@@ -155,10 +155,10 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Primary Thumbnail</label>
                 <div class="flex items-center gap-4 mb-3">
-                    <img src="{{ $product->thumbnail_url }}" alt="{{ $product->name }}" class="w-20 h-20 rounded-xl object-cover border border-gray-200 dark:border-gray-700">
+                    <img id="product-thumb-preview" src="{{ $product->thumbnail_url }}" alt="{{ $product->name }}" class="w-20 h-20 rounded-xl object-cover border border-gray-200 dark:border-gray-700 preview-target">
                     <span class="text-xs text-gray-500">Current thumbnail. Choose a new file to replace it.</span>
                 </div>
-                <input type="file" name="thumbnail" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300 cursor-pointer">
+                <input type="file" name="thumbnail" accept="image/*" data-preview="#product-thumb-preview" class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300 cursor-pointer">
             </div>
 
             <!-- Existing Gallery Images -->
@@ -170,7 +170,7 @@
                     <div class="relative group rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 aspect-square">
                         <img src="{{ $galleryImg->image_url }}" alt="Gallery image" class="w-full h-full object-cover">
                         <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center p-2">
-                            <form action="{{ route('admin.products.delete-image', ['product' => $product->id, 'image' => $galleryImg->id]) }}" method="POST" onsubmit="return confirm('Delete this gallery photo?');">
+                            <form action="{{ route('admin.products.delete-image', ['product' => $product->id, 'image' => $galleryImg->id]) }}" method="POST" data-confirm="Delete this gallery photo?">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="bg-red-600 hover:bg-red-700 text-white rounded-lg p-2 text-xs transition">

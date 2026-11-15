@@ -16,6 +16,7 @@
     },
     "dependencies": {
         "@alpinejs/collapse": "^3.17.5",
-        "alpinejs": "^3.17.5"
+        "alpinejs": "^3.17.5",
+        "sweetalert2": "^11.26.25"
     }
 }

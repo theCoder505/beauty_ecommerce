@@ -41,7 +41,7 @@ class ReviewController extends Controller
             });
         }
 
-        $reviews  = $query->orderByDesc('created_at')->paginate(20)->withQueryString();
+        $reviews  = $query->orderByDesc('created_at')->get();
         $products = Product::where('is_active', true)->orderBy('name')->get(['id', 'name']);
 
         $statuses = ['pending', 'approved', 'hidden'];

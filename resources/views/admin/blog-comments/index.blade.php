@@ -12,8 +12,8 @@
 
     <!-- Comments Table -->
     <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
+        <div class="overflow-x-auto p-4">
+            <table id="comments-datatable" class="w-full text-left text-sm">
                 <thead>
                     <tr class="bg-gray-50 dark:bg-gray-800/60 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
                         <th class="px-6 py-4">Article</th>
@@ -59,7 +59,7 @@
                                 <button type="submit" class="px-2.5 py-1 text-xs font-medium text-gray-700 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg transition">Hide</button>
                             </form>
                             @endif
-                            <form action="{{ route('admin.blog-comments.destroy', $comment) }}" method="POST" class="inline" onsubmit="return confirm('Delete this comment permanently?');">
+                            <form action="{{ route('admin.blog-comments.destroy', $comment) }}" method="POST" class="inline" data-confirm="Delete this comment permanently?">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="px-2.5 py-1 text-xs font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 rounded-lg transition">Delete</button>
@@ -76,12 +76,26 @@
                 </tbody>
             </table>
         </div>
-        @if($comments->hasPages())
-        <div class="p-4 border-t border-gray-100 dark:border-gray-800">
-            {{ $comments->links() }}
-        </div>
-        @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        $('#comments-datatable').DataTable({
+            pageLength: 10,
+            responsive: true,
+            columnDefs: [
+                { orderable: false, targets: [2, 4] }
+            ],
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search comments...",
+                paginate: { previous: "‹ Prev", next: "Next ›" }
+            }
+        });
+    });
+</script>
+@endpush
 

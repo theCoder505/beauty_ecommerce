@@ -11,8 +11,8 @@
     </div>
 
     <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
+        <div class="overflow-x-auto p-4">
+            <table id="subscribers-datatable" class="w-full text-left text-sm">
                 <thead>
                     <tr class="bg-gray-50 dark:bg-gray-800/60 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
                         <th class="px-6 py-4">Subscriber Email</th>
@@ -51,12 +51,25 @@
                 </tbody>
             </table>
         </div>
-        @if($subscribers->hasPages())
-        <div class="p-4 border-t border-gray-100 dark:border-gray-800">
-            {{ $subscribers->links() }}
-        </div>
-        @endif
     </div>
 </div>
+@endsection
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        $('#subscribers-datatable').DataTable({
+            pageLength: 10,
+            responsive: true,
+            order: [[2, 'desc']],
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search subscribers...",
+                paginate: { previous: "‹ Prev", next: "Next ›" }
+            }
+        });
+    });
+</script>
+@endpush
 @endsection
 

@@ -112,13 +112,11 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cover Image</label>
-                @if($blogPost->cover_image)
-                    <div class="mb-3 flex items-center gap-4">
-                        <img src="{{ $blogPost->cover_image_url }}" alt="{{ $blogPost->title }}" class="w-24 h-16 rounded-xl object-cover border border-gray-200 dark:border-gray-700">
-                        <span class="text-xs text-gray-500">Current cover. Upload a new file to replace it.</span>
-                    </div>
-                @endif
-                <input type="file" name="cover_image" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300 cursor-pointer">
+                <div class="mb-3 flex items-center gap-4">
+                    <img id="blog-cover-preview" src="{{ $blogPost->cover_image ? $blogPost->cover_image_url : '' }}" alt="{{ $blogPost->title }}" class="{{ $blogPost->cover_image ? '' : 'hidden' }} w-32 h-20 rounded-xl object-cover border border-gray-200 dark:border-gray-700 preview-target">
+                    <span class="text-xs text-gray-500">Current cover or selected preview.</span>
+                </div>
+                <input type="file" name="cover_image" accept="image/*" data-preview="#blog-cover-preview" class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300 cursor-pointer">
             </div>
 
             <div>

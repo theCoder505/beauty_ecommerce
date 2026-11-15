@@ -57,13 +57,11 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category Image</label>
-                @if($category->image)
-                    <div class="mb-3 flex items-center gap-4">
-                        <img src="{{ $category->image_url }}" alt="{{ $category->name }}" class="w-20 h-20 rounded-xl object-cover border border-gray-200 dark:border-gray-700">
-                        <span class="text-xs text-gray-500">Current image. Upload a new one to replace it.</span>
-                    </div>
-                @endif
-                <input type="file" name="image" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300 cursor-pointer">
+                <div class="mb-3 flex items-center gap-4">
+                    <img id="category-image-preview" src="{{ $category->image ? $category->image_url : '' }}" alt="{{ $category->name }}" class="{{ $category->image ? '' : 'hidden' }} w-20 h-20 rounded-xl object-cover border border-gray-200 dark:border-gray-700 preview-target">
+                    <span class="text-xs text-gray-500">Current image or selected preview.</span>
+                </div>
+                <input type="file" name="image" accept="image/*" data-preview="#category-image-preview" class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300 cursor-pointer">
             </div>
         </div>
 

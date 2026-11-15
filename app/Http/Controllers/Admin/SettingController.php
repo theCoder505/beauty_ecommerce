@@ -21,7 +21,29 @@ class SettingController extends Controller
     {
         $encryptedKeys = ['stripe_secret_key', 'stripe_webhook_secret', 'google_client_secret'];
 
-        $data = $request->except(['_token', '_method']);
+        // Handle Site Logo Upload (Point 3)
+        if ($request->hasFile('site_logo')) {
+            $request->validate([
+                'site_logo' => 'image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+            ]);
+            $logoPath = $request->file('site_logo')->store('settings', 'public');
+            $this->settingService->set('site_logo', $logoPath, false, 'general');
+        } elseif ($request->boolean('remove_site_logo')) {
+            $this->settingService->set('site_logo', '', false, 'general');
+        }
+
+        // Handle Site Icon / Favicon Upload (Point 3)
+        if ($request->hasFile('site_icon')) {
+            $request->validate([
+                'site_icon' => 'image|mimes:jpeg,png,jpg,gif,svg,webp,ico|max:1024',
+            ]);
+            $iconPath = $request->file('site_icon')->store('settings', 'public');
+            $this->settingService->set('site_icon', $iconPath, false, 'general');
+        } elseif ($request->boolean('remove_site_icon')) {
+            $this->settingService->set('site_icon', '', false, 'general');
+        }
+
+        $data = $request->except(['_token', '_method', 'site_logo', 'site_icon', 'remove_site_logo', 'remove_site_icon']);
 
         foreach ($data as $key => $value) {
             if ($value === null || $value === '') continue;

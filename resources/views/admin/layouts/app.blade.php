@@ -4,10 +4,29 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Dashboard') – Admin Panel</title>
+    @php $siteSettings = app(\App\Services\SettingService::class)->all(); @endphp
+    <title>@yield('title', 'Dashboard') – {{ $siteSettings['site_name'] ?? 'Admin Panel' }}</title>
+    
+    @if(!empty($siteSettings['site_icon']))
+    <link rel="icon" type="image/x-icon" href="{{ asset('storage/'.$siteSettings['site_icon']) }}">
+    <link rel="apple-touch-icon" href="{{ asset('storage/'.$siteSettings['site_icon']) }}">
+    @endif
+
+    {{-- Dark theme script (avoids FOUC) --}}
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
     @stack('styles')
 </head>
@@ -35,10 +54,18 @@
         {{-- Logo & Toggle --}}
         <div class="h-16 px-4 border-b border-gray-800 flex items-center justify-between">
             <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 overflow-hidden transition-all duration-300" :class="sidebarCollapsed ? 'lg:hidden' : ''">
-                <span class="text-brand-400 font-serif text-xl font-bold whitespace-nowrap">✦ GlowHaus</span>
+                @if(!empty($siteSettings['site_logo']))
+                    <img src="{{ asset('storage/'.$siteSettings['site_logo']) }}" alt="{{ $siteSettings['site_name'] ?? 'Logo' }}" class="h-8 max-w-[140px] object-contain">
+                @else
+                    <span class="text-brand-400 font-serif text-xl font-bold whitespace-nowrap">✦ {{ $siteSettings['site_name'] ?? 'GlowHaus' }}</span>
+                @endif
             </a>
-            <a href="{{ route('admin.dashboard') }}" class="hidden font-serif text-xl font-bold text-brand-400 mx-auto" :class="sidebarCollapsed ? 'lg:block' : ''" title="GlowHaus Admin">
-                ✦
+            <a href="{{ route('admin.dashboard') }}" class="hidden font-serif text-xl font-bold text-brand-400 mx-auto" :class="sidebarCollapsed ? 'lg:block' : ''" title="{{ $siteSettings['site_name'] ?? 'Admin' }}">
+                @if(!empty($siteSettings['site_icon']))
+                    <img src="{{ asset('storage/'.$siteSettings['site_icon']) }}" alt="Icon" class="h-7 w-7 object-contain">
+                @else
+                    ✦
+                @endif
             </a>
             <button type="button" @click="toggleCollapse()"
                 class="hidden lg:flex p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition focus:outline-none"
@@ -157,6 +184,29 @@
             @yield('content')
         </main>
     </div>
+
+    {{-- SweetAlert2 Session Notifications --}}
+    @if(session('success'))
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.toast) toast(@json(session('success')), 'success');
+        });
+    </script>
+    @endif
+    @if(session('error'))
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.toast) toast(@json(session('error')), 'error');
+        });
+    </script>
+    @endif
+    @if(session('status'))
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.toast) toast(@json(session('status')), 'info');
+        });
+    </script>
+    @endif
 
     @stack('scripts')
 </body>

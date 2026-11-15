@@ -68,7 +68,7 @@ class AuthController extends Controller
         return view('users.auth.verify-otp');
     }
 
-    public function verifyRegistrationOtp(Request $request): RedirectResponse
+    public function verifyRegistrationOtp(Request $request): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $request->validate([
             'otp' => ['required', 'string'],
@@ -77,7 +77,11 @@ class AuthController extends Controller
         $result = $this->otpService->verify('register', $request->otp);
 
         if ($result !== true) {
-            return back()->withErrors(['otp' => is_string($result) ? $result : 'Invalid or expired OTP.']);
+            $msg = is_string($result) ? $result : 'Invalid or expired OTP.';
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->withErrors(['otp' => $msg]);
         }
 
         $sessionData = $this->otpService->getSessionData('register');
@@ -93,20 +97,35 @@ class AuthController extends Controller
         $this->cartService->mergeGuestCart($user->id);
         $this->otpService->clear('register');
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success'  => true,
+                'message'  => 'Registration successful! Welcome, ' . $user->name . '.',
+                'redirect' => route('home'),
+            ]);
+        }
+
         return redirect()->route('home')
             ->with('success', 'Registration successful! Welcome, ' . $user->name . '.');
     }
 
-    public function resendRegistrationOtp(Request $request): RedirectResponse
+    public function resendRegistrationOtp(Request $request): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         if (! $this->otpService->canResend('register')) {
             $seconds = $this->otpService->secondsUntilResend('register');
-            return back()->withErrors(['otp' => "Please wait {$seconds} seconds before requesting a new OTP."]);
+            $msg = "Please wait {$seconds} seconds before requesting a new OTP.";
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 429);
+            }
+            return back()->withErrors(['otp' => $msg]);
         }
 
         $sessionData = $this->otpService->getSessionData('register');
 
         if (empty($sessionData['email'])) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Session expired. Please restart registration.', 'redirect' => route('register')], 422);
+            }
             return redirect()->route('register')
                 ->withErrors(['email' => 'Session expired. Please restart registration.']);
         }
@@ -124,6 +143,13 @@ class AuthController extends Controller
         ));
 
         $this->otpService->store('register', $otp, $sessionData);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'A new verification code has been sent to your email.',
+            ]);
+        }
 
         return back()->with('status', 'A new OTP has been sent to your email.');
     }
@@ -191,7 +217,7 @@ class AuthController extends Controller
         return view('users.auth.forgot-password');
     }
 
-    public function sendForgotOtp(Request $request): RedirectResponse
+    public function sendForgotOtp(Request $request): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $data = $request->validate([
             'email' => ['required', 'email', 'exists:users,email'],
@@ -212,6 +238,14 @@ class AuthController extends Controller
 
         $this->otpService->store('forgot', $otp, ['email' => $data['email']]);
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success'  => true,
+                'message'  => 'OTP sent to ' . $data['email'] . '. Please check your inbox.',
+                'redirect' => route('password.otp'),
+            ]);
+        }
+
         return redirect()->route('password.otp')
             ->with('status', 'OTP sent to ' . $data['email'] . '.');
     }
@@ -221,7 +255,7 @@ class AuthController extends Controller
         return view('users.auth.forgot-otp');
     }
 
-    public function verifyForgotOtp(Request $request): RedirectResponse
+    public function verifyForgotOtp(Request $request): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $request->validate([
             'otp' => ['required', 'string'],
@@ -230,13 +264,69 @@ class AuthController extends Controller
         $result = $this->otpService->verify('forgot', $request->otp);
 
         if ($result !== true) {
-            return back()->withErrors(['otp' => is_string($result) ? $result : 'Invalid or expired OTP.']);
+            $msg = is_string($result) ? $result : 'Invalid or expired OTP.';
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->withErrors(['otp' => $msg]);
         }
 
         session(['password_reset_verified' => true]);
         $this->otpService->clear('forgot');
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success'  => true,
+                'message'  => 'OTP verified successfully.',
+                'redirect' => route('password.reset'),
+            ]);
+        }
+
         return redirect()->route('password.reset');
+    }
+
+    public function resendForgotOtp(Request $request): RedirectResponse|\Illuminate\Http\JsonResponse
+    {
+        if (! $this->otpService->canResend('forgot')) {
+            $seconds = $this->otpService->secondsUntilResend('forgot');
+            $msg = "Please wait {$seconds} seconds before requesting a new OTP.";
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 429);
+            }
+            return back()->withErrors(['otp' => $msg]);
+        }
+
+        $sessionData = $this->otpService->getSessionData('forgot');
+        if (empty($sessionData['email'])) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Session expired. Please restart password reset.', 'redirect' => route('password.request')], 422);
+            }
+            return redirect()->route('password.request')->withErrors(['email' => 'Session expired.']);
+        }
+
+        $otp = $this->otpService->generate();
+        $user = User::where('email', $sessionData['email'])->first();
+
+        Mail::to($sessionData['email'])->send(new OtpMail(
+            otp: $otp,
+            mailSubject: '✦ Your New Password Reset Code – GlowHaus Beauty',
+            title: 'Password Reset Request',
+            messageBody: 'Here is your new one-time verification code.',
+            name: $user?->name,
+            actionType: 'forgot',
+            expiryMinutes: 10
+        ));
+
+        $this->otpService->store('forgot', $otp, $sessionData);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'A new OTP has been sent to your email.',
+            ]);
+        }
+
+        return back()->with('status', 'A new OTP has been sent to your email.');
     }
 
     public function showResetPassword(): View|RedirectResponse

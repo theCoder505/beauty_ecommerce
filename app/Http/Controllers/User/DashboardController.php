@@ -107,6 +107,13 @@ class DashboardController extends Controller
             expiryMinutes: 10
         ));
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Verification code sent to {$user->email}.",
+            ]);
+        }
+
         return back()->with('otp_sent', true);
     }
 
@@ -116,12 +123,23 @@ class DashboardController extends Controller
 
         $result = $this->otpService->verify('user_change_password', $request->otp);
         if ($result !== true) {
-            return back()->withErrors(['otp' => $result]);
+            $msg = is_string($result) ? $result : 'Invalid or expired OTP.';
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->withErrors(['otp' => $msg]);
         }
 
         $data = $this->otpService->getSessionData('user_change_password');
         auth()->user()->update(['password' => $data['new_password']]);
         $this->otpService->clear('user_change_password');
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Password changed successfully.',
+            ]);
+        }
 
         return back()->with('success', 'Password changed successfully.');
     }
@@ -154,6 +172,13 @@ class DashboardController extends Controller
             expiryMinutes: 10
         ));
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Verification code sent to current email ({$user->email}).",
+            ]);
+        }
+
         return back()->with('otp_sent', true);
     }
 
@@ -163,14 +188,67 @@ class DashboardController extends Controller
 
         $result = $this->otpService->verify('user_change_email', $request->otp);
         if ($result !== true) {
-            return back()->withErrors(['otp' => $result]);
+            $msg = is_string($result) ? $result : 'Invalid or expired OTP.';
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->withErrors(['otp' => $msg]);
         }
 
         $data = $this->otpService->getSessionData('user_change_email');
         auth()->user()->update(['email' => $data['new_email']]);
         $this->otpService->clear('user_change_email');
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Email address updated successfully.',
+                'email'   => $data['new_email'],
+            ]);
+        }
+
         return back()->with('success', 'Email address updated successfully.');
+    }
+
+    public function resendOtp(Request $request)
+    {
+        $type = $request->input('type', 'password');
+        $purposeKey = $type === 'email' ? 'user_change_email' : 'user_change_password';
+
+        if (! $this->otpService->canResend($purposeKey)) {
+            $seconds = $this->otpService->secondsUntilResend($purposeKey);
+            return response()->json([
+                'success' => false,
+                'message' => "Please wait {$seconds} seconds before requesting a new OTP.",
+            ], 429);
+        }
+
+        $sessionData = $this->otpService->getSessionData($purposeKey);
+        if (! $sessionData) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Session expired. Please re-submit the form.',
+            ], 422);
+        }
+
+        $user = auth()->user();
+        $otp  = $this->otpService->generate();
+        $this->otpService->store($purposeKey, $otp, $sessionData);
+
+        Mail::to($user->email)->send(new OtpMail(
+            otp: $otp,
+            mailSubject: '✦ New Verification Code – GlowHaus',
+            title: $type === 'email' ? 'Update Account Email' : 'Change Account Password',
+            messageBody: 'Here is your new one-time verification code.',
+            name: $user->name,
+            actionType: 'user_resend',
+            expiryMinutes: 10
+        ));
+
+        return response()->json([
+            'success' => true,
+            'message' => "A new verification code has been sent to {$user->email}.",
+        ]);
     }
 }
 

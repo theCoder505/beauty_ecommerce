@@ -1,6 +1,22 @@
 {{-- Shared sidebar partial for user dashboard --}}
 <aside class="lg:w-56 shrink-0">
     <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-cream-200 dark:border-gray-700 sticky top-20">
+        @php
+            $dashSettings = app(\App\Services\SettingService::class)->all();
+            $dashSiteName = $dashSettings['site_name'] ?? config('app.name');
+        @endphp
+        <div class="mb-4 pb-4 border-b border-cream-200 dark:border-gray-700 flex items-center gap-2">
+            @if(!empty($dashSettings['site_logo']))
+                <a href="{{ route('home') }}"><img src="{{ asset('storage/'.$dashSettings['site_logo']) }}" alt="{{ $dashSiteName }}" class="h-7 w-auto max-w-[140px] object-contain"></a>
+            @elseif(!empty($dashSettings['site_icon']))
+                <a href="{{ route('home') }}" class="flex items-center gap-2">
+                    <img src="{{ asset('storage/'.$dashSettings['site_icon']) }}" alt="{{ $dashSiteName }}" class="h-6 w-6 object-contain">
+                    <span class="font-serif font-bold text-gray-900 dark:text-white text-sm">{{ $dashSiteName }}</span>
+                </a>
+            @else
+                <a href="{{ route('home') }}" class="text-brand-700 dark:text-brand-400 font-serif font-bold text-sm">✦ {{ $dashSiteName }}</a>
+            @endif
+        </div>
         <div class="flex items-center gap-3 mb-5 pb-5 border-b border-cream-200 dark:border-gray-700">
             <img src="{{ auth()->user()->avatar_url }}" class="w-10 h-10 rounded-full object-cover">
             <div class="min-w-0"><p class="font-semibold text-sm text-gray-900 dark:text-white truncate">{{ auth()->user()->name }}</p><p class="text-xs text-gray-500 truncate">{{ auth()->user()->email }}</p></div>

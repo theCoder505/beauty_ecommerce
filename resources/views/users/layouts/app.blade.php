@@ -27,6 +27,21 @@
     {{-- Canonical --}}
     <link rel="canonical" href="{{ url()->current() }}">
 
+    @php $siteIcon = app(\App\Services\SettingService::class)->get('site_icon'); @endphp
+    @if($siteIcon)
+    <link rel="icon" type="image/x-icon" href="{{ asset('storage/'.$siteIcon) }}">
+    <link rel="apple-touch-icon" href="{{ asset('storage/'.$siteIcon) }}">
+    @endif
+
+    {{-- Dark theme script (avoids FOUC) --}}
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+
     {{-- JSON-LD --}}
     @stack('jsonld')
 
@@ -63,6 +78,29 @@
     </main>
 
     @include('users.layouts.footer')
+
+    {{-- SweetAlert2 Session Notifications --}}
+    @if(session('success'))
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.toast) toast(@json(session('success')), 'success');
+        });
+    </script>
+    @endif
+    @if(session('error'))
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.toast) toast(@json(session('error')), 'error');
+        });
+    </script>
+    @endif
+    @if(session('status'))
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.toast) toast(@json(session('status')), 'info');
+        });
+    </script>
+    @endif
 
     @stack('scripts')
 </body>

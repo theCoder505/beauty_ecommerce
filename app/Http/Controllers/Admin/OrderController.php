@@ -43,7 +43,7 @@ class OrderController extends Controller
             $query->whereHas('payment', fn ($q) => $q->where('method', $request->payment_method));
         }
 
-        $orders = $query->orderByDesc('created_at')->paginate(20)->withQueryString();
+        $orders = $query->orderByDesc('created_at')->get();
 
         $statuses = [
             'pending', 'confirmed', 'processing', 'shipped',

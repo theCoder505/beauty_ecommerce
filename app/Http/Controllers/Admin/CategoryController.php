@@ -19,7 +19,7 @@ class CategoryController extends Controller
         $categories = Category::withCount('products')
             ->orderBy('sort_order')
             ->orderBy('name')
-            ->paginate(20);
+            ->get();
 
         return view('admin.categories.index', compact('categories'));
     }

@@ -46,8 +46,8 @@
 
     <!-- Products Table -->
     <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
+        <div class="overflow-x-auto p-4">
+            <table id="products-datatable" class="w-full text-left text-sm">
                 <thead>
                     <tr class="bg-gray-50 dark:bg-gray-800/60 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
                         <th class="px-6 py-4">Product</th>
@@ -112,7 +112,7 @@
                         <td class="px-6 py-4 text-right space-x-2">
                             <a href="{{ route('admin.products.show', $p) }}" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-300 rounded-lg transition">View</a>
                             <a href="{{ route('admin.products.edit', $p) }}" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-brand-700 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 dark:bg-brand-900/20 dark:hover:bg-brand-900/40 rounded-lg transition">Edit</a>
-                            <form action="{{ route('admin.products.destroy', $p) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this product? All images and reviews will be removed.');">
+                            <form action="{{ route('admin.products.destroy', $p) }}" method="POST" class="inline" data-confirm="Are you sure you want to delete this product? All images and reviews will be removed.">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 rounded-lg transition">Delete</button>
@@ -129,11 +129,25 @@
                 </tbody>
             </table>
         </div>
-        @if($products->hasPages())
-        <div class="p-4 border-t border-gray-100 dark:border-gray-800">
-            {{ $products->links() }}
-        </div>
-        @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        $('#products-datatable').DataTable({
+            pageLength: 10,
+            responsive: true,
+            columnDefs: [
+                { orderable: false, targets: [0, 6] }
+            ],
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search products...",
+                paginate: { previous: "‹ Prev", next: "Next ›" }
+            }
+        });
+    });
+</script>
+@endpush

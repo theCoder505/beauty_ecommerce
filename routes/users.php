@@ -38,6 +38,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/forgot-password', [User\AuthController::class, 'sendForgotOtp'])->name('password.email');
     Route::get('/forgot-password/verify-otp', [User\AuthController::class, 'showForgotOtp'])->name('password.otp');
     Route::post('/forgot-password/verify-otp', [User\AuthController::class, 'verifyForgotOtp'])->name('password.otp.verify');
+    Route::post('/forgot-password/resend-otp', [User\AuthController::class, 'resendForgotOtp'])->name('password.resend-otp');
     Route::get('/forgot-password/reset', [User\AuthController::class, 'showResetPassword'])->name('password.reset');
     Route::post('/forgot-password/reset', [User\AuthController::class, 'resetPassword'])->name('password.update');
 });
@@ -87,6 +88,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/change-email', [User\DashboardController::class, 'changeEmailForm'])->name('change-email');
         Route::post('/change-email/otp', [User\DashboardController::class, 'sendChangeEmailOtp'])->name('change-email.otp');
         Route::post('/change-email/verify', [User\DashboardController::class, 'verifyAndChangeEmail'])->name('change-email.verify');
+        Route::post('/security/resend-otp', [User\DashboardController::class, 'resendOtp'])->name('security.resend-otp');
     });
 });
 

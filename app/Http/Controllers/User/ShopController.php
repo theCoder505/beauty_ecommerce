@@ -6,24 +6,68 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
 
 class ShopController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request)
     {
         $products = $this->buildProductQuery($request)->paginate(12)->withQueryString();
-        $categories = Category::where('is_active', true)->orderBy('name')->get();
+        $categories = Category::where('is_active', true)
+            ->withCount(['products' => function ($q) {
+                $q->where('is_active', true);
+            }])
+            ->orderBy('name')
+            ->get();
 
-        return view('users.pages.shop', compact('products', 'categories'));
+        $minPossiblePrice = (float) (Product::where('is_active', true)->min('price') ?? 0);
+        $maxPossiblePrice = (float) (Product::where('is_active', true)->max('price') ?? 1000);
+        if ($maxPossiblePrice <= $minPossiblePrice) {
+            $maxPossiblePrice = $minPossiblePrice + 1000;
+        }
+
+        if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            $currency = app(\App\Services\SettingService::class)->get('currency_symbol', '৳');
+            $html = view('users.partials.shop-product-list', compact('products', 'currency'))->render();
+            return response()->json([
+                'html'       => $html,
+                'total'      => $products->total(),
+                'pagination' => (string) $products->links(),
+                'title'      => 'All Products',
+            ]);
+        }
+
+        return view('users.pages.shop', compact('products', 'categories', 'minPossiblePrice', 'maxPossiblePrice'));
     }
 
-    public function category(Request $request, Category $category): View
+    public function category(Request $request, Category $category)
     {
         $products = $this->buildProductQuery($request, $category->id)->paginate(12)->withQueryString();
-        $categories = Category::where('is_active', true)->orderBy('name')->get();
+        $categories = Category::where('is_active', true)
+            ->withCount(['products' => function ($q) {
+                $q->where('is_active', true);
+            }])
+            ->orderBy('name')
+            ->get();
 
-        return view('users.pages.shop', compact('products', 'categories', 'category'));
+        $minPossiblePrice = (float) (Product::where('is_active', true)->min('price') ?? 0);
+        $maxPossiblePrice = (float) (Product::where('is_active', true)->max('price') ?? 1000);
+        if ($maxPossiblePrice <= $minPossiblePrice) {
+            $maxPossiblePrice = $minPossiblePrice + 1000;
+        }
+
+        if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            $currency = app(\App\Services\SettingService::class)->get('currency_symbol', '৳');
+            $html = view('users.partials.shop-product-list', compact('products', 'currency'))->render();
+            return response()->json([
+                'html'       => $html,
+                'total'      => $products->total(),
+                'pagination' => (string) $products->links(),
+                'title'      => $category->name,
+                'category_id'=> $category->id,
+            ]);
+        }
+
+        return view('users.pages.shop', compact('products', 'categories', 'category', 'minPossiblePrice', 'maxPossiblePrice'));
     }
 
     private function buildProductQuery(Request $request, ?int $forceCategoryId = null)

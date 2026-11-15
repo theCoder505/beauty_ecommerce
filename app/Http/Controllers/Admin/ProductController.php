@@ -45,7 +45,7 @@ class ProductController extends Controller
             };
         }
 
-        $products   = $query->orderByDesc('created_at')->paginate(20)->withQueryString();
+        $products   = $query->orderByDesc('created_at')->get();
         $categories = Category::where('is_active', true)->orderBy('name')->get();
 
         return view('admin.products.index', compact('products', 'categories'));

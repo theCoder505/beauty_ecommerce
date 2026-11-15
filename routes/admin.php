@@ -20,6 +20,9 @@ Route::middleware('admin')->group(function () {
     Route::post('/profile', [Admin\ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/change-password/otp', [Admin\ProfileController::class, 'sendChangeOtp'])->name('profile.send-otp');
     Route::post('/profile/change-password/verify', [Admin\ProfileController::class, 'verifyAndChange'])->name('profile.verify-change');
+    Route::post('/profile/change-email/otp', [Admin\ProfileController::class, 'sendChangeEmailOtp'])->name('profile.send-email-otp');
+    Route::post('/profile/change-email/verify', [Admin\ProfileController::class, 'verifyAndChangeEmail'])->name('profile.verify-email');
+    Route::post('/profile/resend-otp', [Admin\ProfileController::class, 'resendOtp'])->name('profile.resend-otp');
 
     // Categories
     Route::resource('categories', Admin\CategoryController::class);

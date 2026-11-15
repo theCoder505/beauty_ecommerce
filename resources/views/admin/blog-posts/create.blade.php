@@ -104,7 +104,10 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cover Image</label>
-                <input type="file" name="cover_image" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300 cursor-pointer">
+                <div class="mb-3">
+                    <img id="blog-cover-preview" class="hidden w-32 h-20 rounded-xl object-cover border border-gray-200 dark:border-gray-700 shadow-sm preview-target mb-2" alt="Cover Preview">
+                </div>
+                <input type="file" name="cover_image" accept="image/*" data-preview="#blog-cover-preview" class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300 cursor-pointer">
                 <p class="text-xs text-gray-400 mt-1">Recommended: 1200x630px JPG/WebP</p>
             </div>
 

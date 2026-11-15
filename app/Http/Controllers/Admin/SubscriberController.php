@@ -9,7 +9,7 @@ class SubscriberController extends Controller
 {
     public function index()
     {
-        $subscribers = NewsletterSubscriber::latest()->paginate(30);
+        $subscribers = NewsletterSubscriber::latest()->get();
         return view('admin.subscribers.index', compact('subscribers'));
     }
 }

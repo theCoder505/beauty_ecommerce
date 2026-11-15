@@ -46,8 +46,8 @@
 
     <!-- Orders Table -->
     <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
+        <div class="overflow-x-auto p-4">
+            <table id="orders-datatable" class="w-full text-left text-sm">
                 <thead>
                     <tr class="bg-gray-50 dark:bg-gray-800/60 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
                         <th class="px-6 py-4">Order #</th>
@@ -129,12 +129,27 @@
                 </tbody>
             </table>
         </div>
-        @if($orders->hasPages())
-        <div class="p-4 border-t border-gray-100 dark:border-gray-800">
-            {{ $orders->links() }}
-        </div>
-        @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        $('#orders-datatable').DataTable({
+            pageLength: 10,
+            responsive: true,
+            order: [[2, 'desc']],
+            columnDefs: [
+                { orderable: false, targets: [6] }
+            ],
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search orders...",
+                paginate: { previous: "‹ Prev", next: "Next ›" }
+            }
+        });
+    });
+</script>
+@endpush
 

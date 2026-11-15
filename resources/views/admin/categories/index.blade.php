@@ -23,8 +23,8 @@
     @endif
 
     <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
+        <div class="overflow-x-auto p-4">
+            <table id="categories-datatable" class="w-full text-left text-sm">
                 <thead>
                     <tr class="bg-gray-50 dark:bg-gray-800/60 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
                         <th class="px-6 py-4">Image</th>
@@ -68,7 +68,7 @@
                         </td>
                         <td class="px-6 py-4 text-right space-x-2">
                             <a href="{{ route('admin.categories.edit', $cat) }}" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-brand-700 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 dark:bg-brand-900/20 dark:hover:bg-brand-900/40 rounded-lg transition">Edit</a>
-                            <form action="{{ route('admin.categories.destroy', $cat) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this category?');">
+                            <form action="{{ route('admin.categories.destroy', $cat) }}" method="POST" class="inline" data-confirm="Are you sure you want to delete this category?">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 rounded-lg transition">Delete</button>
@@ -85,11 +85,26 @@
                 </tbody>
             </table>
         </div>
-        @if($categories->hasPages())
-        <div class="p-4 border-t border-gray-100 dark:border-gray-800">
-            {{ $categories->links() }}
-        </div>
-        @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        $('#categories-datatable').DataTable({
+            pageLength: 10,
+            responsive: true,
+            order: [[4, 'asc']],
+            columnDefs: [
+                { orderable: false, targets: [0, 6] }
+            ],
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search categories...",
+                paginate: { previous: "‹ Prev", next: "Next ›" }
+            }
+        });
+    });
+</script>
+@endpush

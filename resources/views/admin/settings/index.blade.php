@@ -26,12 +26,63 @@
     </div>
     @endif
 
-    <form action="{{ route('admin.settings.update') }}" method="POST" class="space-y-6">
+    <form action="{{ route('admin.settings.update') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
         @csrf
 
         <!-- Tab 1: General & Store Details -->
         <div x-show="tab === 'general'" class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 sm:p-8 space-y-6 shadow-sm">
             <h3 class="text-base font-semibold text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-800 pb-3">Brand & Store Info</h3>
+
+            {{-- Site Logo & Icon (Point 3 & Point 9) --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 p-4 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20">
+                {{-- Logo --}}
+                <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Website Logo</label>
+                    <p class="text-xs text-gray-500">Appears in surface web header, admin sidebar & user dashboard.</p>
+                    <div class="flex items-center gap-4 pt-1">
+                        <div class="w-24 h-16 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex items-center justify-center p-2 overflow-hidden shadow-inner shrink-0">
+                            <img id="logo-preview" src="{{ !empty($settings['site_logo']->value) ? asset('storage/'.$settings['site_logo']->value) : '' }}" 
+                                 class="max-h-full max-w-full object-contain {{ empty($settings['site_logo']->value) ? 'hidden' : '' }}" alt="Logo Preview">
+                            <span id="logo-placeholder" class="text-xs text-gray-400 {{ !empty($settings['site_logo']->value) ? 'hidden' : '' }}">No Logo</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <input type="file" name="site_logo" accept="image/*" data-preview="#logo-preview"
+                                   onchange="document.getElementById('logo-placeholder').classList.add('hidden')"
+                                   class="block w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300">
+                            @if(!empty($settings['site_logo']->value))
+                            <label class="inline-flex items-center gap-1.5 mt-2 cursor-pointer">
+                                <input type="checkbox" name="remove_site_logo" value="1" class="rounded text-red-600 focus:ring-red-500 text-xs">
+                                <span class="text-xs text-red-500 hover:text-red-600">Remove current logo</span>
+                            </label>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Icon / Favicon --}}
+                <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Website Icon / Favicon</label>
+                    <p class="text-xs text-gray-500">Appears as the browser tab icon and collapsed sidebar logo.</p>
+                    <div class="flex items-center gap-4 pt-1">
+                        <div class="w-16 h-16 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex items-center justify-center p-2 overflow-hidden shadow-inner shrink-0">
+                            <img id="icon-preview" src="{{ !empty($settings['site_icon']->value) ? asset('storage/'.$settings['site_icon']->value) : '' }}" 
+                                 class="w-10 h-10 object-contain {{ empty($settings['site_icon']->value) ? 'hidden' : '' }}" alt="Icon Preview">
+                            <span id="icon-placeholder" class="text-xs text-gray-400 {{ !empty($settings['site_icon']->value) ? 'hidden' : '' }}">No Icon</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <input type="file" name="site_icon" accept="image/*" data-preview="#icon-preview"
+                                   onchange="document.getElementById('icon-placeholder').classList.add('hidden')"
+                                   class="block w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300">
+                            @if(!empty($settings['site_icon']->value))
+                            <label class="inline-flex items-center gap-1.5 mt-2 cursor-pointer">
+                                <input type="checkbox" name="remove_site_icon" value="1" class="rounded text-red-600 focus:ring-red-500 text-xs">
+                                <span class="text-xs text-red-500 hover:text-red-600">Remove current icon</span>
+                            </label>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>

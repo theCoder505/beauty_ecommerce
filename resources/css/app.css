@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
     --color-brand-50: #f0fdf4;
     --color-brand-100: #dcfce7;
@@ -64,3 +66,148 @@ html { scroll-behavior: smooth; }
 button{
     cursor: pointer;
 }
+
+/* Dual Range Slider */
+.range-slider-wrapper {
+    position: relative;
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+}
+.range-slider-wrapper input[type="range"] {
+    position: absolute;
+    width: 100%;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    pointer-events: none;
+    z-index: 20;
+    margin: 0;
+}
+.range-slider-wrapper input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #15803d;
+    border: 2px solid #ffffff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    cursor: pointer;
+    pointer-events: auto;
+    transition: transform 0.15s ease;
+}
+.range-slider-wrapper input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+}
+.range-slider-wrapper input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #15803d;
+    border: 2px solid #ffffff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    cursor: pointer;
+    pointer-events: auto;
+    transition: transform 0.15s ease;
+}
+.range-slider-track {
+    position: absolute;
+    width: 100%;
+    height: 6px;
+    border-radius: 9999px;
+    background-color: #e5e7eb;
+}
+.dark .range-slider-track {
+    background-color: #374151;
+}
+.range-slider-highlight {
+    position: absolute;
+    height: 6px;
+    border-radius: 9999px;
+    background-color: #15803d;
+    z-index: 10;
+}
+
+/* DataTables Styling */
+.dataTables_wrapper {
+    font-size: 0.875rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+}
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter {
+    padding: 0.5rem 1.5rem;
+}
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_paginate {
+    padding: 0.75rem 1.5rem;
+}
+.dataTables_wrapper .dataTables_length select {
+    border-radius: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #d1d5db;
+    background-color: #ffffff;
+    color: #111827;
+}
+.dark .dataTables_wrapper .dataTables_length select {
+    border-color: #374151;
+    background-color: #1f2937;
+    color: #f3f4f6;
+}
+.dataTables_wrapper .dataTables_filter input {
+    border-radius: 0.5rem;
+    padding: 0.35rem 0.75rem;
+    border: 1px solid #d1d5db;
+    background-color: #ffffff;
+    color: #111827;
+    margin-left: 0.5rem;
+}
+.dark .dataTables_wrapper .dataTables_filter input {
+    border-color: #374151;
+    background-color: #1f2937;
+    color: #f3f4f6;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    border-radius: 0.5rem !important;
+    border: 1px solid transparent !important;
+    padding: 0.35rem 0.75rem !important;
+    margin: 0 2px !important;
+    font-weight: 500;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+    background: #15803d !important;
+    color: #ffffff !important;
+    border-color: #15803d !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background: #f3f4f6 !important;
+    color: #111827 !important;
+}
+.dark .dataTables_wrapper .dataTables_paginate .paginate_button {
+    color: #d1d5db !important;
+}
+.dark .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background: #374151 !important;
+    color: #ffffff !important;
+}
+.dark .dataTables_wrapper .dataTables_info {
+    color: #9ca3af !important;
+}
+table.dataTable.no-footer {
+    border-bottom: 1px solid #e5e7eb !important;
+}
+.dark table.dataTable.no-footer {
+    border-bottom: 1px solid #374151 !important;
+}
+.dark table.dataTable tbody tr {
+    background-color: transparent !important;
+    color: #e5e7eb;
+}
+.dark table.dataTable tbody tr:hover {
+    background-color: rgba(55, 65, 81, 0.4) !important;
+}
+

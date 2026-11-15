@@ -10,7 +10,10 @@
         {{-- Logo --}}
         <a href="{{ route('home') }}" class="flex items-center gap-2 font-serif font-bold text-xl text-gray-900 dark:text-white shrink-0">
             @if(!empty($settings['site_logo']))
-                <img src="{{ asset('storage/'.$settings['site_logo']) }}" alt="{{ $siteName }}" class="h-9 w-auto">
+                <img src="{{ asset('storage/'.$settings['site_logo']) }}" alt="{{ $siteName }}" class="h-9 w-auto max-w-[180px] object-contain">
+            @elseif(!empty($settings['site_icon']))
+                <img src="{{ asset('storage/'.$settings['site_icon']) }}" alt="{{ $siteName }}" class="h-8 w-8 object-contain">
+                <span>{{ $siteName }}</span>
             @else
                 <span class="text-brand-700">✦</span> {{ $siteName }}
             @endif

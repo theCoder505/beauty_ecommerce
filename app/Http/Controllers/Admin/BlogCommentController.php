@@ -12,7 +12,7 @@ class BlogCommentController extends Controller
     {
         $comments = BlogComment::with(['user', 'post'])
             ->when($request->status, fn($q) => $q->where('status', $request->status))
-            ->latest()->paginate(20);
+            ->latest()->get();
         return view('admin.blog-comments.index', compact('comments'));
     }
 
