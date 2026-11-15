@@ -11,25 +11,46 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
     @stack('styles')
 </head>
-<body class="font-sans bg-gray-100 dark:bg-gray-950 text-gray-900 dark:text-gray-100 antialiased" x-data="{ sidebarOpen: false }">
+<body class="font-sans bg-gray-100 dark:bg-gray-950 text-gray-900 dark:text-gray-100 antialiased"
+    x-data="{
+        sidebarOpen: false,
+        sidebarCollapsed: localStorage.getItem('admin_sidebar_collapsed') === 'true',
+        toggleCollapse() {
+            this.sidebarCollapsed = !this.sidebarCollapsed;
+            localStorage.setItem('admin_sidebar_collapsed', this.sidebarCollapsed);
+        }
+    }">
 
     {{-- Sidebar Overlay --}}
     <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-black/50 z-30 lg:hidden"></div>
 
     {{-- Sidebar --}}
-    <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
-        class="fixed top-0 left-0 h-full w-64 bg-gray-900 dark:bg-gray-950 z-40 transition-transform duration-300 flex flex-col border-r border-gray-800">
+    <aside
+        :class="[
+            sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+            sidebarCollapsed ? 'lg:w-20' : 'lg:w-64'
+        ]"
+        class="fixed top-0 left-0 h-full w-64 bg-gray-900 dark:bg-gray-950 z-40 transition-all duration-300 flex flex-col border-r border-gray-800">
 
-        {{-- Logo --}}
-        <div class="p-5 border-b border-gray-800">
-            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2">
-                <span class="text-brand-400 font-serif text-xl font-bold">✦ GlowHaus</span>
+        {{-- Logo & Toggle --}}
+        <div class="h-16 px-4 border-b border-gray-800 flex items-center justify-between">
+            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 overflow-hidden transition-all duration-300" :class="sidebarCollapsed ? 'lg:hidden' : ''">
+                <span class="text-brand-400 font-serif text-xl font-bold whitespace-nowrap">✦ GlowHaus</span>
             </a>
-            <p class="text-xs text-gray-500 mt-1">Admin Panel</p>
+            <a href="{{ route('admin.dashboard') }}" class="hidden font-serif text-xl font-bold text-brand-400 mx-auto" :class="sidebarCollapsed ? 'lg:block' : ''" title="GlowHaus Admin">
+                ✦
+            </a>
+            <button type="button" @click="toggleCollapse()"
+                class="hidden lg:flex p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition focus:outline-none"
+                :title="sidebarCollapsed ? 'Expand sidebar' : 'Minimize sidebar'">
+                <svg class="w-4 h-4 transition-transform duration-300" :class="sidebarCollapsed ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
+                </svg>
+            </button>
         </div>
 
         {{-- Nav --}}
-        <nav class="flex-1 overflow-y-auto py-4 px-3">
+        <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
             @php
             $navItems = [
                 ['route' => 'admin.dashboard',          'icon' => 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',  'label' => 'Dashboard'],
@@ -50,36 +71,59 @@
                     ? request()->routeIs('admin.dashboard')
                     : (request()->routeIs($item['route']) || request()->routeIs(str_replace('.index', '.*', $item['route'])));
             @endphp
-            <a href="{{ route($item['route']) }}"
-                class="flex items-center gap-3 px-3 py-2.5 rounded-xl mb-1 text-sm font-medium transition {{ $isActive ? 'bg-brand-700 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white' }}">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/></svg>
-                {{ $item['label'] }}
-            </a>
+            <div class="relative group">
+                <a href="{{ route($item['route']) }}"
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition {{ $isActive ? 'bg-brand-700 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white' }}"
+                    :class="sidebarCollapsed ? 'lg:justify-center lg:px-2' : ''">
+                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/></svg>
+                    <span class="truncate whitespace-nowrap transition-opacity duration-200" :class="sidebarCollapsed ? 'lg:hidden' : ''">{{ $item['label'] }}</span>
+                </a>
+                {{-- Floating Tooltip when collapsed on desktop --}}
+                <div x-show="sidebarCollapsed" x-cloak
+                    class="hidden lg:group-hover:block absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2.5 py-1.5 bg-gray-900 text-white text-xs font-semibold rounded-lg shadow-2xl border border-gray-700 whitespace-nowrap z-50 pointer-events-none">
+                    {{ $item['label'] }}
+                </div>
+            </div>
             @endforeach
         </nav>
 
         {{-- User info --}}
-        <div class="p-4 border-t border-gray-800">
-            <div class="flex items-center gap-3">
-                <img src="{{ auth('admin')->user()?->avatar_url ?? asset('images/placeholder-avatar.jpg') }}" class="w-9 h-9 rounded-full object-cover">
-                <div class="min-w-0">
+        <div class="p-3 border-t border-gray-800">
+            <div class="flex items-center gap-3" :class="sidebarCollapsed ? 'lg:justify-center' : ''">
+                <img src="{{ auth('admin')->user()?->avatar_url ?? asset('images/placeholder-avatar.jpg') }}" class="w-9 h-9 rounded-full object-cover shrink-0" title="{{ auth('admin')->user()?->name ?? 'Admin' }}">
+                <div class="min-w-0" :class="sidebarCollapsed ? 'lg:hidden' : ''">
                     <p class="text-sm font-semibold text-white truncate">{{ auth('admin')->user()?->name ?? 'Admin' }}</p>
                     <p class="text-xs text-gray-500 truncate">{{ auth('admin')->user()?->email ?? 'admin@beautyecom.com' }}</p>
                 </div>
             </div>
             <form method="POST" action="{{ route('admin.logout') }}" class="mt-3">
                 @csrf
-                <button type="submit" class="w-full text-left text-xs text-red-400 hover:text-red-300 transition">Sign Out</button>
+                <button type="submit" class="w-full text-left text-xs text-red-400 hover:text-red-300 transition flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-red-950/40"
+                    :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
+                    title="Sign Out">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    <span :class="sidebarCollapsed ? 'lg:hidden' : ''">Sign Out</span>
+                </button>
             </form>
         </div>
     </aside>
 
     {{-- Main --}}
-    <div class="lg:ml-64 min-h-screen flex flex-col">
+    <div :class="sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'"
+        class="min-h-screen flex flex-col transition-all duration-300">
         {{-- Top bar --}}
-        <header class="sticky top-0 z-20 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 h-14 flex items-center px-4 gap-4">
-            <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+        <header class="sticky top-0 z-20 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 h-16 flex items-center px-4 gap-4">
+            {{-- Mobile drawer toggle --}}
+            <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition" aria-label="Open mobile menu">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+            {{-- Desktop collapse toggle in header --}}
+            <button type="button" @click="toggleCollapse()"
+                class="hidden lg:flex items-center justify-center p-2 rounded-lg text-gray-500 hover:text-gray-800 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition focus:outline-none"
+                :title="sidebarCollapsed ? 'Expand sidebar' : 'Minimize sidebar'" aria-label="Toggle sidebar">
+                <svg class="w-5 h-5 transition-transform duration-300" :class="sidebarCollapsed ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
+                </svg>
             </button>
             <h1 class="font-semibold text-gray-800 dark:text-white text-sm">@yield('title', 'Dashboard')</h1>
             <div class="ml-auto flex items-center gap-3">
