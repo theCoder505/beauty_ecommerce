@@ -1,8 +1,12 @@
 <?php
 
+use App\Http\Middleware\AdminAuthenticate;
+use App\Http\Middleware\CacheSessionKeepAliveMiddleware;
+use App\Http\Middleware\RedirectIfAdminAuthenticated;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -20,9 +24,21 @@ return Application::configure(basePath: dirname(__DIR__))
         }
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->redirectUsersTo(function (Request $request) {
+            if ($request->is('admin*') || auth('admin')->check()) {
+                return route('admin.dashboard');
+            }
+
+            return route('user.dashboard');
+        });
+
+        $middleware->appendToGroup('web', [
+            CacheSessionKeepAliveMiddleware::class,
+        ]);
+
         $middleware->alias([
-            'admin'           => \App\Http\Middleware\AdminAuthenticate::class,
-            'admin.guest'     => \App\Http\Middleware\RedirectIfAdminAuthenticated::class,
+            'admin' => AdminAuthenticate::class,
+            'admin.guest' => RedirectIfAdminAuthenticated::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

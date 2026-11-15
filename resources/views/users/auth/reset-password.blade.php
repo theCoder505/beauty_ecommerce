@@ -8,7 +8,7 @@
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-cream-200 dark:border-gray-700">
             @if($errors->any())<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-xl px-4 py-3 mb-5 text-sm">@foreach($errors->all() as $e)<p>{{ $e }}</p>@endforeach</div>@endif
-            <form method="POST" action="{{ route('password.update') }}" class="space-y-5">@csrf
+            <form method="POST" action="{{ route('password.update') }}" class="space-y-5" x-data="{ loading: false }" @submit="if ($el.checkValidity()) { loading = true; }">@csrf
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">New Password</label>
                     <div class="relative" x-data="{ show: false }">
@@ -47,7 +47,15 @@
                         </button>
                     </div>
                 </div>
-                <button type="submit" class="w-full bg-brand-700 text-white font-bold py-3.5 rounded-xl hover:bg-brand-800 transition">Reset Password</button>
+                <button type="submit"
+                    :disabled="loading"
+                    class="w-full bg-brand-700 text-white font-bold py-3.5 rounded-xl hover:bg-brand-800 transition flex items-center justify-center gap-2.5 disabled:opacity-75 disabled:cursor-not-allowed">
+                    <svg x-show="loading" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" x-cloak>
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span x-text="loading ? 'Resetting Password…' : 'Reset Password'">Reset Password</span>
+                </button>
             </form>
         </div>
     </div>

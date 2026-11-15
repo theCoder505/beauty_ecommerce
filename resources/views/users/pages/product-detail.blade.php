@@ -18,18 +18,61 @@
     </nav>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        {{-- Gallery --}}
-        <div x-data="{ active: '{{ $product->thumbnail_url }}' }">
-            <div class="aspect-square rounded-2xl overflow-hidden bg-cream-100 dark:bg-gray-800 shadow-lg mb-4">
-                <img :src="active" alt="{{ $product->name }}" class="w-full h-full object-cover">
+        {{-- Gallery with Right-Side Zoom Preview (Amazon/E-commerce style) --}}
+        <div x-data="productGallery('{{ $product->thumbnail_url }}')" class="relative">
+            {{-- Main Image with Zoom Lens --}}
+            <div class="aspect-square rounded-2xl overflow-hidden bg-cream-100 dark:bg-gray-800 shadow-lg mb-4 relative cursor-crosshair select-none border border-cream-200 dark:border-gray-700"
+                 @mouseenter="zoomed = true"
+                 @mouseleave="zoomed = false"
+                 @mousemove="onMouseMove($event)">
+                <img :src="active"
+                     alt="{{ $product->name }}"
+                     class="w-full h-full object-cover pointer-events-none select-none">
+
+                {{-- Movable Zoom Lens over image on desktop --}}
+                <div x-show="zoomed"
+                     x-cloak
+                     class="hidden lg:block absolute w-[140px] h-[140px] bg-brand-500/20 border-2 border-brand-500/70 rounded-xl pointer-events-none shadow-md backdrop-blur-[1px]"
+                     :style="'left: ' + lensX + 'px; top: ' + lensY + 'px;'">
+                </div>
+
+                {{-- Hover zoom badge --}}
+                <div x-show="!zoomed" x-transition.opacity
+                     class="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 pointer-events-none shadow-md">
+                    <svg class="w-3.5 h-3.5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"/>
+                    </svg>
+                    <span class="font-medium">Hover to zoom</span>
+                </div>
             </div>
+
+            {{-- Right-Side Zoom Preview Window (shows magnified view on the right) --}}
+            <div x-show="zoomed"
+                 x-cloak
+                 x-transition:enter="transition ease-out duration-150"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-100"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95"
+                 class="hidden lg:block absolute left-[calc(100%+3rem)] top-0 w-full aspect-square z-40 rounded-2xl shadow-2xl border-2 border-cream-300 dark:border-gray-700 bg-white dark:bg-gray-900 pointer-events-none overflow-hidden"
+                 :style="'background-image: url(' + active + '); background-repeat: no-repeat; background-size: 300% 300%; background-position: ' + bgX + '% ' + bgY + '%;'">
+                 <div class="absolute top-3 left-3 bg-black/70 backdrop-blur-md text-white text-[11px] font-semibold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow">
+                     <span class="text-brand-400">✦</span> 3x Zoom View
+                 </div>
+            </div>
+
             @if($product->images->isNotEmpty())
-            <div class="flex gap-3 overflow-x-auto pb-2">
-                <button @click="active='{{ $product->thumbnail_url }}'" class="shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 border-transparent hover:border-brand-700 transition">
+            <div class="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
+                <button @click="active = '{{ $product->thumbnail_url }}'"
+                        :class="active === '{{ $product->thumbnail_url }}' ? 'border-brand-700 ring-2 ring-brand-700/30' : 'border-transparent hover:border-brand-700'"
+                        class="shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition">
                     <img src="{{ $product->thumbnail_url }}" class="w-full h-full object-cover">
                 </button>
                 @foreach($product->images as $img)
-                <button @click="active='{{ $img->image_url }}'" class="shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 border-transparent hover:border-brand-700 transition">
+                <button @click="active = '{{ $img->image_url }}'"
+                        :class="active === '{{ $img->image_url }}' ? 'border-brand-700 ring-2 ring-brand-700/30' : 'border-transparent hover:border-brand-700'"
+                        class="shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition">
                     <img src="{{ $img->image_url }}" class="w-full h-full object-cover">
                 </button>
                 @endforeach
@@ -67,25 +110,58 @@
                 @endif
             </div>
 
-            {{-- Add to Cart --}}
+            {{-- Add to Cart (JS Ajax with + - quantity div and Swal alert) --}}
             @if($product->stock > 0)
-            <form action="{{ route('cart.add') }}" method="POST" class="flex gap-3 items-center" x-data="{ qty: 1 }">
-                @csrf
-                <input type="hidden" name="product_id" value="{{ $product->id }}">
-                <div class="flex items-center border border-cream-200 dark:border-gray-600 rounded-xl overflow-hidden">
-                    <button type="button" @click="qty = Math.max(1, qty - 1)" class="px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-cream-100 dark:hover:bg-gray-700 transition text-lg">−</button>
-                    <input type="number" name="quantity" :value="qty" min="1" max="{{ $product->stock }}"
-                        class="w-14 text-center py-3 border-0 bg-transparent text-gray-900 dark:text-white font-semibold focus:outline-none">
-                    <button type="button" @click="qty = Math.min({{ $product->stock }}, qty + 1)" class="px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-cream-100 dark:hover:bg-gray-700 transition text-lg">+</button>
+            <div x-data="productCart({
+                productId: {{ $product->id }},
+                maxStock: {{ (int) $product->stock }},
+                productName: @js($product->name),
+                addUrl: @js(route('cart.add')),
+                cartUrl: @js(route('cart.index')),
+                csrfToken: @js(csrf_token())
+            })" class="space-y-4">
+                <div class="flex flex-wrap items-center gap-4">
+                    {{-- Quantity Stepper Div with + - --}}
+                    <div class="inline-flex items-center bg-cream-100 dark:bg-gray-800 border border-cream-300 dark:border-gray-700 rounded-2xl p-1 shadow-sm select-none">
+                        <button type="button"
+                                @click="decrease()"
+                                :disabled="qty <= 1 || loading"
+                                class="w-10 h-10 rounded-xl flex items-center justify-center text-gray-700 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-700 hover:shadow-sm active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition text-base font-bold"
+                                aria-label="Decrease quantity">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20 12H4"/></svg>
+                        </button>
+
+                        {{-- Number displayed inside a div --}}
+                        <div class="w-14 text-center font-bold text-gray-900 dark:text-white text-base tracking-wide"
+                             x-text="qty">
+                            1
+                        </div>
+
+                        <button type="button"
+                                @click="increase()"
+                                :disabled="qty >= maxStock || loading"
+                                class="w-10 h-10 rounded-xl flex items-center justify-center text-gray-700 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-700 hover:shadow-sm active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition text-base font-bold"
+                                aria-label="Increase quantity">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                        </button>
+                    </div>
+
+                    {{-- Add to Cart Button with JS action and loader --}}
+                    <button type="button"
+                            @click="addToCart()"
+                            :disabled="loading || maxStock <= 0"
+                            class="flex-1 min-w-[200px] bg-brand-700 text-white font-bold py-3.5 px-6 rounded-2xl hover:bg-brand-800 transition shadow-lg shadow-brand-700/25 flex items-center justify-center gap-2.5 disabled:opacity-75 disabled:cursor-not-allowed active:scale-[0.99]">
+                        <svg x-show="loading" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" x-cloak>
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <svg x-show="!loading" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
+                        <span x-text="loading ? 'Adding to Cart…' : 'Add to Cart'">Add to Cart</span>
+                    </button>
                 </div>
-                @auth
-                <button type="submit" class="flex-1 bg-brand-700 text-white font-bold py-3.5 rounded-xl hover:bg-brand-800 transition shadow-lg shadow-brand-700/25">
-                    Add to Cart
-                </button>
-                @else
-                <a href="{{ route('login') }}" class="flex-1 bg-brand-700 text-white font-bold py-3.5 rounded-xl hover:bg-brand-800 transition text-center shadow-lg shadow-brand-700/25">Add to Cart</a>
-                @endauth
-            </form>
+            </div>
             @else
             <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-5 py-4 text-red-600 dark:text-red-400 font-semibold text-sm">
                 This product is currently out of stock.
@@ -207,4 +283,130 @@
     @endif
 </div>
 @endsection
+
+@push('scripts')
+<script>
+window.productGallery = function(initialImg) {
+    return {
+        active: initialImg,
+        zoomed: false,
+        lensX: 0,
+        lensY: 0,
+        bgX: 0,
+        bgY: 0,
+        onMouseMove(e) {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const lensW = 140;
+            const lensH = 140;
+
+            const mx = e.clientX - rect.left;
+            const my = e.clientY - rect.top;
+
+            let lx = mx - lensW / 2;
+            let ly = my - lensH / 2;
+
+            lx = Math.max(0, Math.min(rect.width - lensW, lx));
+            ly = Math.max(0, Math.min(rect.height - lensH, ly));
+
+            this.lensX = lx;
+            this.lensY = ly;
+
+            const maxX = rect.width - lensW;
+            const maxY = rect.height - lensH;
+
+            this.bgX = maxX > 0 ? (lx / maxX) * 100 : 0;
+            this.bgY = maxY > 0 ? (ly / maxY) * 100 : 0;
+        }
+    };
+};
+
+window.productCart = function(config) {
+    return {
+        qty: 1,
+        maxStock: config.maxStock,
+        loading: false,
+        decrease() {
+            if (this.qty > 1) {
+                this.qty--;
+            }
+        },
+        increase() {
+            if (this.qty < this.maxStock) {
+                this.qty++;
+            }
+        },
+        async addToCart() {
+            if (this.loading || this.maxStock <= 0) return;
+            this.loading = true;
+
+            try {
+                const res = await fetch(config.addUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': config.csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        product_id: config.productId,
+                        quantity: this.qty
+                    })
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    const badge = document.getElementById('header-cart-count');
+                    if (badge) {
+                        badge.textContent = data.count;
+                        badge.classList.remove('hidden');
+                    }
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Added to Cart!',
+                        html: '<p class="text-sm text-gray-600 dark:text-gray-300"><strong>' + this.qty + 'x</strong> &ldquo;' + config.productName + '&rdquo; has been added to your shopping bag.</p>',
+                        showCancelButton: true,
+                        confirmButtonText: 'View Cart',
+                        cancelButtonText: 'Continue Shopping',
+                        confirmButtonColor: '#15803d',
+                        cancelButtonColor: '#6b7280',
+                        background: document.documentElement.classList.contains('dark') ? '#1f2937' : '#ffffff',
+                        color: document.documentElement.classList.contains('dark') ? '#f3f4f6' : '#111827',
+                        customClass: {
+                            popup: 'rounded-2xl border border-cream-200 dark:border-gray-700 shadow-2xl',
+                            confirmButton: 'px-5 py-2.5 rounded-xl font-semibold text-sm',
+                            cancelButton: 'px-5 py-2.5 rounded-xl font-semibold text-sm'
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = config.cartUrl;
+                        }
+                    });
+                } else {
+                    const msg = data.message || (data.errors ? Object.values(data.errors)[0][0] : 'Failed to add item to cart.');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Unable to Add',
+                        text: msg,
+                        confirmButtonColor: '#15803d'
+                    });
+                }
+            } catch (err) {
+                console.error('Cart add error:', err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Network Error',
+                    text: 'Could not connect to server. Please try again.',
+                    confirmButtonColor: '#15803d'
+                });
+            } finally {
+                this.loading = false;
+            }
+        }
+    };
+};
+</script>
+@endpush
 

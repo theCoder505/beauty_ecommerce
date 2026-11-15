@@ -43,15 +43,15 @@ Route::middleware('guest')->group(function () {
     Route::post('/forgot-password/reset', [User\AuthController::class, 'resetPassword'])->name('password.update');
 });
 
+// Cart (supports both guest and authenticated users)
+Route::get('/cart', [User\CartController::class, 'index'])->name('cart.index');
+Route::post('/cart/add', [User\CartController::class, 'add'])->name('cart.add');
+Route::patch('/cart/{item}', [User\CartController::class, 'update'])->name('cart.update');
+Route::delete('/cart/{item}', [User\CartController::class, 'remove'])->name('cart.remove');
+
 // Authenticated users
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [User\AuthController::class, 'logout'])->name('logout');
-
-    // Cart
-    Route::get('/cart', [User\CartController::class, 'index'])->name('cart.index');
-    Route::post('/cart/add', [User\CartController::class, 'add'])->name('cart.add');
-    Route::patch('/cart/{item}', [User\CartController::class, 'update'])->name('cart.update');
-    Route::delete('/cart/{item}', [User\CartController::class, 'remove'])->name('cart.remove');
 
     // Wishlist
     Route::post('/wishlist/toggle/{product}', [User\WishlistController::class, 'toggle'])->name('wishlist.toggle');
@@ -73,6 +73,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/blog/{post}/comment', [User\BlogController::class, 'comment'])->name('blog.comment');
 
     // User Dashboard
+    Route::get('/user/dashboard', fn () => redirect()->route('user.dashboard'));
     Route::prefix('dashboard')->name('user.')->group(function () {
         Route::get('/', [User\DashboardController::class, 'index'])->name('dashboard');
         Route::get('/profile', [User\DashboardController::class, 'profile'])->name('profile');

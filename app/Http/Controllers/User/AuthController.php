@@ -5,9 +5,11 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Mail\OtpMail;
 use App\Models\User;
+use App\Services\CacheSessionService;
 use App\Services\CartService;
 use App\Services\OtpService;
 use App\Services\SettingService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,26 +20,31 @@ use Laravel\Socialite\Facades\Socialite;
 class AuthController extends Controller
 {
     public function __construct(
-        private readonly OtpService     $otpService,
-        private readonly CartService    $cartService,
+        private readonly OtpService $otpService,
+        private readonly CartService $cartService,
         private readonly SettingService $settingService,
+        private readonly CacheSessionService $cacheSessionService,
     ) {}
 
     // -------------------------------------------------------------------------
     // Registration
     // -------------------------------------------------------------------------
 
-    public function showRegister(): View
+    public function showRegister(): View|RedirectResponse
     {
+        if (Auth::check()) {
+            return redirect()->route('user.dashboard');
+        }
+
         return view('users.auth.register');
     }
 
     public function register(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'name'                  => ['required', 'string', 'max:255'],
-            'email'                 => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password'              => ['required', 'string', 'min:8', 'confirmed'],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
             'password_confirmation' => ['required'],
         ]);
 
@@ -54,13 +61,13 @@ class AuthController extends Controller
         ));
 
         $this->otpService->store('register', $otp, [
-            'name'     => $data['name'],
-            'email'    => $data['email'],
+            'name' => $data['name'],
+            'email' => $data['email'],
             'password' => bcrypt($data['password']),
         ]);
 
         return redirect()->route('register.verify-otp')
-            ->with('status', 'OTP sent to ' . $data['email'] . '. Please check your inbox.');
+            ->with('status', 'OTP sent to '.$data['email'].'. Please check your inbox.');
     }
 
     public function showVerifyOtp(): View
@@ -68,7 +75,7 @@ class AuthController extends Controller
         return view('users.auth.verify-otp');
     }
 
-    public function verifyRegistrationOtp(Request $request): RedirectResponse|\Illuminate\Http\JsonResponse
+    public function verifyRegistrationOtp(Request $request): RedirectResponse|JsonResponse
     {
         $request->validate([
             'otp' => ['required', 'string'],
@@ -81,15 +88,16 @@ class AuthController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg], 422);
             }
+
             return back()->withErrors(['otp' => $msg]);
         }
 
         $sessionData = $this->otpService->getSessionData('register');
 
         $user = User::create([
-            'name'      => $sessionData['name'],
-            'email'     => $sessionData['email'],
-            'password'  => $sessionData['password'],
+            'name' => $sessionData['name'],
+            'email' => $sessionData['email'],
+            'password' => $sessionData['password'],
             'is_active' => true,
         ]);
 
@@ -99,17 +107,17 @@ class AuthController extends Controller
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
-                'success'  => true,
-                'message'  => 'Registration successful! Welcome, ' . $user->name . '.',
-                'redirect' => route('home'),
+                'success' => true,
+                'message' => 'Registration successful! Welcome, '.$user->name.'.',
+                'redirect' => route('user.dashboard'),
             ]);
         }
 
-        return redirect()->route('home')
-            ->with('success', 'Registration successful! Welcome, ' . $user->name . '.');
+        return redirect()->route('user.dashboard')
+            ->with('success', 'Registration successful! Welcome, '.$user->name.'.');
     }
 
-    public function resendRegistrationOtp(Request $request): RedirectResponse|\Illuminate\Http\JsonResponse
+    public function resendRegistrationOtp(Request $request): RedirectResponse|JsonResponse
     {
         if (! $this->otpService->canResend('register')) {
             $seconds = $this->otpService->secondsUntilResend('register');
@@ -117,6 +125,7 @@ class AuthController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg], 429);
             }
+
             return back()->withErrors(['otp' => $msg]);
         }
 
@@ -126,6 +135,7 @@ class AuthController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => 'Session expired. Please restart registration.', 'redirect' => route('register')], 422);
             }
+
             return redirect()->route('register')
                 ->withErrors(['email' => 'Session expired. Please restart registration.']);
         }
@@ -161,6 +171,7 @@ class AuthController extends Controller
     public function googleRedirect(): \Symfony\Component\HttpFoundation\RedirectResponse
     {
         $this->configureSocialite();
+
         return Socialite::driver('google')->redirect();
     }
 
@@ -176,11 +187,11 @@ class AuthController extends Controller
 
         if (! $user) {
             $user = User::create([
-                'name'      => $googleUser->getName(),
-                'email'     => $googleUser->getEmail(),
+                'name' => $googleUser->getName(),
+                'email' => $googleUser->getEmail(),
                 'google_id' => $googleUser->getId(),
-                'provider'  => 'google',
-                'password'  => null,
+                'provider' => 'google',
+                'password' => null,
                 'is_active' => true,
             ]);
         } else {
@@ -192,19 +203,19 @@ class AuthController extends Controller
         Auth::login($user);
         $this->cartService->mergeGuestCart($user->id);
 
-        return redirect()->route('home');
+        return redirect()->route('user.dashboard');
     }
 
     private function configureSocialite(): void
     {
-        $clientId     = $this->settingService->get('google_client_id');
+        $clientId = $this->settingService->get('google_client_id');
         $clientSecret = $this->settingService->get('google_client_secret');
-        $redirectUrl  = route('auth.google.callback');
+        $redirectUrl = route('auth.google.callback');
 
         config([
-            'services.google.client_id'     => $clientId,
+            'services.google.client_id' => $clientId,
             'services.google.client_secret' => $clientSecret,
-            'services.google.redirect'      => $redirectUrl,
+            'services.google.redirect' => $redirectUrl,
         ]);
     }
 
@@ -217,7 +228,7 @@ class AuthController extends Controller
         return view('users.auth.forgot-password');
     }
 
-    public function sendForgotOtp(Request $request): RedirectResponse|\Illuminate\Http\JsonResponse
+    public function sendForgotOtp(Request $request): RedirectResponse|JsonResponse
     {
         $data = $request->validate([
             'email' => ['required', 'email', 'exists:users,email'],
@@ -240,14 +251,14 @@ class AuthController extends Controller
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
-                'success'  => true,
-                'message'  => 'OTP sent to ' . $data['email'] . '. Please check your inbox.',
+                'success' => true,
+                'message' => 'OTP sent to '.$data['email'].'. Please check your inbox.',
                 'redirect' => route('password.otp'),
             ]);
         }
 
         return redirect()->route('password.otp')
-            ->with('status', 'OTP sent to ' . $data['email'] . '.');
+            ->with('status', 'OTP sent to '.$data['email'].'.');
     }
 
     public function showForgotOtp(): View
@@ -255,7 +266,7 @@ class AuthController extends Controller
         return view('users.auth.forgot-otp');
     }
 
-    public function verifyForgotOtp(Request $request): RedirectResponse|\Illuminate\Http\JsonResponse
+    public function verifyForgotOtp(Request $request): RedirectResponse|JsonResponse
     {
         $request->validate([
             'otp' => ['required', 'string'],
@@ -268,6 +279,7 @@ class AuthController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg], 422);
             }
+
             return back()->withErrors(['otp' => $msg]);
         }
 
@@ -276,8 +288,8 @@ class AuthController extends Controller
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
-                'success'  => true,
-                'message'  => 'OTP verified successfully.',
+                'success' => true,
+                'message' => 'OTP verified successfully.',
                 'redirect' => route('password.reset'),
             ]);
         }
@@ -285,7 +297,7 @@ class AuthController extends Controller
         return redirect()->route('password.reset');
     }
 
-    public function resendForgotOtp(Request $request): RedirectResponse|\Illuminate\Http\JsonResponse
+    public function resendForgotOtp(Request $request): RedirectResponse|JsonResponse
     {
         if (! $this->otpService->canResend('forgot')) {
             $seconds = $this->otpService->secondsUntilResend('forgot');
@@ -293,6 +305,7 @@ class AuthController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg], 429);
             }
+
             return back()->withErrors(['otp' => $msg]);
         }
 
@@ -301,6 +314,7 @@ class AuthController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => 'Session expired. Please restart password reset.', 'redirect' => route('password.request')], 422);
             }
+
             return redirect()->route('password.request')->withErrors(['email' => 'Session expired.']);
         }
 
@@ -342,8 +356,8 @@ class AuthController extends Controller
     public function resetPassword(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'email'                 => ['required', 'email', 'exists:users,email'],
-            'password'              => ['required', 'string', 'min:8', 'confirmed'],
+            'email' => ['required', 'email', 'exists:users,email'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
             'password_confirmation' => ['required'],
         ]);
 
@@ -354,31 +368,35 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        return redirect()->route('home')
-            ->with('success', 'Password reset successfully. You are now logged in.');
+        return redirect()->route('user.dashboard')->with('success', 'Password reset successfully. You are now logged in.');
     }
 
     // -------------------------------------------------------------------------
     // Standard Login / Logout
     // -------------------------------------------------------------------------
 
-    public function showLogin(): View
+    public function showLogin(): View|RedirectResponse
     {
+        if (Auth::check()) {
+            return redirect()->route('user.dashboard');
+        }
+
         return view('users.auth.login');
     }
 
     public function login(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
-            'email'    => ['required', 'email'],
+            'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
             $this->cartService->mergeGuestCart(Auth::id());
+            $this->cacheSessionService->createSession(Auth::user(), 'web');
 
-            return redirect()->intended(route('home'));
+            return redirect()->intended(route('user.dashboard'));
         }
 
         return back()->withErrors([
@@ -388,6 +406,7 @@ class AuthController extends Controller
 
     public function logout(Request $request): RedirectResponse
     {
+        $this->cacheSessionService->destroyCurrentSession('web');
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

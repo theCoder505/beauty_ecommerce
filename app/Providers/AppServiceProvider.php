@@ -2,9 +2,16 @@
 
 namespace App\Providers;
 
+use App\Services\CacheSessionService;
 use App\Services\SettingService;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Session\CacheBasedSessionHandler;
+use Illuminate\Session\Store;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -15,6 +22,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(SettingService::class, fn () => new SettingService());
+        $this->app->singleton(CacheSessionService::class, fn () => new CacheSessionService());
     }
 
     /**
@@ -23,6 +31,31 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useTailwind();
+
+        // Support 'cache' as a valid session driver option
+        Session::extend('cache', function ($app) {
+            return new CacheBasedSessionHandler(
+                $app['cache']->store($app['config']['session.store'] ?? null),
+                $app['config']['session.lifetime']
+            );
+        });
+
+        // Keep session in cache on login; keep for 6 months and renew daily on activity
+        Event::listen(Login::class, function (Login $event): void {
+            if ($event->user) {
+                $this->app->make(CacheSessionService::class)->createSession(
+                    $event->user,
+                    $event->guard ?? 'web'
+                );
+            }
+        });
+
+        // Forget cache session on logout
+        Event::listen(Logout::class, function (Logout $event): void {
+            $this->app->make(CacheSessionService::class)->destroyCurrentSession(
+                $event->guard ?? 'web'
+            );
+        });
 
         try {
             if (Schema::hasTable('settings')) {

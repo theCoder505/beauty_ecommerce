@@ -4,12 +4,17 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AdminLogin;
+use App\Services\CacheSessionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class AuthController extends Controller
 {
+    public function __construct(
+        private readonly CacheSessionService $cacheSessionService
+    ) {}
+
     public function showLogin(): View|RedirectResponse
     {
         if (auth('admin')->check()) {
@@ -33,6 +38,7 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
+        $this->cacheSessionService->createSession(auth('admin')->user(), 'admin');
 
         AdminLogin::create([
             'admin_id'   => auth('admin')->id(),
@@ -46,6 +52,7 @@ class AuthController extends Controller
 
     public function logout(Request $request): RedirectResponse
     {
+        $this->cacheSessionService->destroyCurrentSession('admin');
         auth('admin')->logout();
 
         $request->session()->invalidate();

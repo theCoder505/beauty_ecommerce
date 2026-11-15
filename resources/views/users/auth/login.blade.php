@@ -12,7 +12,7 @@
                 @foreach($errors->all() as $e)<p>{{ $e }}</p>@endforeach
             </div>
             @endif
-            <form method="POST" action="{{ route('login.post') }}" class="space-y-5">
+            <form method="POST" action="{{ route('login.post') }}" class="space-y-5" x-data="{ loading: false }" @submit="if ($el.checkValidity()) { loading = true; }">
                 @csrf
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email Address</label>
@@ -45,13 +45,32 @@
                     <input type="checkbox" name="remember" id="remember" class="rounded">
                     <label for="remember" class="text-sm text-gray-600 dark:text-gray-400">Remember me</label>
                 </div>
-                <button type="submit" class="w-full bg-brand-700 text-white font-bold py-3.5 rounded-xl hover:bg-brand-800 transition shadow-lg shadow-brand-700/25">Sign In</button>
+                <button type="submit"
+                    :disabled="loading"
+                    class="w-full bg-brand-700 text-white font-bold py-3.5 rounded-xl hover:bg-brand-800 transition shadow-lg shadow-brand-700/25 flex items-center justify-center gap-2.5 disabled:opacity-75 disabled:cursor-not-allowed">
+                    <svg x-show="loading" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" x-cloak>
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span x-text="loading ? 'Signing In…' : 'Sign In'">Sign In</span>
+                </button>
             </form>
             <div class="relative my-6"><div class="border-t border-cream-200 dark:border-gray-700"></div><span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 px-3 text-xs text-gray-400">or</span></div>
-            <a href="{{ route('auth.google') }}" class="flex items-center justify-center gap-3 w-full border border-cream-200 dark:border-gray-600 rounded-xl py-3 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-cream-50 dark:hover:bg-gray-700 transition">
-                <svg class="w-5 h-5" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303C33.654 32.339 29.28 35 24 35c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 19.0 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0124 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 01-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
-                Continue with Google
-            </a>
+            <div x-data="{ googleLoading: false }">
+                <a href="{{ route('auth.google') }}"
+                   @click="googleLoading = true"
+                   :class="{ 'opacity-75 pointer-events-none': googleLoading }"
+                   class="flex items-center justify-center gap-3 w-full border border-cream-200 dark:border-gray-600 rounded-xl py-3 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-cream-50 dark:hover:bg-gray-700 transition">
+                    <svg x-show="googleLoading" class="animate-spin h-5 w-5 text-brand-700 dark:text-brand-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" x-cloak>
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <svg x-show="!googleLoading" class="w-5 h-5 shrink-0" viewBox="0 0 48 48">
+                        <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303C33.654 32.339 29.28 35 24 35c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 19.0 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0124 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 01-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/>
+                    </svg>
+                    <span x-text="googleLoading ? 'Connecting to Google…' : 'Continue with Google'">Continue with Google</span>
+                </a>
+            </div>
             <p class="text-center text-sm text-gray-500 mt-5">Don't have an account? <a href="{{ route('register') }}" class="text-brand-700 font-semibold hover:underline">Create one</a></p>
         </div>
     </div>

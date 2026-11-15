@@ -14,6 +14,7 @@ Route::middleware('admin')->group(function () {
 
     // Dashboard
     Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', fn () => redirect()->route('admin.dashboard'));
 
     // Profile
     Route::get('/profile', [Admin\ProfileController::class, 'show'])->name('profile');
