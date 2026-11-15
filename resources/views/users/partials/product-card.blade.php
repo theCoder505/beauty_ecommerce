@@ -45,6 +45,13 @@
             <a href="{{ route('products.show', $product->slug) }}" class="hover:text-brand-700 dark:hover:text-brand-400 transition">{{ $product->name }}</a>
         </h3>
 
+        {{-- Description for List View --}}
+        @if(!empty($product->description))
+        <p class="product-list-desc hidden text-xs text-gray-500 dark:text-gray-400 mb-3 line-clamp-2 leading-relaxed">
+            {{ Str::limit(strip_tags($product->description), 160) }}
+        </p>
+        @endif
+
         {{-- Rating --}}
         @php $avg = $product->approved_reviews_avg_rating ?? $product->average_rating ?? 0; $count = $product->approved_reviews_count ?? 0; @endphp
         @if($count > 0)

@@ -155,9 +155,15 @@
                     </div>
 
                     {{-- Reset all button --}}
-                    <button type="button" onclick="resetShopFilters()" class="w-full text-center text-xs font-semibold text-gray-500 hover:text-red-500 transition py-2">
-                        Reset All Filters
-                    </button>
+                    <div class="flex justify-center pt-1">
+                        <button type="button" onclick="resetShopFilters()" 
+                            class="p-2.5 rounded-full text-gray-400 hover:text-red-500 bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-950/30 border border-cream-200 dark:border-gray-700 hover:border-red-300 dark:hover:border-red-800 transition shadow-xs flex items-center justify-center group"
+                            title="Reset all filters" aria-label="Reset all filters">
+                            <svg class="w-4 h-4 text-gray-500 dark:text-gray-400 group-hover:text-red-500 transition-transform duration-300 group-hover:rotate-[-180deg]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                        </button>
+                    </div>
                 </form>
             </div>
         </aside>
@@ -172,7 +178,7 @@
                     </h1>
                     <p class="text-sm text-gray-500 mt-1"><span id="shop-total-count">{{ $products->total() }}</span> products found</p>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-3">
                     <label for="shop-sort-select" class="sr-only">Sort products</label>
                     <select id="shop-sort-select" onchange="onSortChange(this.value)"
                         class="text-sm border border-cream-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-brand-600">
@@ -182,6 +188,26 @@
                         <option value="popular"    {{ request('sort') === 'popular'    ? 'selected' : '' }}>Most Popular</option>
                         <option value="rating"     {{ request('sort') === 'rating'     ? 'selected' : '' }}>Top Rated</option>
                     </select>
+
+                    {{-- View Mode Toggle (Grid / List) --}}
+                    <div class="flex items-center border border-cream-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 p-0.5 shadow-xs">
+                        {{-- Grid view button --}}
+                        <button type="button" id="view-mode-grid" onclick="setViewMode('grid')"
+                            class="p-1.5 rounded-md transition text-brand-700 dark:text-brand-400 bg-cream-100 dark:bg-gray-700"
+                            title="Grid View" aria-label="Grid view">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                            </svg>
+                        </button>
+                        {{-- List view button --}}
+                        <button type="button" id="view-mode-list" onclick="setViewMode('list')"
+                            class="p-1.5 rounded-md transition text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                            title="List View" aria-label="List view">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -193,14 +219,11 @@
             </div>
 
             {{-- AJAX Loading Overlay --}}
-            <div id="shop-loading-overlay" class="hidden absolute inset-0 bg-white/70 dark:bg-gray-950/70 backdrop-blur-xs z-30 flex items-center justify-center rounded-2xl min-h-[300px]">
-                <div class="flex flex-col items-center gap-3">
-                    <svg class="animate-spin h-8 w-8 text-brand-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                    </svg>
-                    <span class="text-xs font-semibold text-gray-600 dark:text-gray-300">Updating products…</span>
-                </div>
+            <div id="shop-loading-overlay" class="hidden absolute inset-0 z-30 flex items-center justify-center min-h-[300px]">
+                <svg class="animate-spin h-12 w-12 text-brand-600 dark:text-brand-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
             </div>
 
             {{-- Products Container (AJAX updated) --}}
@@ -209,14 +232,13 @@
             </div>
 
             {{-- Infinite Scroll Loader & Sentinel --}}
-            <div id="infinite-scroll-container" class="py-8 flex flex-col items-center justify-center">
+            <div id="infinite-scroll-container" class="py-6 flex flex-col items-center justify-center">
                 {{-- Loader indicator while loading more products --}}
-                <div id="infinite-scroll-loader" class="hidden flex items-center gap-3 bg-white dark:bg-gray-800 border border-cream-200 dark:border-gray-700 px-6 py-3 rounded-full shadow-md text-sm font-medium text-gray-700 dark:text-gray-200">
-                    <svg class="animate-spin h-5 w-5 text-brand-600 dark:text-brand-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <div id="infinite-scroll-loader" class="hidden flex items-center justify-center py-4">
+                    <svg class="animate-spin h-12 w-12 text-brand-600 dark:text-brand-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                     </svg>
-                    <span>Loading more products…</span>
                 </div>
                 
                 {{-- End of products message --}}
@@ -428,6 +450,7 @@
         })
         .then(data => {
             container.innerHTML = data.html;
+        applyCurrentViewMode();
             document.getElementById('shop-total-count').textContent = data.total;
             if (data.title) {
                 document.getElementById('shop-heading-title').textContent = data.title;
@@ -441,6 +464,19 @@
                 endMsg.classList.remove('hidden');
             } else if (endMsg) {
                 endMsg.classList.add('hidden');
+            }
+
+            // Instantly move user to the top of the products list
+            const wrapper = document.getElementById('shop-page-wrapper');
+            if (wrapper) {
+                const headerOffset = 70;
+                const topPos = Math.max(0, (wrapper.getBoundingClientRect().top + window.pageYOffset) - headerOffset);
+                const prevScrollBehavior = document.documentElement.style.scrollBehavior;
+                document.documentElement.style.scrollBehavior = 'auto';
+                window.scrollTo({ top: topPos, behavior: 'instant' });
+                document.documentElement.scrollTop = topPos;
+                document.body.scrollTop = topPos;
+                document.documentElement.style.scrollBehavior = prevScrollBehavior;
             }
         })
         .catch(err => {
@@ -530,7 +566,46 @@
         }, { passive: true });
     }
 
+    // View mode (Grid / List) state
+    let currentViewMode = 'grid';
+    try {
+        currentViewMode = localStorage.getItem('shop_view_mode') || 'grid';
+    } catch (e) {}
+
+    function applyCurrentViewMode() {
+        const grid = document.getElementById('shop-products-grid');
+        const gridBtn = document.getElementById('view-mode-grid');
+        const listBtn = document.getElementById('view-mode-list');
+
+        if (currentViewMode === 'list') {
+            if (grid) grid.classList.add('list-view');
+            if (listBtn) {
+                listBtn.className = 'p-1.5 rounded-md transition text-brand-700 dark:text-brand-400 bg-cream-100 dark:bg-gray-700';
+            }
+            if (gridBtn) {
+                gridBtn.className = 'p-1.5 rounded-md transition text-gray-400 hover:text-gray-700 dark:hover:text-gray-200';
+            }
+        } else {
+            if (grid) grid.classList.remove('list-view');
+            if (gridBtn) {
+                gridBtn.className = 'p-1.5 rounded-md transition text-brand-700 dark:text-brand-400 bg-cream-100 dark:bg-gray-700';
+            }
+            if (listBtn) {
+                listBtn.className = 'p-1.5 rounded-md transition text-gray-400 hover:text-gray-700 dark:hover:text-gray-200';
+            }
+        }
+    }
+
+    function setViewMode(mode) {
+        currentViewMode = mode;
+        try {
+            localStorage.setItem('shop_view_mode', mode);
+        } catch (e) {}
+        applyCurrentViewMode();
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
+        applyCurrentViewMode();
         initInfiniteScroll();
     });
 </script>

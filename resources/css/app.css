@@ -230,3 +230,55 @@ table.dataTable.no-footer {
     background: rgba(156, 163, 175, 0.6);
 }
 
+/* List View Styles for Shop */
+#shop-products-grid.list-view {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.25rem !important;
+}
+
+#shop-products-grid.list-view .product-card {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+@media (min-width: 640px) {
+    #shop-products-grid.list-view .product-card {
+        flex-direction: row;
+        align-items: stretch;
+    }
+    #shop-products-grid.list-view .product-card > div:first-child {
+        width: 14rem;
+        height: auto;
+        min-height: 12.5rem;
+        flex-shrink: 0;
+        aspect-ratio: auto;
+    }
+    #shop-products-grid.list-view .product-card > div:first-child a {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+    #shop-products-grid.list-view .product-card > div:first-child img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    #shop-products-grid.list-view .product-card > div:last-child {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 1.25rem 1.5rem;
+    }
+    #shop-products-grid.list-view .product-card h3 {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+}
+
+#shop-products-grid.list-view .product-list-desc {
+    display: -webkit-box !important;
+}
+
