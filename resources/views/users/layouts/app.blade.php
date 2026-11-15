@@ -57,22 +57,6 @@
 
     @include('users.layouts.header')
 
-    {{-- Toast Notifications --}}
-    <div class="fixed top-20 right-4 z-[200] space-y-2" id="toast-container">
-        @if(session('success'))
-            <div class="toast flex items-center gap-3 bg-green-600 text-white px-5 py-3 rounded-xl shadow-lg text-sm font-medium max-w-xs">
-                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                {{ session('success') }}
-            </div>
-        @endif
-        @if(session('error'))
-            <div class="toast flex items-center gap-3 bg-red-600 text-white px-5 py-3 rounded-xl shadow-lg text-sm font-medium max-w-xs">
-                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                {{ session('error') }}
-            </div>
-        @endif
-    </div>
-
     <main>
         @yield('content')
     </main>

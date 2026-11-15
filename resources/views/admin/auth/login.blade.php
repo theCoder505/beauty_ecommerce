@@ -7,7 +7,6 @@
     <div class="text-center mb-8"><span class="font-serif font-bold text-2xl text-brand-400">✦ GlowHaus</span><p class="text-gray-400 text-sm mt-2">Admin Panel</p></div>
     <div class="bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-700">
         @if(isset($errors) && $errors->any())<div class="bg-red-900/30 border border-red-800 text-red-400 rounded-xl px-4 py-3 mb-5 text-sm">@foreach($errors->all() as $e)<p>{{ $e }}</p>@endforeach</div>@endif
-        @if(session('success'))<div class="bg-green-900/30 border border-green-800 text-green-400 rounded-xl px-4 py-3 mb-5 text-sm">{{ session('success') }}</div>@endif
         <form method="POST" action="{{ route('admin.login.post') }}" class="space-y-5">@csrf
             <div><label class="block text-sm font-medium text-gray-300 mb-1.5">Email</label><input type="email" name="email" value="{{ old('email') }}" required autofocus class="w-full px-4 py-3 rounded-xl border border-gray-600 bg-gray-900 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-600"></div>
             <div>
@@ -30,5 +29,19 @@
         </form>
     </div>
 </div>
+@if(session('success'))
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        if (window.toast) toast(@json(session('success')), 'success');
+    });
+</script>
+@endif
+@if(session('error'))
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        if (window.toast) toast(@json(session('error')), 'error');
+    });
+</script>
+@endif
 </body></html>
 

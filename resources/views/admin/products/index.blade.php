@@ -56,6 +56,7 @@
                         <th class="px-6 py-4">Stock</th>
                         <th class="px-6 py-4">Status</th>
                         <th class="px-6 py-4">Featured</th>
+                        <th class="px-6 py-4">Visits</th>
                         <th class="px-6 py-4 text-right">Actions</th>
                     </tr>
                 </thead>
@@ -109,19 +110,31 @@
                                 <span class="text-gray-400 text-xs">—</span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 text-right space-x-2">
-                            <a href="{{ route('admin.products.show', $p) }}" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-300 rounded-lg transition">View</a>
-                            <a href="{{ route('admin.products.edit', $p) }}" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-brand-700 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 dark:bg-brand-900/20 dark:hover:bg-brand-900/40 rounded-lg transition">Edit</a>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300 font-medium">
+                                <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                {{ number_format($p->views_count ?? 0) }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right space-x-1.5 whitespace-nowrap">
+                            <a href="{{ route('admin.products.show', $p) }}" class="inline-flex items-center justify-center w-8 h-8 text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-300 rounded-lg transition" title="View Product" aria-label="View">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            </a>
+                            <a href="{{ route('admin.products.edit', $p) }}" class="inline-flex items-center justify-center w-8 h-8 text-brand-700 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 dark:bg-brand-900/20 dark:hover:bg-brand-900/40 dark:text-brand-400 rounded-lg transition" title="Edit Product" aria-label="Edit">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            </a>
                             <form action="{{ route('admin.products.destroy', $p) }}" method="POST" class="inline" data-confirm="Are you sure you want to delete this product? All images and reviews will be removed.">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 rounded-lg transition">Delete</button>
+                                <button type="submit" class="inline-flex items-center justify-center w-8 h-8 text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 rounded-lg transition" title="Delete Product" aria-label="Delete">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </button>
                             </form>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                        <td colspan="8" class="px-6 py-12 text-center text-gray-500">
                             No products found matching your criteria.
                         </td>
                     </tr>
@@ -140,7 +153,7 @@
             pageLength: 10,
             responsive: true,
             columnDefs: [
-                { orderable: false, targets: [0, 6] }
+                { orderable: false, targets: [0, 7] }
             ],
             language: {
                 search: "_INPUT_",

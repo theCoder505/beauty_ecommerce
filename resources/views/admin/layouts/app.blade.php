@@ -162,24 +162,6 @@
             </div>
         </header>
 
-        {{-- Flash Messages --}}
-        @if(session('success') || session('error'))
-        <div class="px-6 pt-4">
-            @if(session('success'))
-            <div class="toast flex items-center gap-3 bg-green-600 text-white px-5 py-3 rounded-xl shadow text-sm font-medium max-w-lg">
-                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                {{ session('success') }}
-            </div>
-            @endif
-            @if(session('error'))
-            <div class="toast flex items-center gap-3 bg-red-600 text-white px-5 py-3 rounded-xl shadow text-sm font-medium max-w-lg">
-                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                {{ session('error') }}
-            </div>
-            @endif
-        </div>
-        @endif
-
         <main class="flex-1 p-6">
             @yield('content')
         </main>
