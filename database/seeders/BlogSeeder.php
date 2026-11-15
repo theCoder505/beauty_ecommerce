@@ -58,10 +58,12 @@ class BlogSeeder extends Seeder
         foreach ($posts as $index => $post) {
             $slug    = Str::slug($post['title']);
             $catId   = $catModels[$post['category']]->id ?? null;
+            $coverImage = 'storage/blogs/' . $slug . '.jpg';
             BlogPost::updateOrCreate(['slug' => $slug], [
                 'blog_category_id' => $catId,
                 'title'            => $post['title'],
                 'slug'             => $slug,
+                'cover_image'      => $coverImage,
                 'excerpt'          => $post['excerpt'],
                 'content'          => $post['content'],
                 'is_published'     => true,

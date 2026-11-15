@@ -26,7 +26,14 @@ class Category extends Model
     public function getImageUrlAttribute(): string
     {
         if ($this->image) {
-            return asset('storage/' . $this->image);
+            if (str_starts_with($this->image, 'http://') || str_starts_with($this->image, 'https://')) {
+                return $this->image;
+            }
+            $clean = ltrim($this->image, '/');
+            if (str_starts_with($clean, 'storage/')) {
+                return asset($clean);
+            }
+            return asset('storage/' . $clean);
         }
         return asset('images/placeholder-category.jpg');
     }

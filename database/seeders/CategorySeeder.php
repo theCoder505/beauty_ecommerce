@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductImage;
 use Illuminate\Support\Str;
 
 class CategorySeeder extends Seeder
@@ -131,6 +132,7 @@ class CategorySeeder extends Seeder
             $catData['slug']      = Str::slug($catData['name']);
             $catData['is_active'] = true;
             $catData['meta_title'] = $catData['name'] . ' – GlowHaus Beauty';
+            $catData['image']      = 'storage/categories/' . $catData['slug'] . '.jpg';
 
             $category = Category::updateOrCreate(['slug' => $catData['slug']], $catData);
 
@@ -154,7 +156,9 @@ class CategorySeeder extends Seeder
                     . "<ul><li>Premium quality formulation</li><li>Dermatologically tested</li>"
                     . "<li>Free from harmful chemicals</li><li>Cruelty-free & vegan</li></ul>";
 
-                Product::updateOrCreate(['sku' => $sku], [
+                $thumbnailPath = 'storage/products/' . $slug . '.jpg';
+
+                $product = Product::updateOrCreate(['sku' => $sku], [
                     'category_id' => $category->id,
                     'name'        => $prodData['name'],
                     'slug'        => $slug,
@@ -162,11 +166,19 @@ class CategorySeeder extends Seeder
                     'price'       => $prodData['price'],
                     'sale_price'  => $prodData['sale_price'],
                     'stock'       => $prodData['stock'],
+                    'thumbnail'   => $thumbnailPath,
                     'description' => $desc,
                     'is_active'   => true,
                     'is_featured' => $prodData['featured'],
                     'meta_title'  => $prodData['name'] . ' – GlowHaus Beauty',
                     'meta_description' => "Buy {$prodData['name']} online at GlowHaus Beauty. Premium cosmetics at great prices.",
+                ]);
+
+                ProductImage::updateOrCreate([
+                    'product_id' => $product->id,
+                    'image'      => $thumbnailPath,
+                ], [
+                    'sort_order' => 1,
                 ]);
             }
         }

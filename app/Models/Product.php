@@ -63,7 +63,14 @@ class Product extends Model
     public function getThumbnailUrlAttribute(): string
     {
         if ($this->thumbnail) {
-            return asset('storage/' . $this->thumbnail);
+            if (str_starts_with($this->thumbnail, 'http://') || str_starts_with($this->thumbnail, 'https://')) {
+                return $this->thumbnail;
+            }
+            $clean = ltrim($this->thumbnail, '/');
+            if (str_starts_with($clean, 'storage/')) {
+                return asset($clean);
+            }
+            return asset('storage/' . $clean);
         }
         return asset('images/placeholder-product.jpg');
     }

@@ -15,7 +15,17 @@ class ProductImage extends Model
 
     public function getImageUrlAttribute(): string
     {
-        return asset('storage/' . $this->image);
+        if ($this->image) {
+            if (str_starts_with($this->image, 'http://') || str_starts_with($this->image, 'https://')) {
+                return $this->image;
+            }
+            $clean = ltrim($this->image, '/');
+            if (str_starts_with($clean, 'storage/')) {
+                return asset($clean);
+            }
+            return asset('storage/' . $clean);
+        }
+        return asset('images/placeholder-product.jpg');
     }
 }
 
