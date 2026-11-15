@@ -33,7 +33,7 @@
                 <div x-show="zoomed"
                      x-cloak
                      class="hidden lg:block absolute w-[140px] h-[140px] bg-brand-500/20 border-2 border-brand-500/70 rounded-xl pointer-events-none shadow-md backdrop-blur-[1px]"
-                     :style="'left: ' + lensX + 'px; top: ' + lensY + 'px;'">
+                     :style="'left: ' + lensX + 'px; top: ' + lensY + 'px;' + (zoomed ? '' : ' display: none;')">
                 </div>
 
                 {{-- Hover zoom badge --}}
@@ -55,22 +55,26 @@
                  x-transition:leave="transition ease-in duration-100"
                  x-transition:leave-start="opacity-100 scale-100"
                  x-transition:leave-end="opacity-0 scale-95"
-                 class="hidden lg:block absolute left-[calc(100%+3rem)] top-0 w-full aspect-square z-40 rounded-2xl shadow-2xl border-2 border-cream-300 dark:border-gray-700 bg-white dark:bg-gray-900 pointer-events-none overflow-hidden"
-                 :style="'background-image: url(' + active + '); background-repeat: no-repeat; background-size: 300% 300%; background-position: ' + bgX + '% ' + bgY + '%;'">
-                 <div class="absolute top-3 left-3 bg-black/70 backdrop-blur-md text-white text-[11px] font-semibold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow">
-                     <span class="text-brand-400">✦</span> 3x Zoom View
-                 </div>
+                 class="hidden lg:block absolute left-[calc(100%+3rem)] top-0 w-full aspect-square z-40 rounded-2xl shadow-2xl border-2 border-cream-300 dark:border-gray-700 bg-white dark:bg-gray-900 pointer-events-none overflow-hidden">
+                <div class="w-full h-full"
+                     :style="'background-image: url(' + active + '); background-repeat: no-repeat; background-size: 300% 300%; background-position: ' + bgX + '% ' + bgY + '%;'">
+                </div>
+                <div class="absolute top-3 left-3 bg-black/70 backdrop-blur-md text-white text-[11px] font-semibold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow">
+                    <span class="text-brand-400">✦</span> 3x Zoom View
+                </div>
             </div>
 
             @if($product->images->isNotEmpty())
             <div class="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
-                <button @click="active = '{{ $product->thumbnail_url }}'"
+                <button type="button"
+                        @click="selectImage('{{ $product->thumbnail_url }}')"
                         :class="active === '{{ $product->thumbnail_url }}' ? 'border-brand-700 ring-2 ring-brand-700/30' : 'border-transparent hover:border-brand-700'"
                         class="shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition">
                     <img src="{{ $product->thumbnail_url }}" class="w-full h-full object-cover">
                 </button>
                 @foreach($product->images as $img)
-                <button @click="active = '{{ $img->image_url }}'"
+                <button type="button"
+                        @click="selectImage('{{ $img->image_url }}')"
                         :class="active === '{{ $img->image_url }}' ? 'border-brand-700 ring-2 ring-brand-700/30' : 'border-transparent hover:border-brand-700'"
                         class="shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition">
                     <img src="{{ $img->image_url }}" class="w-full h-full object-cover">
@@ -294,6 +298,10 @@ window.productGallery = function(initialImg) {
         lensY: 0,
         bgX: 0,
         bgY: 0,
+        selectImage(imgUrl) {
+            this.active = imgUrl;
+            this.zoomed = false;
+        },
         onMouseMove(e) {
             const rect = e.currentTarget.getBoundingClientRect();
             const lensW = 140;

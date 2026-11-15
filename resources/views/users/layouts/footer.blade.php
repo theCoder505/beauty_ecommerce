@@ -9,7 +9,7 @@
         <div class="lg:col-span-1">
             <a href="{{ route('home') }}" class="inline-flex items-center gap-2 font-serif font-bold text-2xl text-white">
                 @if(!empty($settings['site_logo']))
-                    <img src="{{ asset('storage/'.$settings['site_logo']) }}" alt="{{ $siteName }}" class="h-9 w-auto max-w-[180px] object-contain">
+                    <img src="{{ asset('storage/'.$settings['site_logo']) }}" alt="{{ $siteName }}" class="w-auto max-w-45 object-contain block">
                 @elseif(!empty($settings['site_icon']))
                     <img src="{{ asset('storage/'.$settings['site_icon']) }}" alt="{{ $siteName }}" class="h-8 w-8 object-contain">
                     <span>{{ $siteName }}</span>
