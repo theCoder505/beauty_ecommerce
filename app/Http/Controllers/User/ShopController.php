@@ -26,14 +26,7 @@ class ShopController extends Controller
         }
 
         if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
-            $currency = app(\App\Services\SettingService::class)->get('currency_symbol', '৳');
-            $html = view('users.partials.shop-product-list', compact('products', 'currency'))->render();
-            return response()->json([
-                'html'       => $html,
-                'total'      => $products->total(),
-                'pagination' => (string) $products->links(),
-                'title'      => 'All Products',
-            ]);
+            return $this->jsonProductResponse($products, 'All Products');
         }
 
         return view('users.pages.shop', compact('products', 'categories', 'minPossiblePrice', 'maxPossiblePrice'));
@@ -56,18 +49,38 @@ class ShopController extends Controller
         }
 
         if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
-            $currency = app(\App\Services\SettingService::class)->get('currency_symbol', '৳');
-            $html = view('users.partials.shop-product-list', compact('products', 'currency'))->render();
-            return response()->json([
-                'html'       => $html,
-                'total'      => $products->total(),
-                'pagination' => (string) $products->links(),
-                'title'      => $category->name,
-                'category_id'=> $category->id,
-            ]);
+            return $this->jsonProductResponse($products, $category->name, $category->id);
         }
 
         return view('users.pages.shop', compact('products', 'categories', 'category', 'minPossiblePrice', 'maxPossiblePrice'));
+    }
+
+    private function jsonProductResponse($products, string $title, ?int $categoryId = null)
+    {
+        $currency = app(\App\Services\SettingService::class)->get('currency_symbol', '৳');
+        $html = view('users.partials.shop-product-list', compact('products', 'currency'))->render();
+        $cardsHtml = '';
+        foreach ($products as $product) {
+            $cardsHtml .= view('users.partials.product-card', compact('product', 'currency'))->render();
+        }
+
+        $payload = [
+            'html'           => $html,
+            'cards_html'     => $cardsHtml,
+            'total'          => $products->total(),
+            'count'          => $products->count(),
+            'current_page'   => $products->currentPage(),
+            'last_page'      => $products->lastPage(),
+            'has_more_pages' => $products->hasMorePages(),
+            'next_page_url'  => $products->nextPageUrl(),
+            'title'          => $title,
+        ];
+
+        if ($categoryId !== null) {
+            $payload['category_id'] = $categoryId;
+        }
+
+        return response()->json($payload);
     }
 
     private function buildProductQuery(Request $request, ?int $forceCategoryId = null)

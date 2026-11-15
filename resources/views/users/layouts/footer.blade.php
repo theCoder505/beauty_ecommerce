@@ -7,7 +7,16 @@
     <div class="max-w-7xl mx-auto px-4 py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
         {{-- Brand --}}
         <div class="lg:col-span-1">
-            <span class="font-serif font-bold text-2xl text-white">✦ {{ $siteName }}</span>
+            <a href="{{ route('home') }}" class="inline-flex items-center gap-2 font-serif font-bold text-2xl text-white">
+                @if(!empty($settings['site_logo']))
+                    <img src="{{ asset('storage/'.$settings['site_logo']) }}" alt="{{ $siteName }}" class="h-9 w-auto max-w-[180px] object-contain">
+                @elseif(!empty($settings['site_icon']))
+                    <img src="{{ asset('storage/'.$settings['site_icon']) }}" alt="{{ $siteName }}" class="h-8 w-8 object-contain">
+                    <span>{{ $siteName }}</span>
+                @else
+                    <span class="text-brand-400">✦</span> {{ $siteName }}
+                @endif
+            </a>
             <p class="mt-4 text-sm text-cream-400 leading-relaxed">Luxury beauty crafted for unforgettable moments. Each product is blended with timeless elegance and a touch of quiet luxury.</p>
             {{-- Social links --}}
             <div class="flex gap-3 mt-6">
