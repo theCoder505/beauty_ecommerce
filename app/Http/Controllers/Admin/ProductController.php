@@ -189,18 +189,26 @@ class ProductController extends Controller
             ->with('success', 'Product deleted successfully.');
     }
 
-    public function destroyImage(Request $request, Product $product, ProductImage $productImage): RedirectResponse
+    public function destroyImage(Request $request, Product $product, ProductImage $image): mixed
     {
         // Ensure image belongs to this product
-        abort_if($productImage->product_id !== $product->id, 403);
+        abort_if($image->product_id !== $product->id, 403);
 
-        $this->imageService->delete($productImage->image);
-        $productImage->delete();
+        $this->imageService->delete($image->image);
+        $image->delete();
 
-        return back()->with('success', 'Image deleted successfully.');
+        if ($request->wantsJson() || $request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json([
+                'success'   => true,
+                'message'   => 'Gallery photo deleted successfully.',
+                'remaining' => $product->productImages()->count(),
+            ]);
+        }
+
+        return back()->with('success', 'Gallery photo deleted successfully.');
     }
 
-    public function deleteImage(Request $request, Product $product, ProductImage $image): RedirectResponse
+    public function deleteImage(Request $request, Product $product, ProductImage $image): mixed
     {
         return $this->destroyImage($request, $product, $image);
     }

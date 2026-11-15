@@ -57,8 +57,13 @@ class ImageService
      */
     public function delete(?string $path): void
     {
-        if ($path && Storage::disk('public')->exists($path)) {
-            Storage::disk('public')->delete($path);
+        if ($path) {
+            $relativePath = str_starts_with($path, 'storage/') ? substr($path, 8) : $path;
+            if (Storage::disk('public')->exists($relativePath)) {
+                Storage::disk('public')->delete($relativePath);
+            } elseif (Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
         }
     }
 

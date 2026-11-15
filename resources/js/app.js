@@ -92,21 +92,29 @@ window.setupImagePreviews = function() {
                 }
             }
 
-            // Check if there is an existing preview container or adjacent preview img
-            const parent = input.closest('.flex, .space-y-4, .space-y-2, .grid, form') || input.parentElement;
-            const existingImg = parent ? parent.querySelector('.preview-target, img[id*="preview"]') : null;
-            if (existingImg && files.length === 1 && files[0].type.startsWith('image/')) {
-                existingImg.src = URL.createObjectURL(files[0]);
-                existingImg.classList.remove('hidden');
-                return;
+            // Container explicitly specified by data-preview-container attribute
+            const containerSelector = input.getAttribute('data-preview-container');
+            let previewContainer = containerSelector ? document.querySelector(containerSelector) : null;
+
+            // Single image input without target: check ONLY immediate parent container (never ancestor form)
+            if (!containerSelector && !input.multiple) {
+                const parent = input.parentElement;
+                const existingImg = parent ? parent.querySelector('.preview-target, img[id*="preview"]') : null;
+                if (existingImg && files.length === 1 && files[0].type.startsWith('image/')) {
+                    existingImg.src = URL.createObjectURL(files[0]);
+                    existingImg.classList.remove('hidden');
+                    return;
+                }
             }
 
             // Dynamic preview container for multiple or inputs without target
-            let previewContainer = input.parentElement.querySelector('.image-preview-container');
             if (!previewContainer) {
-                previewContainer = document.createElement('div');
-                previewContainer.className = 'image-preview-container flex flex-wrap gap-3 mt-3';
-                input.parentElement.appendChild(previewContainer);
+                previewContainer = input.parentElement.querySelector('.image-preview-container');
+                if (!previewContainer) {
+                    previewContainer = document.createElement('div');
+                    previewContainer.className = 'image-preview-container flex flex-wrap gap-3 mt-3';
+                    input.parentElement.appendChild(previewContainer);
+                }
             }
             previewContainer.innerHTML = '';
 

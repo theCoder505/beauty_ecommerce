@@ -162,31 +162,33 @@
             </div>
 
             <!-- Existing Gallery Images -->
-            @if($product->productImages->isNotEmpty())
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Existing Gallery Photos</label>
-                <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
+            <div id="existing-gallery-section" class="{{ $product->productImages->isEmpty() ? 'hidden' : '' }}">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Existing Gallery Photos</label>
+                    <span id="gallery-count-badge" class="text-xs text-gray-500 font-medium">{{ $product->productImages->count() }} photo{{ $product->productImages->count() === 1 ? '' : 's' }}</span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3" id="existing-gallery-grid">
                     @foreach($product->productImages as $galleryImg)
-                    <div class="relative group rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 aspect-square">
+                    <div id="gallery-item-{{ $galleryImg->id }}" class="relative group rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 aspect-square bg-gray-50 dark:bg-gray-800 transition-all duration-200">
                         <img src="{{ $galleryImg->image_url }}" alt="Gallery image" class="w-full h-full object-cover">
                         <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center p-2">
-                            <form action="{{ route('admin.products.delete-image', ['product' => $product->id, 'image' => $galleryImg->id]) }}" method="POST" data-confirm="Delete this gallery photo?">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white rounded-lg p-2 text-xs transition">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                </button>
-                            </form>
+                            <button type="button"
+                                    onclick="deleteGalleryPhoto('{{ route('admin.products.delete-image', ['product' => $product, 'image' => $galleryImg]) }}', {{ $galleryImg->id }})"
+                                    class="bg-red-600 hover:bg-red-700 text-white rounded-lg p-2 text-xs transition shadow-md hover:scale-110 active:scale-95"
+                                    title="Delete gallery photo">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </button>
                         </div>
                     </div>
                     @endforeach
                 </div>
             </div>
-            @endif
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Add More Gallery Photos</label>
-                <input type="file" name="gallery[]" accept="image/*" multiple class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300 cursor-pointer">
+                <input type="file" name="gallery[]" accept="image/*" multiple data-preview-container="#gallery-preview-container" class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300 cursor-pointer">
+                <p class="text-xs text-gray-400 mt-1">Select one or multiple images to append to the product gallery.</p>
+                <div id="gallery-preview-container" class="image-preview-container flex flex-wrap gap-3 mt-3"></div>
             </div>
         </div>
 
@@ -244,5 +246,99 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+window.deleteGalleryPhoto = function(url, imageId) {
+    const isDark = document.documentElement.classList.contains('dark');
+    Swal.fire({
+        title: 'Delete this gallery photo?',
+        text: 'This image will be permanently removed from the product gallery.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, delete photo',
+        cancelButtonText: 'Cancel',
+        background: isDark ? '#111827' : '#ffffff',
+        color: isDark ? '#f3f4f6' : '#111827',
+        customClass: {
+            popup: 'rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xl',
+            confirmButton: 'px-5 py-2.5 rounded-xl font-semibold text-sm',
+            cancelButton: 'px-5 py-2.5 rounded-xl font-semibold text-sm'
+        }
+    }).then(async (result) => {
+        if (!result.isConfirmed) return;
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        const itemEl = document.getElementById('gallery-item-' + imageId);
+        if (itemEl) {
+            itemEl.style.opacity = '0.4';
+            itemEl.style.pointerEvents = 'none';
+        }
+
+        try {
+            const res = await fetch(url, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                }
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (res.ok && data.success !== false) {
+                if (itemEl) {
+                    itemEl.classList.add('scale-75', 'opacity-0');
+                    setTimeout(() => {
+                        itemEl.remove();
+                        const grid = document.getElementById('existing-gallery-grid');
+                        const countBadge = document.getElementById('gallery-count-badge');
+                        if (grid) {
+                            const count = grid.children.length;
+                            if (countBadge) {
+                                countBadge.textContent = count + ' photo' + (count === 1 ? '' : 's');
+                            }
+                            if (count === 0) {
+                                const section = document.getElementById('existing-gallery-section');
+                                if (section) section.classList.add('hidden');
+                            }
+                        }
+                    }, 200);
+                }
+                if (window.toast) {
+                    toast(data.message || 'Gallery photo deleted successfully.', 'success');
+                }
+            } else {
+                if (itemEl) {
+                    itemEl.style.opacity = '1';
+                    itemEl.style.pointerEvents = 'auto';
+                }
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to delete gallery image. Please try again.',
+                    confirmButtonColor: '#dc2626',
+                    background: isDark ? '#111827' : '#ffffff',
+                    color: isDark ? '#f3f4f6' : '#111827'
+                });
+            }
+        } catch (err) {
+            console.error('Gallery image delete error:', err);
+            if (itemEl) {
+                itemEl.style.opacity = '1';
+                itemEl.style.pointerEvents = 'auto';
+            }
+            Swal.fire({
+                icon: 'error',
+                title: 'Network Error',
+                text: 'Something went wrong while deleting the gallery image.',
+                confirmButtonColor: '#dc2626',
+                background: isDark ? '#111827' : '#ffffff',
+                color: isDark ? '#f3f4f6' : '#111827'
+            });
+        }
+    });
+};
 </script>
 @endpush

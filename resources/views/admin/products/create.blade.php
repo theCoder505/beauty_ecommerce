@@ -158,8 +158,9 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Gallery Additional Photos</label>
-                <input type="file" name="gallery[]" accept="image/*" multiple class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300 cursor-pointer">
+                <input type="file" name="gallery[]" accept="image/*" multiple data-preview-container="#gallery-preview-container" class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300 cursor-pointer">
                 <p class="text-xs text-gray-400 mt-1">Select multiple images for the product carousel.</p>
+                <div id="gallery-preview-container" class="image-preview-container flex flex-wrap gap-3 mt-3"></div>
             </div>
         </div>
 
