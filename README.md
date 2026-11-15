@@ -1,59 +1,158 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Trefume Paris — Luxury Fragrance & Beauty E-Commerce
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A modern single-vendor beauty and fragrance e-commerce web application built on **Laravel 12**, **PHP 8.2+**, **Tailwind CSS v4**, and **Alpine.js**.
 
-## About Laravel
+Designed in an editorial luxury aesthetic inspired by high-end perfumeries, featuring warm cream/beige backgrounds (`#F6F3EE`, `#EFECE6`), deep forest-green accents (`#15803D`), classic serif typography (*Playfair Display*), clean sans body (*Inter*), ticker announcements, review carousels, and responsive mobile-first layouts.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🌟 Key Features & Architecture
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 1. Architectural Patterns
+- **Service Layer Pattern**: Thin controllers delegating all business logic to dedicated services (`CartService`, `CheckoutService`, `OrderService`, `OtpService`, `ImageService`, `SettingService`, `AnalyticsService`, `WishlistService`).
+- **Two Independent Auth Guards**:
+  - `web` guard backed by `users` table (session-based customer accounts).
+  - `admin` guard backed by `admins` table with dedicated session handling and login IP audit logging (`admin_logins`).
 
-## Learning Laravel
+### 2. Zero-Database OTP Registration & Password Reset
+- Unverified user data and 6-digit OTPs are stored securely in encrypted sessions (`OtpService`).
+- OTPs are hashed using bcrypt before storage, strictly enforcing a 5-minute TTL, maximum attempt limits, and resend cooldowns.
+- Accounts are created in the database **only after** OTP verification is successful.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### 3. Shared Hosting Ready
+- Built to run effortlessly on standard cPanel/shared hosting without supervisor, background daemons, or cron workers.
+- `QUEUE_CONNECTION=sync` for all transactional notifications and mailings.
+- Pre-compiled production assets (`npm run build`) committed to `public/build`.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 4. Runtime Configuration & Encrypted Settings
+- Sensitive credentials (Stripe Secret Key, Webhook Secret, Google Client Secret) are encrypted with AES-256 in the `settings` database table.
+- Google OAuth (Socialite) and Stripe API credentials are injected dynamically into Laravel configuration at runtime (`SettingService::configureSocialite()`, `SettingService::configureStripe()`). No hardcoded `.env` secrets required.
 
-## Laravel Sponsors
+### 5. Media Compression & Optimization
+- Automatic image processing using **Intervention Image v3** (GD driver).
+- Uploaded product photos, banners, and avatars are converted to WebP and compressed below 900KB.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 6. Built-in SEO & Analytics
+- Dynamic meta titles, descriptions, and Open Graph tags across home, shop, product, and blog pages.
+- Auto-generated `sitemap.xml` (`/sitemap.xml`) and `robots.txt` (`/robots.txt`).
+- Privacy-friendly analytics engine tracking site visits, product page views, and best-selling metrics.
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## 🚀 Quick Setup & Installation
 
-## Contributing
+### Prerequisites
+- PHP 8.2 or higher (with `gd`, `pdo_mysql`, `mbstring`, `openssl`, `curl` extensions)
+- Composer 2.x
+- Node.js 18+ and npm
+- MySQL / MariaDB
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Step-by-Step Installation
 
-## Code of Conduct
+1. **Clone & Navigate:**
+   ```bash
+   cd c:\xampp\htdocs\laravelwebsites\products\beauty_ecom
+   ```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+2. **Install PHP & Node Dependencies:**
+   ```bash
+   composer install
+   npm install
+   ```
 
-## Security Vulnerabilities
+3. **Configure Environment:**
+   Ensure `.env` contains:
+   ```ini
+   APP_NAME="Trefume Paris"
+   APP_ENV=local
+   APP_KEY=base64:...
+   APP_DEBUG=true
+   APP_URL=http://localhost:8000
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=beauty_ecom
+   DB_USERNAME=root
+   DB_PASSWORD=
 
-## License
+   QUEUE_CONNECTION=sync
+   FILESYSTEM_DISK=public
+   MAIL_MAILER=log
+   ```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+4. **Run Migrations & Seeders:**
+   ```bash
+   php artisan migrate
+   php artisan db:seed
+   ```
+
+5. **Create Storage Symlink:**
+   ```bash
+   php artisan storage:link
+   ```
+
+6. **Build Frontend Assets:**
+   ```bash
+   npm run build
+   ```
+
+7. **Start the Development Server:**
+   ```bash
+   php artisan serve
+   ```
+   Open `http://localhost:8000` in your browser.
+
+---
+
+## 🔐 Default Credentials
+
+### Administrator Portal
+- **URL**: `http://localhost:8000/admin/login`
+- **Email**: `admin@beautyecom.com`
+- **Password**: `Admin@12345`
+
+*Admin features include catalog management, real-time order status transitions, manual payment verification, review moderation, editorial blog manager, subscriber list, and store settings.*
+
+---
+
+## 💳 Payment Options Out-of-the-Box
+1. **Cash on Delivery (COD)**: Fully automated order placement with zero upfront charges.
+2. **Manual Bank Transfer**: Customer provides bank transaction reference; Admin verifies payment from the admin order console.
+3. **Stripe Online Gateway**: Enable via Admin Settings (`/admin/settings`) by entering your Stripe Publishable & Secret Keys.
+
+---
+
+## 📂 Project Structure Highlights
+
+```
+app/
+├── Http/
+│   ├── Controllers/
+│   │   ├── Admin/            # 12 Admin CRUD and management controllers
+│   │   └── User/             # 10 Customer storefront, cart, checkout controllers
+│   └── Middleware/           # AdminAuthenticate, RedirectIfAdminAuthenticated
+├── Models/                   # 17 Eloquent models with relations and accessors
+├── Providers/                # AppServiceProvider (Settings boot & Socialite)
+└── Services/
+    ├── AnalyticsService.php   # Traffic & engagement metrics
+    ├── CartService.php        # Guest & authenticated cart sync
+    ├── CheckoutService.php    # DB transaction & lockForUpdate stock locking
+    ├── ImageService.php       # Intervention Image v3 GD compression
+    ├── OrderService.php       # Order lifecycle & state machine
+    ├── OtpService.php         # Session-stored hashed OTPs
+    ├── SettingService.php     # Cached settings & encrypted secrets
+    └── WishlistService.php    # Wishlist toggle & customer collections
+
+resources/
+├── css/app.css               # Tailwind CSS v4 design tokens & keyframes
+├── js/app.js                 # Alpine.js & theme switcher (dark/light)
+└── views/
+    ├── admin/                # Full admin views (dashboard, products, orders, etc.)
+    └── users/                # Storefront, cart, checkout, blog, user dashboard
+```
+
+---
+
+## 🛡️ License
+Private commercial project. All rights reserved.

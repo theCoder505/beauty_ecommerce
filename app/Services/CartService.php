@@ -1,0 +1,110 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\CartItem;
+use App\Models\Product;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
+
+class CartService
+{
+    protected function sessionId(): string
+    {
+        return session()->getId();
+    }
+
+    protected function query()
+    {
+        $query = CartItem::with('product.images');
+
+        if (Auth::check()) {
+            $query->where('user_id', Auth::id());
+        } else {
+            $query->where('session_id', $this->sessionId());
+        }
+
+        return $query;
+    }
+
+    public function items(): Collection
+    {
+        return $this->query()->get();
+    }
+
+    public function count(): int
+    {
+        return $this->query()->sum('quantity');
+    }
+
+    public function total(): float
+    {
+        return $this->items()->sum(fn($item) => $item->line_total);
+    }
+
+    public function add(int $productId, int $quantity = 1): CartItem
+    {
+        $product = Product::findOrFail($productId);
+
+        $existing = $this->query()->where('product_id', $productId)->first();
+
+        if ($existing) {
+            $newQty = min($existing->quantity + $quantity, $product->stock);
+            $existing->update(['quantity' => $newQty]);
+            return $existing;
+        }
+
+        $data = [
+            'product_id' => $productId,
+            'quantity'   => min($quantity, $product->stock),
+        ];
+
+        if (Auth::check()) {
+            $data['user_id'] = Auth::id();
+        } else {
+            $data['session_id'] = $this->sessionId();
+        }
+
+        return CartItem::create($data);
+    }
+
+    public function update(int $cartItemId, int $quantity): bool
+    {
+        $item = $this->query()->where('id', $cartItemId)->firstOrFail();
+        $max  = $item->product->stock ?? $quantity;
+        $item->update(['quantity' => min($quantity, $max)]);
+        return true;
+    }
+
+    public function remove(int $cartItemId): bool
+    {
+        return $this->query()->where('id', $cartItemId)->delete() > 0;
+    }
+
+    public function clear(): void
+    {
+        $this->query()->delete();
+    }
+
+    /**
+     * Merge guest cart into user cart after login.
+     */
+    public function mergeGuestCart(int $userId): void
+    {
+        $guestItems = CartItem::where('session_id', $this->sessionId())->get();
+        foreach ($guestItems as $guestItem) {
+            $existing = CartItem::where('user_id', $userId)
+                ->where('product_id', $guestItem->product_id)
+                ->first();
+            if ($existing) {
+                $product = $guestItem->product;
+                $newQty  = min($existing->quantity + $guestItem->quantity, $product->stock ?? 999);
+                $existing->update(['quantity' => $newQty]);
+                $guestItem->delete();
+            } else {
+                $guestItem->update(['user_id' => $userId, 'session_id' => null]);
+            }
+        }
+    }
+}
+

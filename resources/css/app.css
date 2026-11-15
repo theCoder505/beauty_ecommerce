@@ -1,11 +1,66 @@
-@import 'tailwindcss';
-
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.js';
+@import "tailwindcss";
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --color-brand-50: #f0fdf4;
+    --color-brand-100: #dcfce7;
+    --color-brand-200: #bbf7d0;
+    --color-brand-300: #86efac;
+    --color-brand-400: #4ade80;
+    --color-brand-500: #22c55e;
+    --color-brand-600: #16a34a;
+    --color-brand-700: #15803d;
+    --color-brand-800: #166534;
+    --color-brand-900: #14532d;
+
+    --color-cream-50: #fdfaf5;
+    --color-cream-100: #faf3e8;
+    --color-cream-200: #f5e6d0;
+    --color-cream-300: #edd9b8;
+    --color-cream-400: #e2c99a;
+    --color-cream-500: #d4b07a;
+
+    --color-warm-900: #1a1209;
+    --color-warm-800: #2d1f0e;
+
+    --font-serif: "Playfair Display", Georgia, serif;
+    --font-sans: "Inter", system-ui, sans-serif;
+}
+
+[x-cloak] { display: none !important; }
+
+/* Smooth scroll */
+html { scroll-behavior: smooth; }
+
+/* Dark mode base */
+.dark body {
+    background-color: #0f0f0f;
+    color: #e5e5e5;
+}
+
+/* Product card hover */
+.product-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+.product-card:hover { transform: translateY(-4px); }
+
+/* Ticker */
+@keyframes ticker {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+.ticker-track { animation: ticker 20s linear infinite; }
+.ticker-track:hover { animation-play-state: paused; }
+
+/* Star rating */
+.star-rating input { display: none; }
+.star-rating label { cursor: pointer; color: #d1d5db; font-size: 1.5rem; }
+.star-rating input:checked ~ label,
+.star-rating label:hover,
+.star-rating label:hover ~ label { color: #f59e0b; }
+
+/* Toast */
+.toast { animation: slideIn 0.4s ease, fadeOut 0.4s ease 3.6s forwards; }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes fadeOut  { from { opacity: 1; } to { opacity: 0; pointer-events: none; } }
+
+button{
+    cursor: pointer;
 }
