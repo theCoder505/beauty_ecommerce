@@ -7,11 +7,13 @@
     $stripeEnabled = ($settings['stripe_enabled'] ?? '0') == '1';
     $manualInstr   = $settings['manual_payment_instructions'] ?? '';
     $stripePk      = $settings['stripe_publishable_key'] ?? '';
+    $cartItems     = $cartItems ?? $items ?? collect();
+    $cartTotal     = $cartTotal ?? $total ?? 0;
 @endphp
 @section('content')
 <div class="max-w-6xl mx-auto px-4 py-10" x-data="{ paymentMethod: '{{ $codEnabled ? 'cod' : ($manualEnabled ? 'manual' : 'stripe') }}' }">
     <h1 class="font-serif text-3xl font-bold text-gray-900 dark:text-white mb-8">Checkout</h1>
-    @if($errors->any())
+    @if(isset($errors) && $errors->any())
     <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-xl px-5 py-4 mb-6 text-sm">
         <ul class="list-disc list-inside space-y-1">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
     </div>
@@ -21,6 +23,11 @@
         @csrf
         <input type="hidden" name="idempotency_key" value="{{ session()->getId() . '_' . time() }}">
         <input type="hidden" name="payment_method" :value="paymentMethod">
+        @if(!empty($isBuyNow) && $items->isNotEmpty())
+        <input type="hidden" name="buy_now" value="1">
+        <input type="hidden" name="product_id" value="{{ $items->first()->product_id }}">
+        <input type="hidden" name="quantity" value="{{ $items->first()->quantity }}">
+        @endif
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {{-- Left: Shipping + Payment --}}
@@ -31,15 +38,15 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="md:col-span-2">
                             <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Full Name *</label>
-                            <input type="text" name="shipping_name" value="{{ old('shipping_name', auth()->user()->name) }}" required class="input-field">
+                            <input type="text" name="shipping_name" value="{{ old('shipping_name', auth()->user()?->name ?? '') }}" required class="input-field">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Phone *</label>
-                            <input type="text" name="shipping_phone" value="{{ old('shipping_phone', auth()->user()->phone) }}" required class="input-field">
+                            <input type="text" name="shipping_phone" value="{{ old('shipping_phone', auth()->user()?->phone ?? '') }}" required class="input-field">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Email *</label>
-                            <input type="email" name="shipping_email" value="{{ old('shipping_email', auth()->user()->email) }}" required class="input-field">
+                            <input type="email" name="shipping_email" value="{{ old('shipping_email', auth()->user()?->email ?? '') }}" required class="input-field">
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Address *</label>
@@ -118,7 +125,22 @@
             {{-- Right: Order Summary --}}
             <div>
                 <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-cream-200 dark:border-gray-700 sticky top-20">
-                    <h2 class="font-semibold text-gray-900 dark:text-white mb-5">Order Summary</h2>
+                    <div class="flex items-center justify-between mb-5">
+                        <h2 class="font-semibold text-gray-900 dark:text-white">Order Summary</h2>
+                        @if(!empty($isBuyNow))
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 px-2.5 py-1 rounded-full">
+                            ⚡ Buy Now
+                        </span>
+                        @endif
+                    </div>
+
+                    @if(!empty($isBuyNow) && !empty($cartCount) && $cartCount > 0)
+                    <div class="mb-4 p-3 rounded-xl bg-cream-100 dark:bg-gray-700/60 text-xs text-gray-600 dark:text-gray-300 flex items-center justify-between gap-2">
+                        <span>Buying this item only. ({{ $cartCount }} other in cart)</span>
+                        <a href="{{ route('checkout.index') }}" class="text-brand-700 dark:text-brand-400 font-bold hover:underline shrink-0">Checkout All →</a>
+                    </div>
+                    @endif
+
                     <div class="space-y-3 mb-5">
                         @foreach($cartItems as $item)
                         <div class="flex gap-3 items-center">

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\OrderConfirmationMail;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\Product;
 use App\Services\CartService;
 use App\Services\CheckoutService;
 use App\Services\SettingService;
@@ -26,20 +27,48 @@ class CheckoutController extends Controller
         private readonly SettingService  $settingService,
     ) {}
 
-    public function index(): View|RedirectResponse
+    public function index(Request $request): View|RedirectResponse
     {
-        $items = $this->cartService->items();
+        $isBuyNow = $request->boolean('buy_now') && $request->filled('product_id');
 
-        if ($items->isEmpty()) {
-            return redirect()->route('cart.index')
-                ->with('error', 'Your cart is empty. Add some products before checking out.');
+        if ($isBuyNow) {
+            $product = Product::with('images')->findOrFail($request->integer('product_id'));
+            $quantity = max(1, min((int) $request->integer('quantity', 1), max(1, (int)$product->stock)));
+
+            if ($product->stock < 1) {
+                return redirect()->route('products.show', $product->slug)
+                    ->with('error', 'This product is currently out of stock.');
+            }
+
+            $lineTotal = $product->current_price * $quantity;
+            $buyNowItem = (object) [
+                'id'         => null,
+                'product_id' => $product->id,
+                'product'    => $product,
+                'quantity'   => $quantity,
+                'line_total' => $lineTotal,
+            ];
+
+            $items = collect([$buyNowItem]);
+            $total = $lineTotal;
+        } else {
+            $items = $this->cartService->items();
+
+            if ($items->isEmpty()) {
+                return redirect()->route('cart.index')
+                    ->with('error', 'Your cart is empty. Add some products before checking out.');
+            }
+
+            $total = $this->cartService->total();
         }
 
         $paymentMethods = $this->getEnabledPaymentMethods();
         $user           = Auth::user();
-        $total          = $this->cartService->total();
+        $cartItems      = $items;
+        $cartTotal      = $total;
+        $cartCount      = $this->cartService->count();
 
-        return view('users.pages.checkout', compact('items', 'paymentMethods', 'user', 'total'));
+        return view('users.pages.checkout', compact('items', 'cartItems', 'paymentMethods', 'user', 'total', 'cartTotal', 'isBuyNow', 'cartCount'));
     }
 
     public function place(Request $request): RedirectResponse|\Illuminate\Http\Response
@@ -50,17 +79,38 @@ class CheckoutController extends Controller
             'shipping_phone'   => ['required', 'string', 'max:30'],
             'shipping_address' => ['required', 'string', 'max:500'],
             'shipping_city'    => ['required', 'string', 'max:100'],
-            'shipping_state'   => ['required', 'string', 'max:100'],
-            'shipping_zip'     => ['required', 'string', 'max:20'],
-            'shipping_country' => ['required', 'string', 'max:100'],
+            'shipping_state'   => ['nullable', 'string', 'max:100'],
+            'shipping_zip'     => ['nullable', 'string', 'max:20'],
+            'shipping_country' => ['nullable', 'string', 'max:100'],
             'notes'            => ['nullable', 'string', 'max:1000'],
             'payment_method'   => ['required', 'string'],
+            'transaction_id'   => ['nullable', 'string', 'max:255'],
+            'buy_now'          => ['nullable', 'boolean'],
+            'product_id'       => ['nullable', 'integer', 'exists:products,id'],
+            'quantity'         => ['nullable', 'integer', 'min:1'],
         ]);
 
         $enabledMethods = $this->getEnabledPaymentMethods();
 
         if (! in_array($data['payment_method'], $enabledMethods)) {
             return back()->withErrors(['payment_method' => 'Selected payment method is not available.']);
+        }
+
+        $isBuyNow = !empty($data['buy_now']) && !empty($data['product_id']);
+        $customItems = null;
+
+        if ($isBuyNow) {
+            $product = Product::findOrFail($data['product_id']);
+            $quantity = max(1, (int) ($data['quantity'] ?? 1));
+            $customItems = collect([
+                (object) [
+                    'id'         => null,
+                    'product_id' => $product->id,
+                    'product'    => $product,
+                    'quantity'   => $quantity,
+                    'line_total' => $product->current_price * $quantity,
+                ]
+            ]);
         }
 
         // Build idempotency key to prevent duplicate orders
@@ -70,11 +120,11 @@ class CheckoutController extends Controller
         $data['idempotency_key'] = session('checkout_idempotency_key', md5(Auth::id() . now()->toDateString()));
 
         if ($data['payment_method'] === 'stripe') {
-            return $this->handleStripeCheckout($data);
+            return $this->handleStripeCheckout($data, $customItems, $isBuyNow);
         }
 
         // COD / Manual bank transfer / other methods
-        $order = $this->checkoutService->placeOrder($data, $data['payment_method']);
+        $order = $this->checkoutService->placeOrder($data, $data['payment_method'], $customItems, !$isBuyNow);
 
         try {
             $order->load('items');
@@ -174,16 +224,16 @@ class CheckoutController extends Controller
         return $methods;
     }
 
-    private function handleStripeCheckout(array $data): RedirectResponse
+    private function handleStripeCheckout(array $data, ?\Illuminate\Support\Collection $customItems = null, bool $isBuyNow = false): RedirectResponse
     {
         Stripe::setApiKey($this->settingService->get('stripe_secret_key'));
 
-        $items      = $this->cartService->items();
-        $lineItems  = [];
+        $items     = $customItems ?? $this->cartService->items();
+        $lineItems = [];
 
         foreach ($items as $item) {
             $product     = $item->product;
-            $unitAmount  = (int) round(($product->sale_price ?? $product->price) * 100);
+            $unitAmount  = (int) round(($product->current_price ?? $product->price) * 100);
 
             $lineItems[] = [
                 'price_data' => [
@@ -198,7 +248,7 @@ class CheckoutController extends Controller
         }
 
         // Place a pending order first so we can track by idempotency key
-        $order = $this->checkoutService->placeOrder($data, 'stripe');
+        $order = $this->checkoutService->placeOrder($data, 'stripe', $customItems, !$isBuyNow);
 
         $stripeSession = StripeSession::create([
             'payment_method_types' => ['card'],

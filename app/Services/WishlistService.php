@@ -7,8 +7,28 @@ use Illuminate\Support\Facades\Auth;
 
 class WishlistService
 {
+    protected ?array $userWishlistIdsCache = null;
+
+    public function userWishlistProductIds(): array
+    {
+        if (!Auth::check()) return [];
+        if ($this->userWishlistIdsCache === null) {
+            try {
+                $this->userWishlistIdsCache = Wishlist::where('user_id', Auth::id())
+                    ->pluck('product_id')
+                    ->map(fn($id) => (int)$id)
+                    ->toArray();
+            } catch (\Throwable $e) {
+                return [];
+            }
+        }
+        return $this->userWishlistIdsCache;
+    }
+
     public function toggle(int $productId): bool
     {
+        $this->userWishlistIdsCache = null;
+
         $existing = Wishlist::where('user_id', Auth::id())
             ->where('product_id', $productId)
             ->first();
@@ -25,9 +45,7 @@ class WishlistService
     public function isWishlisted(int $productId): bool
     {
         if (!Auth::check()) return false;
-        return Wishlist::where('user_id', Auth::id())
-            ->where('product_id', $productId)
-            ->exists();
+        return in_array((int)$productId, $this->userWishlistProductIds(), true);
     }
 
     public function getUserWishlist()

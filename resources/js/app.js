@@ -30,6 +30,189 @@ window.toast = function(title, icon = 'success') {
     });
 };
 
+// Global AJAX Add to Cart helper (No page reload)
+window.addToCartAjax = async function(productId, quantity = 1, buttonEl = null) {
+    if (!productId) return;
+
+    let originalHtml = '';
+    if (buttonEl) {
+        if (buttonEl.disabled) return;
+        buttonEl.disabled = true;
+        originalHtml = buttonEl.innerHTML;
+        buttonEl.innerHTML = `
+            <svg class="animate-spin h-3.5 w-3.5 mx-auto text-current inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="sr-only">Adding…</span>
+        `;
+    }
+
+    try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        const response = await fetch('/cart/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ product_id: productId, quantity: quantity })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            // Update cart badge in header
+            const badge = document.getElementById('header-cart-count');
+            if (badge) {
+                badge.textContent = data.count;
+                if (data.count > 0) {
+                    badge.classList.remove('hidden');
+                }
+            }
+
+            if (window.toast) {
+                window.toast(data.message || 'Added to shopping bag!', 'success');
+            }
+        } else {
+            const msg = data.message || (data.errors ? Object.values(data.errors)[0][0] : 'Failed to add item to cart.');
+            if (window.toast) {
+                window.toast(msg, 'error');
+            }
+        }
+    } catch (err) {
+        console.error('AJAX add to cart failed:', err);
+        if (window.toast) {
+            window.toast('Network error. Please try again.', 'error');
+        }
+    } finally {
+        if (buttonEl) {
+            buttonEl.disabled = false;
+            buttonEl.innerHTML = originalHtml;
+        }
+    }
+};
+
+// Global AJAX Wishlist Toggle helper (No page reload)
+window.toggleWishlist = async function(productId, buttonEl = null) {
+    if (!productId) return;
+
+    if (buttonEl && buttonEl.dataset.loading === 'true') return;
+    if (buttonEl) buttonEl.dataset.loading = 'true';
+
+    try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        const response = await fetch(`/wishlist/toggle/${productId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        if (response.status === 401) {
+            // Unauthenticated user: prompt politely with Swal
+            if (window.Swal) {
+                window.Swal.fire({
+                    icon: 'info',
+                    title: 'Sign In Required',
+                    text: 'Please sign in to save your favorite beauty products to your wishlist.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sign In',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#15803d',
+                    cancelButtonColor: '#6b7280',
+                    background: document.documentElement.classList.contains('dark') ? '#1f2937' : '#ffffff',
+                    color: document.documentElement.classList.contains('dark') ? '#f3f4f6' : '#111827',
+                    customClass: {
+                        popup: 'rounded-2xl border border-cream-200 dark:border-gray-700 shadow-2xl',
+                        confirmButton: 'px-5 py-2.5 rounded-xl font-semibold text-sm',
+                        cancelButton: 'px-5 py-2.5 rounded-xl font-semibold text-sm'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '/login';
+                    }
+                });
+            } else {
+                window.location.href = '/login';
+            }
+            return;
+        }
+
+        const data = await response.json();
+
+        if (response.ok && typeof data.wishlisted !== 'undefined') {
+            // Update button visual state
+            if (buttonEl) {
+                const icon = buttonEl.querySelector('svg');
+                if (data.wishlisted) {
+                    buttonEl.classList.remove('text-gray-400');
+                    buttonEl.classList.add('text-red-500', 'opacity-100');
+                    buttonEl.setAttribute('title', 'Remove from wishlist');
+                    if (icon) {
+                        icon.classList.add('fill-current');
+                    }
+                } else {
+                    buttonEl.classList.remove('text-red-500');
+                    buttonEl.classList.add('text-gray-400');
+                    buttonEl.setAttribute('title', 'Add to wishlist');
+                    if (icon) {
+                        icon.classList.remove('fill-current');
+                    }
+                }
+            }
+
+            // Synchronize any matching wishlist buttons for this product on the current page
+            document.querySelectorAll(`button[onclick*="toggleWishlist(${productId}"]`).forEach(btn => {
+                if (btn !== buttonEl) {
+                    const icon = btn.querySelector('svg');
+                    if (data.wishlisted) {
+                        btn.classList.remove('text-gray-400');
+                        btn.classList.add('text-red-500', 'opacity-100');
+                        btn.setAttribute('title', 'Remove from wishlist');
+                        if (icon) icon.classList.add('fill-current');
+                    } else {
+                        btn.classList.remove('text-red-500');
+                        btn.classList.add('text-gray-400');
+                        btn.setAttribute('title', 'Add to wishlist');
+                        if (icon) icon.classList.remove('fill-current');
+                    }
+                }
+            });
+
+            // Update header wishlist badge count
+            const badge = document.getElementById('header-wishlist-count');
+            if (badge) {
+                badge.textContent = data.count;
+                if (data.count > 0) {
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+
+            if (window.toast) {
+                window.toast(
+                    data.wishlisted ? 'Saved to your wishlist!' : 'Removed from wishlist',
+                    data.wishlisted ? 'success' : 'info'
+                );
+            }
+        }
+    } catch (err) {
+        console.error('AJAX wishlist toggle failed:', err);
+        if (window.toast) {
+            window.toast('Could not update wishlist.', 'error');
+        }
+    } finally {
+        if (buttonEl) buttonEl.dataset.loading = 'false';
+    }
+};
+
 // Global alert override (Point 2: "Add Swal alert in all kind of alerts, no js alert() simply at all please")
 window.alert = function (message) {
     const isDark = document.documentElement.classList.contains('dark');

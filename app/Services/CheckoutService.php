@@ -18,7 +18,7 @@ class CheckoutService
      * Place an order inside a DB transaction with stock locking.
      * Returns the created Order.
      */
-    public function placeOrder(array $data, string $paymentMethod): Order
+    public function placeOrder(array $data, string $paymentMethod, ?\Illuminate\Support\Collection $customItems = null, bool $clearCart = true): Order
     {
         // Idempotency: prevent duplicate submission
         $idempotencyKey = $data['idempotency_key'] ?? null;
@@ -26,23 +26,24 @@ class CheckoutService
             return Order::where('idempotency_key', $idempotencyKey)->firstOrFail();
         }
 
-        $cartItems = $this->cartService->items();
+        $orderItems = $customItems ?? $this->cartService->items();
 
-        if ($cartItems->isEmpty()) {
-            throw new \RuntimeException('Your cart is empty.');
+        if ($orderItems->isEmpty()) {
+            throw new \RuntimeException('No items available for checkout.');
         }
 
-        return DB::transaction(function () use ($data, $paymentMethod, $cartItems, $idempotencyKey) {
+        return DB::transaction(function () use ($data, $paymentMethod, $orderItems, $idempotencyKey, $clearCart) {
             $subtotal = 0;
 
             // Lock product rows for stock validation
-            $productIds = $cartItems->pluck('product_id')->toArray();
+            $productIds = $orderItems->pluck('product_id')->toArray();
             $products   = Product::lockForUpdate()->whereIn('id', $productIds)->get()->keyBy('id');
 
-            foreach ($cartItems as $item) {
+            foreach ($orderItems as $item) {
                 $product = $products->get($item->product_id);
                 if (!$product || !$product->is_active) {
-                    throw new \RuntimeException("Product \"{$item->product->name}\" is no longer available.");
+                    $name = $item->product->name ?? 'Selected product';
+                    throw new \RuntimeException("Product \"{$name}\" is no longer available.");
                 }
                 if ($product->stock < $item->quantity) {
                     throw new \RuntimeException(
@@ -77,7 +78,7 @@ class CheckoutService
             ]);
 
             // Create order items & decrement stock
-            foreach ($cartItems as $item) {
+            foreach ($orderItems as $item) {
                 $product = $products->get($item->product_id);
                 OrderItem::create([
                     'order_id'     => $order->id,
@@ -108,8 +109,10 @@ class CheckoutService
                 'note'       => 'Order placed.',
             ]);
 
-            // Clear cart
-            $this->cartService->clear();
+            // Clear cart only if regular cart checkout
+            if ($clearCart) {
+                $this->cartService->clear();
+            }
 
             return $order;
         });

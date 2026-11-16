@@ -1,5 +1,8 @@
-@php $currency = app(\App\Services\SettingService::class)->get('currency_symbol', '৳'); @endphp
-<div class="product-card group bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl border border-cream-200 dark:border-gray-700 transition duration-300">
+@php
+    $currency = app(\App\Services\SettingService::class)->get('currency_symbol', '৳');
+    $isWishlisted = auth()->check() ? app(\App\Services\WishlistService::class)->isWishlisted($product->id) : false;
+@endphp
+<div class="product-card group bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl border border-cream-200 dark:border-gray-700 transition duration-300 flex flex-col">
     {{-- Image --}}
     <div class="relative overflow-hidden aspect-square bg-cream-100 dark:bg-gray-700">
         <a href="{{ route('products.show', $product->slug) }}">
@@ -18,28 +21,21 @@
             Featured
         </span>
         @endif
-        {{-- Wishlist button --}}
-        @auth
+        {{-- Wishlist button (AJAX) --}}
         <button
-            x-data
-            @click.prevent="
-                fetch('{{ route('wishlist.toggle', $product->id) }}', {
-                    method: 'POST',
-                    headers: {'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, 'Accept': 'application/json', 'Content-Type': 'application/json'}
-                }).then(r => r.json()).then(d => {
-                    $el.classList.toggle('text-red-500', d.wishlisted);
-                    $el.classList.toggle('text-gray-400', !d.wishlisted);
-                })
-            "
-            class="absolute bottom-3 right-3 bg-white dark:bg-gray-800 p-2 rounded-full shadow text-gray-400 hover:text-red-500 transition opacity-0 group-hover:opacity-100"
+            type="button"
+            onclick="toggleWishlist({{ $product->id }}, this)"
+            class="absolute bottom-3 right-3 bg-white/90 dark:bg-gray-800/90 backdrop-blur p-2 rounded-full shadow-md transition duration-200 {{ $isWishlisted ? 'text-red-500 opacity-100' : 'text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100' }}"
+            title="{{ $isWishlisted ? 'Remove from wishlist' : 'Add to wishlist' }}"
             aria-label="Wishlist">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+            <svg class="w-4 h-4 {{ $isWishlisted ? 'fill-current' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+            </svg>
         </button>
-        @endauth
     </div>
 
     {{-- Info --}}
-    <div class="p-4">
+    <div class="p-4 flex flex-col flex-1">
         <p class="text-xs text-gray-400 mb-1">{{ $product->category->name ?? '' }}</p>
         <h3 class="font-semibold text-sm text-gray-900 dark:text-gray-100 leading-tight line-clamp-2 mb-2">
             <a href="{{ route('products.show', $product->slug) }}" class="hover:text-brand-700 dark:hover:text-brand-400 transition">{{ $product->name }}</a>
@@ -63,26 +59,32 @@
         </div>
         @endif
 
-        {{-- Price + Cart --}}
-        <div class="flex items-center justify-between mt-auto">
+        {{-- Price + Cart (AJAX) --}}
+        <div class="flex items-center justify-between mt-auto pt-2">
             <div>
                 <span class="font-bold text-brand-700 dark:text-brand-400 text-base">{{ $currency }}{{ number_format($product->current_price) }}</span>
                 @if($product->is_on_sale)
                 <span class="text-xs text-gray-400 line-through ml-1">{{ $currency }}{{ number_format($product->price) }}</span>
                 @endif
             </div>
-            @auth
-            <form action="{{ route('cart.add') }}" method="POST">
-                @csrf
-                <input type="hidden" name="product_id" value="{{ $product->id }}">
-                <input type="hidden" name="quantity" value="1">
-                <button type="submit" class="bg-brand-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-brand-800 transition" {{ $product->stock == 0 ? 'disabled' : '' }}>
-                    {{ $product->stock == 0 ? 'Out of Stock' : 'Add to Cart' }}
-                </button>
-            </form>
+
+            @if($product->stock > 0)
+            <button
+                type="button"
+                onclick="addToCartAjax({{ $product->id }}, 1, this)"
+                class="bg-brand-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-brand-800 transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                aria-label="Add {{ $product->name }} to cart">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                <span>Add to Cart</span>
+            </button>
             @else
-            <a href="{{ route('login') }}" class="bg-brand-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-brand-800 transition">Add to Cart</a>
-            @endauth
+            <button
+                type="button"
+                disabled
+                class="bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 text-xs font-semibold px-3 py-1.5 rounded-lg cursor-not-allowed">
+                Out of Stock
+            </button>
+            @endif
         </div>
     </div>
 </div>

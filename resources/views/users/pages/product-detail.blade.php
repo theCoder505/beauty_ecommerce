@@ -86,10 +86,23 @@
 
         {{-- Product Info --}}
         <div class="space-y-6">
-            <div>
-                <span class="text-xs font-semibold uppercase tracking-widest text-brand-700 dark:text-brand-400">{{ $product->category->name }}</span>
-                <h1 class="font-serif text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mt-2 leading-tight">{{ $product->name }}</h1>
-                <p class="text-sm text-gray-400 mt-1">SKU: {{ $product->sku }}</p>
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <span class="text-xs font-semibold uppercase tracking-widest text-brand-700 dark:text-brand-400">{{ $product->category->name }}</span>
+                    <h1 class="font-serif text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mt-2 leading-tight">{{ $product->name }}</h1>
+                    <p class="text-sm text-gray-400 mt-1">SKU: {{ $product->sku }}</p>
+                </div>
+                @php $isWl = auth()->check() ? app(\App\Services\WishlistService::class)->isWishlisted($product->id) : false; @endphp
+                <button
+                    type="button"
+                    onclick="toggleWishlist({{ $product->id }}, this)"
+                    class="p-3 rounded-2xl border border-cream-300 dark:border-gray-700 hover:border-red-300 dark:hover:border-red-900/40 bg-white dark:bg-gray-800 shadow-sm transition {{ $isWl ? 'text-red-500' : 'text-gray-400 hover:text-red-500' }}"
+                    title="{{ $isWl ? 'Remove from wishlist' : 'Add to wishlist' }}"
+                    aria-label="Wishlist">
+                    <svg class="w-6 h-6 {{ $isWl ? 'fill-current' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                    </svg>
+                </button>
             </div>
 
             {{-- Rating --}}
@@ -114,7 +127,7 @@
                 @endif
             </div>
 
-            {{-- Add to Cart (JS Ajax with + - quantity div and Swal alert) --}}
+            {{-- Add to Cart & Buy Now (JS Ajax with + - quantity div and Swal alert) --}}
             @if($product->stock > 0)
             <div x-data="productCart({
                 productId: {{ $product->id }},
@@ -122,28 +135,29 @@
                 productName: @js($product->name),
                 addUrl: @js(route('cart.add')),
                 cartUrl: @js(route('cart.index')),
+                checkoutUrl: @js(route('checkout.index')),
                 csrfToken: @js(csrf_token())
             })" class="space-y-4">
-                <div class="flex flex-wrap items-center gap-4">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
                     {{-- Quantity Stepper Div with + - --}}
-                    <div class="inline-flex items-center bg-cream-100 dark:bg-gray-800 border border-cream-300 dark:border-gray-700 rounded-2xl p-1 shadow-sm select-none">
+                    <div class="inline-flex items-center justify-between sm:justify-start bg-cream-100 dark:bg-gray-800 border border-cream-300 dark:border-gray-700 rounded-2xl p-1 shadow-sm select-none shrink-0">
                         <button type="button"
                                 @click="decrease()"
-                                :disabled="qty <= 1 || loading"
+                                :disabled="qty <= 1 || loading || buyLoading"
                                 class="w-10 h-10 rounded-xl flex items-center justify-center text-gray-700 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-700 hover:shadow-sm active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition text-base font-bold"
                                 aria-label="Decrease quantity">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20 12H4"/></svg>
                         </button>
 
                         {{-- Number displayed inside a div --}}
-                        <div class="w-14 text-center font-bold text-gray-900 dark:text-white text-base tracking-wide"
+                        <div class="w-12 text-center font-bold text-gray-900 dark:text-white text-base tracking-wide"
                              x-text="qty">
                             1
                         </div>
 
                         <button type="button"
                                 @click="increase()"
-                                :disabled="qty >= maxStock || loading"
+                                :disabled="qty >= maxStock || loading || buyLoading"
                                 class="w-10 h-10 rounded-xl flex items-center justify-center text-gray-700 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-700 hover:shadow-sm active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition text-base font-bold"
                                 aria-label="Increase quantity">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
@@ -153,8 +167,8 @@
                     {{-- Add to Cart Button with JS action and loader --}}
                     <button type="button"
                             @click="addToCart()"
-                            :disabled="loading || maxStock <= 0"
-                            class="flex-1 min-w-[200px] bg-brand-700 text-white font-bold py-3.5 px-6 rounded-2xl hover:bg-brand-800 transition shadow-lg shadow-brand-700/25 flex items-center justify-center gap-2.5 disabled:opacity-75 disabled:cursor-not-allowed active:scale-[0.99]">
+                            :disabled="loading || buyLoading || maxStock <= 0"
+                            class="flex-1 min-w-[150px] bg-brand-700 hover:bg-brand-800 text-white font-bold py-3.5 px-5 rounded-2xl transition shadow-lg shadow-brand-700/25 flex items-center justify-center gap-2 disabled:opacity-75 disabled:cursor-not-allowed active:scale-[0.99]">
                         <svg x-show="loading" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" x-cloak>
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -162,7 +176,22 @@
                         <svg x-show="!loading" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                         </svg>
-                        <span x-text="loading ? 'Adding to Cart…' : 'Add to Cart'">Add to Cart</span>
+                        <span x-text="loading ? 'Adding…' : 'Add to Cart'">Add to Cart</span>
+                    </button>
+
+                    {{-- Buy Now Button with instant checkout redirect --}}
+                    <button type="button"
+                            @click="buyNow()"
+                            :disabled="loading || buyLoading || maxStock <= 0"
+                            class="flex-1 min-w-[150px] bg-warm-900 hover:bg-black dark:bg-amber-600 dark:hover:bg-amber-700 text-white font-bold py-3.5 px-5 rounded-2xl transition shadow-lg shadow-warm-900/20 dark:shadow-amber-600/20 flex items-center justify-center gap-2 disabled:opacity-75 disabled:cursor-not-allowed active:scale-[0.99]">
+                        <svg x-show="buyLoading" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" x-cloak>
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <svg x-show="!buyLoading" class="w-5 h-5 text-amber-400 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        <span x-text="buyLoading ? 'Proceeding…' : 'Buy Now'">Buy Now</span>
                     </button>
                 </div>
             </div>
@@ -333,6 +362,7 @@ window.productCart = function(config) {
         qty: 1,
         maxStock: config.maxStock,
         loading: false,
+        buyLoading: false,
         decrease() {
             if (this.qty > 1) {
                 this.qty--;
@@ -344,7 +374,7 @@ window.productCart = function(config) {
             }
         },
         async addToCart() {
-            if (this.loading || this.maxStock <= 0) return;
+            if (this.loading || this.buyLoading || this.maxStock <= 0) return;
             this.loading = true;
 
             try {
@@ -412,6 +442,11 @@ window.productCart = function(config) {
             } finally {
                 this.loading = false;
             }
+        },
+        buyNow() {
+            if (this.buyLoading || this.loading || this.maxStock <= 0) return;
+            this.buyLoading = true;
+            window.location.href = `${config.checkoutUrl}?buy_now=1&product_id=${config.productId}&quantity=${this.qty}`;
         }
     };
 };
