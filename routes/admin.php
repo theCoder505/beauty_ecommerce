@@ -64,5 +64,7 @@ Route::middleware('admin')->group(function () {
 
     // Newsletter subscribers
     Route::get('/subscribers', [Admin\SubscriberController::class, 'index'])->name('subscribers.index');
+    Route::post('/subscribers/bulk-delete', [Admin\SubscriberController::class, 'bulkDelete'])->name('subscribers.bulk-delete');
+    Route::delete('/subscribers/{subscriber}', [Admin\SubscriberController::class, 'destroy'])->name('subscribers.destroy');
 });
 
