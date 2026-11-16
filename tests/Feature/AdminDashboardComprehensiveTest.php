@@ -127,8 +127,8 @@ test('admin can view comprehensive dashboard with charts, geo stats, device stat
     // Verify currency symbol from settings is rendered
     $response->assertSee('৳140.00');
 
-    // Verify World Map container height (h-[460px]) & minimize controls
-    $response->assertSee('h-[460px]');
+    // Verify World Map container height (h-[750px]) & minimize controls
+    $response->assertSee('h-[750px]');
     $response->assertSee('mapZoomOut()', false);
     $response->assertSee('toggleMapHeight()', false);
 

@@ -236,53 +236,56 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6 items-start">
-        {{-- Vector World Map Container with Interactive Controls --}}
-        <div class="lg:col-span-8 bg-gray-50/50 dark:bg-gray-800/20 rounded-2xl p-4 border border-gray-100 dark:border-gray-800 relative">
-            <div class="flex flex-wrap items-center justify-between text-xs text-gray-400 mb-3 gap-2">
-                <span>Full-width Mercator view · Hover country to inspect visitors</span>
-                <div class="flex items-center gap-1.5">
-                    <button type="button" onclick="mapZoomOut()" class="px-2.5 py-1 text-xs rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-bold transition shadow-2xs" title="Zoom Out (Can minimize smaller than default)">
-                        − Zoom Out
-                    </button>
-                    <button type="button" onclick="mapZoomIn()" class="px-2.5 py-1 text-xs rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-bold transition shadow-2xs" title="Zoom In">
-                        + Zoom In
-                    </button>
-                    <button type="button" onclick="mapReset()" class="px-2.5 py-1 text-xs rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium transition shadow-2xs" title="Reset View">
-                        ⟲ Fit
-                    </button>
-                    <button type="button" onclick="toggleMapHeight()" id="toggle-map-size-btn" class="px-2.5 py-1 text-xs rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium transition shadow-2xs" title="Toggle Compact or Normal Height">
-                        Minimize Height
-                    </button>
-                </div>
+    {{-- Vector World Map Container with Interactive Controls (Full Width & Enlarged Height) --}}
+    <div class="bg-gray-50/50 dark:bg-gray-800/20 rounded-2xl p-4 sm:p-5 border border-gray-100 dark:border-gray-800 relative mt-6">
+        <div class="flex flex-wrap items-center justify-between text-xs text-gray-400 mb-3 gap-2">
+            <span class="flex items-center gap-2">
+                <span class="font-medium text-gray-700 dark:text-gray-300">Expansive World Map</span>
+                <span class="hidden sm:inline text-gray-400">· Full-width Mercator projection · Hover country for live visitor metrics</span>
+            </span>
+            <div class="flex items-center gap-1.5">
+                <button type="button" onclick="mapZoomOut()" class="px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-bold transition shadow-2xs" title="Zoom Out (Can minimize smaller than default)">
+                    − Zoom Out
+                </button>
+                <button type="button" onclick="mapZoomIn()" class="px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-bold transition shadow-2xs" title="Zoom In">
+                    + Zoom In
+                </button>
+                <button type="button" onclick="mapReset()" class="px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium transition shadow-2xs" title="Reset View">
+                    ⟲ Fit
+                </button>
+                <button type="button" onclick="toggleMapHeight()" id="toggle-map-size-btn" class="px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium transition shadow-2xs" title="Toggle Compact or Full Height">
+                    Minimize Height
+                </button>
             </div>
-            <div id="world-map-container" class="h-[460px] w-full rounded-xl overflow-hidden transition-all duration-300"></div>
         </div>
+        <div id="world-map-container" class="h-[750px] w-full rounded-xl overflow-hidden transition-all duration-300" style="min-height: 750px;"></div>
+    </div>
 
-        {{-- Countries Leaderboard List --}}
-        <div class="lg:col-span-4 bg-gray-50/50 dark:bg-gray-800/30 rounded-2xl p-5 border border-gray-100 dark:border-gray-800">
-            <h3 class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-4 flex items-center justify-between">
-                <span>Top Visitor Countries</span>
-                <span class="text-gray-400 text-[11px] font-normal">{{ $countryStats['total_visitors'] }} total visits</span>
+    {{-- Countries Leaderboard Grid (Full Width Responsive Cards) --}}
+    <div class="mt-6 pt-5 border-t border-gray-100 dark:border-gray-800">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
+                <span>Top Visitor Countries & Regional Traffic</span>
+                <span class="text-gray-400 text-[11px] font-normal">({{ $countryStats['total_visitors'] }} total logged visits)</span>
             </h3>
-            <div id="countries-leaderboard-list" class="space-y-3 max-h-[430px] overflow-y-auto pr-1">
-                @forelse($countryStats['country_list'] as $c)
-                <div class="space-y-1.5 p-2 rounded-xl hover:bg-gray-100/70 dark:hover:bg-gray-800/60 transition">
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                            <span class="font-mono text-[11px] px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold">{{ $c['country_code'] }}</span>
-                            <span>{{ $c['country'] }}</span>
-                        </span>
-                        <span class="font-semibold text-gray-900 dark:text-white">{{ $c['count'] }} <span class="text-gray-400 font-normal">({{ $c['percentage'] }}%)</span></span>
-                    </div>
-                    <div class="w-full bg-gray-200 dark:bg-gray-700/60 rounded-full h-1.5 overflow-hidden">
-                        <div class="bg-teal-500 h-1.5 rounded-full transition-all duration-500" style="width: {{ $c['percentage'] }}%"></div>
-                    </div>
+        </div>
+        <div id="countries-leaderboard-list" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+            @forelse($countryStats['country_list'] as $c)
+            <div class="p-3 rounded-xl bg-gray-50/70 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800/80 hover:border-teal-300 dark:hover:border-teal-700 transition space-y-2">
+                <div class="flex items-center justify-between text-xs">
+                    <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold">{{ $c['country_code'] }}</span>
+                    <span class="font-bold text-gray-900 dark:text-white">{{ $c['count'] }} <span class="text-gray-400 text-[11px] font-normal">({{ $c['percentage'] }}%)</span></span>
                 </div>
-                @empty
-                <p class="text-xs text-gray-400 text-center py-6">No visitor country records yet.</p>
-                @endforelse
+                <div class="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate" title="{{ $c['country'] }}">
+                    {{ $c['country'] }}
+                </div>
+                <div class="w-full bg-gray-200 dark:bg-gray-700/60 rounded-full h-1.5 overflow-hidden">
+                    <div class="bg-teal-500 h-1.5 rounded-full transition-all duration-500" style="width: {{ $c['percentage'] }}%"></div>
+                </div>
             </div>
+            @empty
+            <p class="text-xs text-gray-400 text-center py-4 col-span-full">No visitor country records yet.</p>
+            @endforelse
         </div>
     </div>
 </div>
@@ -1005,20 +1008,24 @@
         const btn = document.getElementById('toggle-map-size-btn');
         if (!container) return;
 
-        const isCompact = container.classList.contains('h-[320px]');
+        const isCompact = container.classList.contains('h-[400px]');
         if (isCompact) {
-            container.classList.remove('h-[320px]');
-            container.classList.add('h-[460px]');
+            container.classList.remove('h-[400px]');
+            container.classList.add('h-[750px]');
+            container.style.minHeight = '750px';
             if (btn) btn.textContent = 'Minimize Height';
         } else {
-            container.classList.remove('h-[460px]');
-            container.classList.add('h-[320px]');
+            container.classList.remove('h-[750px]');
+            container.classList.add('h-[400px]');
+            container.style.minHeight = '400px';
             if (btn) btn.textContent = 'Expand Height';
         }
 
-        if (worldMapInstance && typeof worldMapInstance.updateSize === 'function') {
-            worldMapInstance.updateSize();
-        }
+        setTimeout(() => {
+            if (worldMapInstance && typeof worldMapInstance.updateSize === 'function') {
+                worldMapInstance.updateSize();
+            }
+        }, 150);
     };
 
     // 4. JQUERY DATATABLE FOR VISITOR LOGS (10 PER PAGE FRONTEND PAGINATION & AJAX DELETION)
