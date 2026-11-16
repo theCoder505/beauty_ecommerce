@@ -18,27 +18,7 @@
         background-color: transparent !important;
     }
     .jvm-zoom-btn {
-        background-color: #ffffff !important;
-        color: #111827 !important;
-        border: 1px solid #d1d5db !important;
-        border-radius: 0.5rem !important;
-        width: 28px !important;
-        height: 28px !important;
-        line-height: 26px !important;
-        font-weight: bold !important;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
-        cursor: pointer !important;
-    }
-    .dark .jvm-zoom-btn {
-        background-color: #1f2937 !important;
-        color: #f9fafb !important;
-        border-color: #374151 !important;
-    }
-    .jvm-zoom-btn:hover {
-        background-color: #f3f4f6 !important;
-    }
-    .dark .jvm-zoom-btn:hover {
-        background-color: #374151 !important;
+        display: none !important;
     }
 </style>
 @endpush
@@ -243,18 +223,15 @@
                 <span class="font-medium text-gray-700 dark:text-gray-300">Expansive World Map</span>
                 <span class="hidden sm:inline text-gray-400">· Full-width Mercator projection · Hover country for live visitor metrics</span>
             </span>
-            <div class="flex items-center gap-1.5">
-                <button type="button" onclick="mapZoomOut()" class="px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-bold transition shadow-2xs" title="Zoom Out (Can minimize smaller than default)">
-                    − Zoom Out
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="mapZoomIn()" class="px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium transition shadow-2xs" title="Zoom In">
+                    Zoom In
                 </button>
-                <button type="button" onclick="mapZoomIn()" class="px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-bold transition shadow-2xs" title="Zoom In">
-                    + Zoom In
+                <button type="button" onclick="mapZoomOut()" class="px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium transition shadow-2xs" title="Zoom Out">
+                    Zoom Out
                 </button>
-                <button type="button" onclick="mapReset()" class="px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium transition shadow-2xs" title="Reset View">
-                    ⟲ Fit
-                </button>
-                <button type="button" onclick="toggleMapHeight()" id="toggle-map-size-btn" class="px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium transition shadow-2xs" title="Toggle Compact or Full Height">
-                    Minimize Height
+                <button type="button" onclick="mapReset()" class="px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium transition shadow-2xs" title="Fit Map to View">
+                    Fit
                 </button>
             </div>
         </div>
@@ -936,7 +913,7 @@
             worldMapInstance = new jsVectorMap({
                 selector: '#world-map-container',
                 map: 'world',
-                zoomButtons: true,
+                zoomButtons: false,
                 zoomOnScroll: false,
                 zoomMin: 0.35,  // Allows minimizing smaller than default scale!
                 zoomMax: 12,
@@ -978,22 +955,24 @@
         }
     }
 
-    // World map zoom & size helpers
-    window.mapZoomOut = function() {
-        const zoomOutBtn = document.querySelector('.jvm-zoom-btn.jvm-zoomout');
-        if (zoomOutBtn) {
-            zoomOutBtn.click();
-        } else if (worldMapInstance && typeof worldMapInstance.zoomOut === 'function') {
-            worldMapInstance.zoomOut();
+    // World map zoom helpers (Zoom In & Zoom Out)
+    window.mapZoomIn = function() {
+        if (!worldMapInstance) return;
+        if (typeof worldMapInstance._setScale === 'function') {
+            const step = worldMapInstance.params?.zoomStep || 1.4;
+            const w = worldMapInstance._width || worldMapInstance.container?.clientWidth || 0;
+            const h = worldMapInstance._height || worldMapInstance.container?.clientHeight || 0;
+            worldMapInstance._setScale(worldMapInstance.scale * step, w / 2, h / 2, false, true);
         }
     };
 
-    window.mapZoomIn = function() {
-        const zoomInBtn = document.querySelector('.jvm-zoom-btn.jvm-zoomin');
-        if (zoomInBtn) {
-            zoomInBtn.click();
-        } else if (worldMapInstance && typeof worldMapInstance.zoomIn === 'function') {
-            worldMapInstance.zoomIn();
+    window.mapZoomOut = function() {
+        if (!worldMapInstance) return;
+        if (typeof worldMapInstance._setScale === 'function') {
+            const step = worldMapInstance.params?.zoomStep || 1.4;
+            const w = worldMapInstance._width || worldMapInstance.container?.clientWidth || 0;
+            const h = worldMapInstance._height || worldMapInstance.container?.clientHeight || 0;
+            worldMapInstance._setScale(worldMapInstance.scale / step, w / 2, h / 2, false, true);
         }
     };
 
@@ -1001,31 +980,6 @@
         if (worldMapInstance && typeof worldMapInstance.reset === 'function') {
             worldMapInstance.reset();
         }
-    };
-
-    window.toggleMapHeight = function() {
-        const container = document.getElementById('world-map-container');
-        const btn = document.getElementById('toggle-map-size-btn');
-        if (!container) return;
-
-        const isCompact = container.classList.contains('h-[400px]');
-        if (isCompact) {
-            container.classList.remove('h-[400px]');
-            container.classList.add('h-[750px]');
-            container.style.minHeight = '750px';
-            if (btn) btn.textContent = 'Minimize Height';
-        } else {
-            container.classList.remove('h-[750px]');
-            container.classList.add('h-[400px]');
-            container.style.minHeight = '400px';
-            if (btn) btn.textContent = 'Expand Height';
-        }
-
-        setTimeout(() => {
-            if (worldMapInstance && typeof worldMapInstance.updateSize === 'function') {
-                worldMapInstance.updateSize();
-            }
-        }, 150);
     };
 
     // 4. JQUERY DATATABLE FOR VISITOR LOGS (10 PER PAGE FRONTEND PAGINATION & AJAX DELETION)
