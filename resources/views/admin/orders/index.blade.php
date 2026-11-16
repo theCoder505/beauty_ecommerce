@@ -180,11 +180,6 @@
                         </td>
                     </tr>
                     @empty
-                    <tr>
-                        <td colspan="7" class="px-6 py-12 text-center text-gray-500">
-                            No orders found matching your filters.
-                        </td>
-                    </tr>
                     @endforelse
                 </tbody>
             </table>
@@ -196,6 +191,7 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
+        $('#orders-datatable tbody tr td[colspan]').closest('tr').remove();
         $('#orders-datatable').DataTable({
             pageLength: 10,
             responsive: true,
@@ -204,6 +200,8 @@
                 { orderable: false, targets: [6] }
             ],
             language: {
+                emptyTable: "No orders found matching your filters.",
+                zeroRecords: "No matching orders found.",
                 search: "_INPUT_",
                 searchPlaceholder: "Search orders...",
                 paginate: { previous: "‹ Prev", next: "Next ›" }

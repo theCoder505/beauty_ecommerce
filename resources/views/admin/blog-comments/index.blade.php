@@ -73,11 +73,6 @@
                         </td>
                     </tr>
                     @empty
-                    <tr>
-                        <td colspan="5" class="px-6 py-12 text-center text-gray-500">
-                            No comments submitted yet.
-                        </td>
-                    </tr>
                     @endforelse
                 </tbody>
             </table>
@@ -89,6 +84,7 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
+        $('#comments-datatable tbody tr td[colspan]').closest('tr').remove();
         $('#comments-datatable').DataTable({
             pageLength: 10,
             responsive: true,
@@ -96,6 +92,8 @@
                 { orderable: false, targets: [2, 4] }
             ],
             language: {
+                emptyTable: "No comments submitted yet.",
+                zeroRecords: "No matching comments found.",
                 search: "_INPUT_",
                 searchPlaceholder: "Search comments...",
                 paginate: { previous: "‹ Prev", next: "Next ›" }

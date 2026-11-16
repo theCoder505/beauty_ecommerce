@@ -32,6 +32,46 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+    <script>
+        if (window.$ && $.fn && $.fn.dataTable) {
+            // Prevent browser alert() popups for DataTables warnings
+            $.fn.dataTable.ext.errMode = function(settings, helpPage, message) {
+                console.warn('DataTables notice:', message, helpPage);
+            };
+
+            // Strip any single-cell colspan empty row before DataTables processes the DOM
+            $(document).on('preInit.dt', function(e, settings) {
+                const api = new $.fn.dataTable.Api(settings);
+                $(api.table().node()).find('tbody tr td[colspan]').closest('tr').remove();
+            });
+        }
+    </script>
+    <style>
+        .dataTables_wrapper .dataTables_empty {
+            text-align: center !important;
+            padding: 3rem 1.5rem !important;
+            color: #6b7280 !important;
+            font-size: 0.875rem !important;
+            font-weight: 500 !important;
+        }
+        .dark .dataTables_wrapper .dataTables_empty {
+            color: #9ca3af !important;
+            background-color: transparent !important;
+        }
+        .dataTables_wrapper .dataTables_filter input {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            padding: 0.4rem 0.75rem;
+            font-size: 0.8125rem;
+            background-color: #ffffff;
+            color: #111827;
+        }
+        .dark .dataTables_wrapper .dataTables_filter input {
+            border-color: #374151;
+            background-color: #1f2937;
+            color: #f3f4f6;
+        }
+    </style>
     @stack('styles')
 </head>
 <body class="admin-body font-sans bg-gray-100 dark:bg-[#0b1329] text-gray-900 dark:text-gray-100 antialiased"

@@ -54,8 +54,8 @@
 
     {{-- Table --}}
     <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm text-gray-600 dark:text-gray-400">
+        <div class="overflow-x-auto p-4">
+            <table id="promo-codes-datatable" class="w-full text-left text-sm text-gray-600 dark:text-gray-400">
                 <thead class="bg-gray-50/75 dark:bg-gray-800/50 text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider border-b border-gray-200 dark:border-gray-800">
                     <tr>
                         <th class="px-6 py-4">Promo Code</th>
@@ -160,26 +160,33 @@
                         </td>
                     </tr>
                     @empty
-                    <tr>
-                        <td colspan="7" class="px-6 py-12 text-center text-gray-400 dark:text-gray-500">
-                            <div class="max-w-xs mx-auto space-y-2">
-                                <svg class="w-10 h-10 mx-auto text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
-                                <p class="font-medium text-sm text-gray-700 dark:text-gray-300">No promo codes found</p>
-                                <p class="text-xs">Create your first coupon code to start running promotions.</p>
-                                <a href="{{ route('admin.promo-codes.create') }}" class="inline-block mt-2 text-xs font-bold text-brand-700 dark:text-brand-400 hover:underline">+ Create Promo Code</a>
-                            </div>
-                        </td>
-                    </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-
-        @if($promoCodes->hasPages())
-        <div class="p-4 border-t border-gray-100 dark:border-gray-800">
-            {{ $promoCodes->links() }}
-        </div>
-        @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        $('#promo-codes-datatable tbody tr td[colspan]').closest('tr').remove();
+        $('#promo-codes-datatable').DataTable({
+            pageLength: 10,
+            responsive: true,
+            order: [[0, 'asc']],
+            columnDefs: [
+                { orderable: false, targets: [6] }
+            ],
+            language: {
+                emptyTable: "No promo codes found. Create your first coupon code to start running promotions.",
+                zeroRecords: "No matching promo codes found.",
+                search: "_INPUT_",
+                searchPlaceholder: "Search promo codes...",
+                paginate: { previous: "‹ Prev", next: "Next ›" }
+            }
+        });
+    });
+</script>
+@endpush

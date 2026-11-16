@@ -35,7 +35,7 @@ class PromoCodeController extends Controller
             }
         }
 
-        $promoCodes = $query->paginate(15)->withQueryString();
+        $promoCodes = $query->get();
 
         return view('admin.promo-codes.index', compact('promoCodes'));
     }

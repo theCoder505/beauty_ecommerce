@@ -80,11 +80,6 @@
                         </td>
                     </tr>
                     @empty
-                    <tr>
-                        <td colspan="7" class="px-6 py-12 text-center text-gray-500">
-                            No categories found. Click "Add Category" to create your first one.
-                        </td>
-                    </tr>
                     @endforelse
                 </tbody>
             </table>
@@ -96,6 +91,7 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
+        $('#categories-datatable tbody tr td[colspan]').closest('tr').remove();
         $('#categories-datatable').DataTable({
             pageLength: 10,
             responsive: true,
@@ -104,6 +100,8 @@
                 { orderable: false, targets: [0, 6] }
             ],
             language: {
+                emptyTable: "No categories found. Click \"Add Category\" to create your first one.",
+                zeroRecords: "No matching categories found.",
                 search: "_INPUT_",
                 searchPlaceholder: "Search categories...",
                 paginate: { previous: "‹ Prev", next: "Next ›" }

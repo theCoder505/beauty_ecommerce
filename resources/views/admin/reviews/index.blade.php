@@ -118,11 +118,6 @@
                         </td>
                     </tr>
                     @empty
-                    <tr>
-                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
-                            No reviews found matching your criteria.
-                        </td>
-                    </tr>
                     @endforelse
                 </tbody>
             </table>
@@ -134,6 +129,7 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
+        $('#reviews-datatable tbody tr td[colspan]').closest('tr').remove();
         $('#reviews-datatable').DataTable({
             pageLength: 10,
             responsive: true,
@@ -141,6 +137,8 @@
                 { orderable: false, targets: [3, 5] }
             ],
             language: {
+                emptyTable: "No reviews found matching your criteria.",
+                zeroRecords: "No matching reviews found.",
                 search: "_INPUT_",
                 searchPlaceholder: "Search reviews...",
                 paginate: { previous: "‹ Prev", next: "Next ›" }

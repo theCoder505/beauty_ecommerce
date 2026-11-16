@@ -133,11 +133,6 @@
                         </td>
                     </tr>
                     @empty
-                    <tr>
-                        <td colspan="8" class="px-6 py-12 text-center text-gray-500">
-                            No products found matching your criteria.
-                        </td>
-                    </tr>
                     @endforelse
                 </tbody>
             </table>
@@ -149,6 +144,7 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
+        $('#products-datatable tbody tr td[colspan]').closest('tr').remove();
         $('#products-datatable').DataTable({
             pageLength: 10,
             responsive: true,
@@ -156,6 +152,8 @@
                 { orderable: false, targets: [0, 7] }
             ],
             language: {
+                emptyTable: "No products found matching your criteria.",
+                zeroRecords: "No matching products found.",
                 search: "_INPUT_",
                 searchPlaceholder: "Search products...",
                 paginate: { previous: "‹ Prev", next: "Next ›" }

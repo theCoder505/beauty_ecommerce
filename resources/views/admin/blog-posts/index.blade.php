@@ -85,11 +85,6 @@
                         </td>
                     </tr>
                     @empty
-                    <tr>
-                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
-                            No articles found. Click "Write New Post" to create one.
-                        </td>
-                    </tr>
                     @endforelse
                 </tbody>
             </table>
@@ -101,6 +96,7 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
+        $('#posts-datatable tbody tr td[colspan]').closest('tr').remove();
         $('#posts-datatable').DataTable({
             pageLength: 10,
             responsive: true,
@@ -108,6 +104,8 @@
                 { orderable: false, targets: [0, 5] }
             ],
             language: {
+                emptyTable: "No articles found. Click \"Write New Post\" to create one.",
+                zeroRecords: "No matching articles found.",
                 search: "_INPUT_",
                 searchPlaceholder: "Search posts...",
                 paginate: { previous: "‹ Prev", next: "Next ›" }
