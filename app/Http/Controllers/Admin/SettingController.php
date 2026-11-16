@@ -14,7 +14,8 @@ class SettingController extends Controller
     public function index()
     {
         $settings = Setting::all()->keyBy('key');
-        return view('admin.settings.index', compact('settings'));
+        $deliveryCharges = $this->settingService->getDeliveryCharges();
+        return view('admin.settings.index', compact('settings', 'deliveryCharges'));
     }
 
     public function update(Request $request)
@@ -43,7 +44,33 @@ class SettingController extends Controller
             $this->settingService->set('site_icon', '', false, 'general');
         }
 
-        $data = $request->except(['_token', '_method', 'site_logo', 'site_icon', 'remove_site_logo', 'remove_site_icon']);
+        // Handle Delivery Charges
+        if ($request->has('delivery_charges')) {
+            $chargesInput = $request->input('delivery_charges', []);
+            $cleanCharges = [];
+            if (is_array($chargesInput)) {
+                $hasDefault = false;
+                foreach ($chargesInput as $idx => $charge) {
+                    $title = trim($charge['title'] ?? '');
+                    if ($title === '') continue;
+                    $amount = max(0, (float) ($charge['amount'] ?? 0));
+                    $isDefault = !empty($charge['is_default']);
+                    if ($isDefault) $hasDefault = true;
+                    $cleanCharges[] = [
+                        'id' => 'delivery_' . ($idx + 1) . '_' . \Illuminate\Support\Str::slug($title),
+                        'title' => $title,
+                        'amount' => $amount,
+                        'is_default' => $isDefault,
+                    ];
+                }
+                if (!$hasDefault && count($cleanCharges) > 0) {
+                    $cleanCharges[0]['is_default'] = true;
+                }
+            }
+            $this->settingService->set('delivery_charges', json_encode($cleanCharges), false, 'shipping');
+        }
+
+        $data = $request->except(['_token', '_method', 'site_logo', 'site_icon', 'remove_site_logo', 'remove_site_icon', 'delivery_charges']);
 
         foreach ($data as $key => $value) {
             if ($value === null || $value === '') continue;

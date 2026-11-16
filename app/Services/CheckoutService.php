@@ -53,8 +53,11 @@ class CheckoutService
                 $subtotal += $item->quantity * ($product->current_price);
             }
 
-            $shippingCost = $this->calculateShipping($subtotal);
-            $total        = $subtotal + $shippingCost;
+            $shippingCost = isset($data['shipping_cost']) ? (float) $data['shipping_cost'] : $this->calculateShipping($subtotal);
+            $shippingTitle = $data['shipping_title'] ?? null;
+            $discount = isset($data['discount']) ? min($subtotal, (float) $data['discount']) : 0;
+            $couponCode = $data['coupon_code'] ?? null;
+            $total = max(0, $subtotal - $discount) + $shippingCost;
 
             // Create order
             $order = Order::create([
@@ -63,7 +66,9 @@ class CheckoutService
                 'status'          => 'pending',
                 'subtotal'        => $subtotal,
                 'shipping_cost'   => $shippingCost,
-                'discount'        => 0,
+                'shipping_title'  => $shippingTitle,
+                'discount'        => $discount,
+                'coupon_code'     => $couponCode,
                 'total'           => $total,
                 'shipping_name'   => $data['shipping_name'],
                 'shipping_phone'  => $data['shipping_phone'],

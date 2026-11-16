@@ -39,6 +39,10 @@ Route::middleware('admin')->group(function () {
     Route::post('/orders/{order}/payment/verify', [Admin\OrderController::class, 'verifyPayment'])->name('orders.verify-payment');
     Route::post('/orders/{order}/payment/reject', [Admin\OrderController::class, 'rejectPayment'])->name('orders.reject-payment');
 
+    // Promo Codes / Coupons
+    Route::resource('promo-codes', Admin\PromoCodeController::class);
+    Route::post('/promo-codes/{promo_code}/toggle', [Admin\PromoCodeController::class, 'toggle'])->name('promo-codes.toggle');
+
     // Reviews
     Route::get('/reviews', [Admin\ReviewController::class, 'index'])->name('reviews.index');
     Route::post('/reviews/{review}/approve', [Admin\ReviewController::class, 'approve'])->name('reviews.approve');

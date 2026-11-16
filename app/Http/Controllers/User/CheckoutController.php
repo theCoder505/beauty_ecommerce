@@ -7,6 +7,7 @@ use App\Mail\OrderConfirmationMail;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Product;
+use App\Models\PromoCode;
 use App\Services\CartService;
 use App\Services\CheckoutService;
 use App\Services\SettingService;
@@ -73,6 +74,9 @@ class CheckoutController extends Controller
         $cartTotal      = $total;
         $cartCount      = $this->cartService->count();
 
+        $deliveryCharges = $this->settingService->getDeliveryCharges();
+        $defaultDelivery = collect($deliveryCharges)->firstWhere('is_default', true) ?? ($deliveryCharges[0] ?? ['id' => 'inside_dhaka', 'title' => 'Inside Dhaka', 'amount' => 60]);
+
         return view('users.pages.checkout', compact(
             'items',
             'cartItems',
@@ -83,8 +87,61 @@ class CheckoutController extends Controller
             'isBuyNow',
             'cartCount',
             'addresses',
-            'primaryAddress'
+            'primaryAddress',
+            'deliveryCharges',
+            'defaultDelivery'
         ));
+    }
+
+    public function applyCoupon(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $code = strtoupper(trim((string) $request->input('code', '')));
+        if (empty($code)) {
+            return response()->json(['success' => false, 'message' => 'Please enter a promo code.'], 422);
+        }
+
+        $promo = PromoCode::where('code', $code)->first();
+        if (!$promo) {
+            return response()->json(['success' => false, 'message' => 'Invalid promo code.'], 422);
+        }
+
+        $isBuyNow = $request->boolean('buy_now') && $request->filled('product_id');
+        if ($isBuyNow) {
+            $product = Product::findOrFail($request->integer('product_id'));
+            $quantity = max(1, (int) $request->integer('quantity', 1));
+            $items = collect([(object) [
+                'product_id'    => $product->id,
+                'product'       => $product,
+                'quantity'      => $quantity,
+                'current_price' => $product->current_price,
+            ]]);
+            $subtotal = $product->current_price * $quantity;
+        } else {
+            $items = $this->cartService->items();
+            if ($items->isEmpty()) {
+                return response()->json(['success' => false, 'message' => 'Your cart is empty.'], 422);
+            }
+            $subtotal = $this->cartService->total();
+        }
+
+        [$valid, $discount, $message] = $promo->computeDiscount($items, $subtotal);
+
+        if (!$valid) {
+            return response()->json(['success' => false, 'message' => $message], 422);
+        }
+
+        $currency = $this->settingService->get('currency_symbol', '৳');
+
+        return response()->json([
+            'success'            => true,
+            'code'               => $promo->code,
+            'discount'           => (float) $discount,
+            'formatted_discount' => $currency . number_format($discount),
+            'message'            => $message,
+            'type'               => $promo->type,
+            'value'              => (float) $promo->value,
+            'new_subtotal'       => max(0, $subtotal - $discount),
+        ]);
     }
 
     public function place(Request $request): RedirectResponse|\Illuminate\Http\Response
@@ -98,26 +155,37 @@ class CheckoutController extends Controller
         ]);
 
         $data = $request->validate([
-            'shipping_name'    => ['required', 'string', 'max:255'],
-            'shipping_email'   => ['required', 'email', 'max:255'],
-            'shipping_phone'   => ['required', 'string', 'max:30'],
-            'shipping_address' => ['required', 'string', 'max:500'],
-            'shipping_city'    => ['required', 'string', 'max:100'],
-            'shipping_state'   => ['nullable', 'string', 'max:100'],
-            'shipping_zip'     => ['nullable', 'string', 'max:20'],
-            'shipping_country' => ['nullable', 'string', 'max:100'],
-            'notes'            => ['nullable', 'string', 'max:1000'],
-            'payment_method'   => ['required', 'string'],
-            'transaction_id'   => ['nullable', 'string', 'max:255'],
-            'buy_now'          => ['nullable', 'boolean'],
-            'product_id'       => ['nullable', 'integer', 'exists:products,id'],
-            'quantity'         => ['nullable', 'integer', 'min:1'],
-            'address_id'       => ['nullable', 'integer'],
+            'shipping_name'      => ['required', 'string', 'max:255'],
+            'shipping_email'     => ['required', 'email', 'max:255'],
+            'shipping_phone'     => ['required', 'string', 'max:30'],
+            'shipping_address'   => ['required', 'string', 'max:500'],
+            'shipping_city'      => ['required', 'string', 'max:100'],
+            'shipping_state'     => ['nullable', 'string', 'max:100'],
+            'shipping_zip'       => ['nullable', 'string', 'max:20'],
+            'shipping_country'   => ['nullable', 'string', 'max:100'],
+            'notes'              => ['nullable', 'string', 'max:1000'],
+            'payment_method'     => ['required', 'string'],
+            'transaction_id'     => ['nullable', 'string', 'max:255'],
+            'buy_now'            => ['nullable', 'boolean'],
+            'product_id'         => ['nullable', 'integer', 'exists:products,id'],
+            'quantity'           => ['nullable', 'integer', 'min:1'],
+            'address_id'         => ['nullable', 'integer'],
+            'delivery_charge_id' => ['required', 'string'],
+            'coupon_code'        => ['nullable', 'string', 'max:50'],
         ]);
 
         // Guarantee that shipping_name and shipping_email are exactly the authenticated user's name and email
         $data['shipping_name']  = $user->name;
         $data['shipping_email'] = $user->email;
+
+        // Resolve Delivery Charge chosen by user
+        $deliveryCharges = $this->settingService->getDeliveryCharges();
+        $selectedCharge  = collect($deliveryCharges)->firstWhere('id', $data['delivery_charge_id'])
+            ?? collect($deliveryCharges)->firstWhere('title', $data['delivery_charge_id'])
+            ?? ($deliveryCharges[0] ?? ['title' => 'Standard Delivery', 'amount' => 60]);
+
+        $data['shipping_cost']  = (float) $selectedCharge['amount'];
+        $data['shipping_title'] = $selectedCharge['title'];
 
         $enabledMethods = $this->getEnabledPaymentMethods();
 
@@ -133,14 +201,34 @@ class CheckoutController extends Controller
             $quantity = max(1, (int) ($data['quantity'] ?? 1));
             $customItems = collect([
                 (object) [
-                    'id'         => null,
-                    'product_id' => $product->id,
-                    'product'    => $product,
-                    'quantity'   => $quantity,
-                    'line_total' => $product->current_price * $quantity,
+                    'id'            => null,
+                    'product_id'    => $product->id,
+                    'product'       => $product,
+                    'quantity'      => $quantity,
+                    'line_total'    => $product->current_price * $quantity,
+                    'current_price' => $product->current_price,
                 ]
             ]);
         }
+
+        // Validate and apply promo code on server side
+        $discount = 0;
+        $appliedCoupon = null;
+        if (!empty($data['coupon_code'])) {
+            $promo = PromoCode::where('code', strtoupper(trim($data['coupon_code'])))->first();
+            if ($promo) {
+                $evalItems = $customItems ?? $this->cartService->items();
+                $evalSubtotal = $isBuyNow ? $customItems->sum('line_total') : $this->cartService->total();
+                [$valid, $calcDiscount] = $promo->computeDiscount($evalItems, $evalSubtotal);
+                if ($valid) {
+                    $discount = (float) $calcDiscount;
+                    $appliedCoupon = $promo->code;
+                    $promo->incrementUsage();
+                }
+            }
+        }
+        $data['discount']    = $discount;
+        $data['coupon_code'] = $appliedCoupon;
 
         // Build idempotency key to prevent duplicate orders
         $idempotencyKey = session()->get('checkout_idempotency_key')

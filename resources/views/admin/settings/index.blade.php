@@ -13,6 +13,7 @@
     <!-- Tab navigation -->
     <div class="flex items-center gap-2 border-b border-gray-200 dark:border-gray-800 pb-2 overflow-x-auto">
         <button @click="tab = 'general'" :class="tab === 'general' ? 'bg-brand-700 text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">General & Store</button>
+        <button @click="tab = 'shipping'" :class="tab === 'shipping' ? 'bg-brand-700 text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">Shipping & Delivery</button>
         <button @click="tab = 'payments'" :class="tab === 'payments' ? 'bg-brand-700 text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">Payment Methods</button>
         <button @click="tab = 'socialite'" :class="tab === 'socialite' ? 'bg-brand-700 text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">Google OAuth</button>
         <button @click="tab = 'seo'" :class="tab === 'seo' ? 'bg-brand-700 text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">SEO & Social</button>
@@ -257,6 +258,72 @@
             </div>
         </div>
 
+        <!-- Tab: Shipping & Delivery Charges -->
+        <div x-show="tab === 'shipping'" class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 sm:p-8 space-y-6 shadow-sm" x-data="deliveryChargesManager(@js($deliveryCharges))">
+            <div class="border-b border-gray-100 dark:border-gray-800 pb-3">
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white">Delivery Charges & Regions</h3>
+                <p class="text-xs text-gray-500 mt-0.5">Admin can set multiple delivery charge tiers (e.g. 'Inside Dhaka' 60, 'Outside Dhaka' 120). Customers must choose one during checkout.</p>
+            </div>
+
+            <div class="space-y-3">
+                <template x-for="(charge, index) in charges" :key="index">
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-3.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-800/40">
+                        <div class="flex-1">
+                            <label class="block text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1">Charge Title / Region *</label>
+                            <input type="text"
+                                   :name="'delivery_charges[' + index + '][title]'"
+                                   x-model="charge.title"
+                                   required
+                                   placeholder="e.g. Inside Dhaka, Outside Dhaka, Express"
+                                   class="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-600 focus:outline-none font-medium">
+                        </div>
+
+                        <div class="w-full sm:w-40">
+                            <label class="block text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1">Amount ({{ $settings['currency_symbol']->value ?? '৳' }}) *</label>
+                            <input type="number"
+                                   :name="'delivery_charges[' + index + '][amount]'"
+                                   x-model="charge.amount"
+                                   required
+                                   min="0"
+                                   step="any"
+                                   placeholder="e.g. 60"
+                                   class="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-600 focus:outline-none font-bold">
+                        </div>
+
+                        <div class="flex items-center justify-between sm:justify-start gap-4 pt-1 sm:pt-4">
+                            <label class="inline-flex items-center gap-1.5 cursor-pointer text-xs text-gray-700 dark:text-gray-300">
+                                <input type="radio"
+                                       name="default_delivery_selection"
+                                       :value="index"
+                                       :checked="charge.is_default"
+                                       @change="setDefault(index)"
+                                       class="text-brand-700 focus:ring-brand-600">
+                                <span class="text-xs font-semibold">Default</span>
+                            </label>
+                            <input type="hidden" :name="'delivery_charges[' + index + '][is_default]'" :value="charge.is_default ? 1 : 0">
+
+                            <button type="button"
+                                    @click="removeCharge(index)"
+                                    :disabled="charges.length <= 1"
+                                    class="p-2 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 disabled:opacity-20 disabled:cursor-not-allowed transition"
+                                    title="Delete Tier">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <div>
+                <button type="button"
+                        @click="addCharge()"
+                        class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-brand-700/30 text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 hover:bg-brand-100 dark:hover:bg-brand-900/40 text-xs font-bold transition shadow-xs">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                    <span>+ Add Delivery Charge Option</span>
+                </button>
+            </div>
+        </div>
+
         <div class="flex items-center justify-end">
             <button type="submit" class="px-8 py-3 rounded-xl bg-brand-700 hover:bg-brand-800 text-white text-sm font-bold shadow-md transition">
                 Save All Settings
@@ -264,4 +331,33 @@
         </div>
     </form>
 </div>
+
+@push('scripts')
+<script>
+function deliveryChargesManager(initialCharges) {
+    return {
+        charges: (initialCharges && initialCharges.length > 0) ? initialCharges : [
+            { title: 'Inside Dhaka', amount: 60, is_default: true },
+            { title: 'Outside Dhaka', amount: 120, is_default: false },
+        ],
+        addCharge() {
+            this.charges.push({ title: '', amount: 0, is_default: this.charges.length === 0 });
+        },
+        removeCharge(index) {
+            if (this.charges.length <= 1) return;
+            const wasDefault = this.charges[index].is_default;
+            this.charges.splice(index, 1);
+            if (wasDefault && this.charges.length > 0) {
+                this.charges[0].is_default = true;
+            }
+        },
+        setDefault(index) {
+            this.charges.forEach((c, idx) => {
+                c.is_default = (idx === index);
+            });
+        }
+    };
+}
+</script>
+@endpush
 @endsection

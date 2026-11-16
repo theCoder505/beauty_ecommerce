@@ -9,7 +9,7 @@ class Order extends Model
 {
     protected $fillable = [
         'order_number', 'user_id', 'status',
-        'subtotal', 'shipping_cost', 'discount', 'total',
+        'subtotal', 'shipping_cost', 'shipping_title', 'discount', 'coupon_code', 'total',
         'shipping_name', 'shipping_phone', 'shipping_email',
         'shipping_address', 'shipping_city', 'shipping_state',
         'shipping_zip', 'shipping_country', 'notes', 'idempotency_key',

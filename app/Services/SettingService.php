@@ -110,6 +110,22 @@ class SettingService
         }
     }
 
+    public function getDeliveryCharges(): array
+    {
+        $raw = $this->get('delivery_charges');
+        if (!empty($raw)) {
+            $decoded = is_string($raw) ? json_decode($raw, true) : $raw;
+            if (is_array($decoded) && count($decoded) > 0) {
+                return $decoded;
+            }
+        }
+
+        return [
+            ['id' => 'inside_dhaka', 'title' => 'Inside Dhaka', 'amount' => 60, 'is_default' => true],
+            ['id' => 'outside_dhaka', 'title' => 'Outside Dhaka', 'amount' => 120, 'is_default' => false],
+        ];
+    }
+
     // Runtime override of Google/Socialite from settings
     public function configureSocialite(): void
     {

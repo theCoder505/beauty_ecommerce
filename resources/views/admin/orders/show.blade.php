@@ -71,14 +71,14 @@
                         <span>Subtotal</span>
                         <span>${{ number_format($order->subtotal, 2) }}</span>
                     </div>
-                    @if($order->discount_amount > 0)
+                    @if(($order->discount ?? $order->discount_amount ?? 0) > 0)
                     <div class="flex justify-between text-green-600 dark:text-green-400">
-                        <span>Discount</span>
-                        <span>-${{ number_format($order->discount_amount, 2) }}</span>
+                        <span>Discount @if($order->coupon_code)<span class="font-mono text-xs font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/30 px-1.5 py-0.5 rounded">({{ $order->coupon_code }})</span>@endif</span>
+                        <span>-${{ number_format($order->discount ?? $order->discount_amount, 2) }}</span>
                     </div>
                     @endif
                     <div class="flex justify-between text-gray-600 dark:text-gray-400">
-                        <span>Shipping Cost</span>
+                        <span>Shipping Cost @if($order->shipping_title)<span class="text-xs text-gray-400">({{ $order->shipping_title }})</span>@endif</span>
                         <span>${{ number_format($order->shipping_cost, 2) }}</span>
                     </div>
                     <div class="flex justify-between text-gray-600 dark:text-gray-400">

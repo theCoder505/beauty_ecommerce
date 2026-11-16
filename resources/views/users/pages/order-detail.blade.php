@@ -22,8 +22,17 @@
                     </div>
                     <div class="border-t border-cream-200 dark:border-gray-700 pt-3 mt-3 space-y-1 text-sm text-gray-600 dark:text-gray-400">
                         <div class="flex justify-between"><span>Subtotal</span><span>{{ $currency }}{{ number_format($order->subtotal) }}</span></div>
-                        <div class="flex justify-between"><span>Shipping</span><span>{{ $currency }}{{ number_format($order->shipping_cost) }}</span></div>
-                        <div class="flex justify-between font-bold text-gray-900 dark:text-white text-base pt-1"><span>Total</span><span>{{ $currency }}{{ number_format($order->total) }}</span></div>
+                        @if($order->discount > 0)
+                        <div class="flex justify-between text-emerald-600 dark:text-emerald-400 font-medium">
+                            <span>Discount @if($order->coupon_code)<span class="font-mono text-xs font-bold bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded">({{ $order->coupon_code }})</span>@endif</span>
+                            <span>-{{ $currency }}{{ number_format($order->discount) }}</span>
+                        </div>
+                        @endif
+                        <div class="flex justify-between">
+                            <span>Shipping @if($order->shipping_title)<span class="text-xs text-gray-400">({{ $order->shipping_title }})</span>@endif</span>
+                            <span>{{ $currency }}{{ number_format($order->shipping_cost) }}</span>
+                        </div>
+                        <div class="flex justify-between font-bold text-gray-900 dark:text-white text-base pt-1 border-t border-cream-200 dark:border-gray-700"><span>Total</span><span>{{ $currency }}{{ number_format($order->total) }}</span></div>
                     </div>
                 </div>
                 {{-- Status History --}}
