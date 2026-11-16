@@ -1,5 +1,8 @@
 @extends('admin.layouts.app')
 @section('title', 'Order #' . $order->order_number)
+@php
+    $currency = app(\App\Services\SettingService::class)->get('currency_symbol', '৳');
+@endphp
 
 @section('content')
 <div class="space-y-6">
@@ -58,10 +61,10 @@
                         <img src="{{ $item->product?->thumbnail_url ?? asset('images/placeholder-product.jpg') }}" alt="{{ $item->product_name }}" class="w-16 h-16 rounded-xl object-cover border border-gray-200 dark:border-gray-700 bg-gray-50 shrink-0">
                         <div class="flex-1 min-w-0">
                             <h4 class="font-semibold text-sm text-gray-900 dark:text-white truncate">{{ $item->product_name }}</h4>
-                            <p class="text-xs text-gray-500 mt-0.5">Price: ${{ number_format($item->price, 2) }} &times; {{ $item->quantity }}</p>
+                            <p class="text-xs text-gray-500 mt-0.5">Price: {{ $currency }}{{ number_format($item->unit_price ?? $item->price, 2) }} &times; {{ $item->quantity }}</p>
                         </div>
                         <div class="text-right">
-                            <span class="font-bold text-sm text-gray-900 dark:text-white">${{ number_format($item->subtotal, 2) }}</span>
+                            <span class="font-bold text-sm text-gray-900 dark:text-white">{{ $currency }}{{ number_format($item->total ?? $item->subtotal, 2) }}</span>
                         </div>
                     </div>
                     @endforeach
@@ -69,25 +72,21 @@
                 <div class="p-5 bg-gray-50 dark:bg-gray-800/40 border-t border-gray-100 dark:border-gray-800 space-y-2 text-sm">
                     <div class="flex justify-between text-gray-600 dark:text-gray-400">
                         <span>Subtotal</span>
-                        <span>${{ number_format($order->subtotal, 2) }}</span>
+                        <span>{{ $currency }}{{ number_format($order->subtotal, 2) }}</span>
                     </div>
                     @if(($order->discount ?? $order->discount_amount ?? 0) > 0)
                     <div class="flex justify-between text-green-600 dark:text-green-400">
                         <span>Discount @if($order->coupon_code)<span class="font-mono text-xs font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/30 px-1.5 py-0.5 rounded">({{ $order->coupon_code }})</span>@endif</span>
-                        <span>-${{ number_format($order->discount ?? $order->discount_amount, 2) }}</span>
+                        <span>-{{ $currency }}{{ number_format($order->discount ?? $order->discount_amount, 2) }}</span>
                     </div>
                     @endif
                     <div class="flex justify-between text-gray-600 dark:text-gray-400">
                         <span>Shipping Cost @if($order->shipping_title)<span class="text-xs text-gray-400">({{ $order->shipping_title }})</span>@endif</span>
-                        <span>${{ number_format($order->shipping_cost, 2) }}</span>
-                    </div>
-                    <div class="flex justify-between text-gray-600 dark:text-gray-400">
-                        <span>Tax</span>
-                        <span>${{ number_format($order->tax_amount, 2) }}</span>
+                        <span>{{ $currency }}{{ number_format($order->shipping_cost, 2) }}</span>
                     </div>
                     <div class="flex justify-between font-bold text-base text-gray-900 dark:text-white pt-2 border-t border-gray-200 dark:border-gray-700">
                         <span>Grand Total</span>
-                        <span>${{ number_format($order->total, 2) }}</span>
+                        <span>{{ $currency }}{{ number_format($order->total, 2) }}</span>
                     </div>
                 </div>
             </div>
@@ -206,27 +205,133 @@
             </div>
 
             <!-- Customer & Shipping -->
-            <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm space-y-3">
-                <h3 class="font-semibold text-gray-900 dark:text-white text-base border-b border-gray-100 dark:border-gray-800 pb-3">Shipping Address</h3>
+            <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+                    <h3 class="font-semibold text-gray-900 dark:text-white text-base">Shipping Address</h3>
+                    @if($order->has_coordinates)
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-2.5 py-0.5 rounded-full">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            GPS Pinned
+                        </span>
+                    @endif
+                </div>
                 
                 <div class="text-sm space-y-1 text-gray-700 dark:text-gray-300">
                     <p class="font-semibold text-gray-900 dark:text-white">{{ $order->shipping_name }}</p>
-                    <p class="text-xs text-gray-500">{{ $order->shipping_email }} &bull; {{ $order->shipping_phone }}</p>
-                    <p class="pt-2 text-xs text-gray-600 dark:text-gray-400">
+                    <p class="text-xs text-gray-500">
+                        <a href="mailto:{{ $order->shipping_email }}">{{ $order->shipping_email }}</a>    
+                        &bull;
+                        <a href="tel:+{{ $order->shipping_phone }}">{{ $order->shipping_phone }}</a>
+                    </p>
+                    <p class="pt-2 text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
                         {{ $order->shipping_address }}<br>
-                        {{ $order->shipping_city }}, {{ $order->shipping_state }} {{ $order->shipping_postal_code }}<br>
+                        {{ $order->shipping_city }}{{ $order->shipping_state ? ', ' . $order->shipping_state : '' }} {{ $order->shipping_zip ?? $order->shipping_postal_code }}<br>
                         {{ $order->shipping_country }}
                     </p>
                 </div>
 
-                @if($order->order_notes)
+                {{-- Map Location --}}
+                <div class="pt-3 border-t border-gray-100 dark:border-gray-800 space-y-2.5">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                            </svg>
+                            Delivery Map Location
+                        </span>
+                        @if($order->has_coordinates)
+                            <span class="font-mono text-[11px] text-gray-400">
+                                {{ number_format($order->effective_latitude, 5) }}, {{ number_format($order->effective_longitude, 5) }}
+                            </span>
+                        @endif
+                    </div>
+
+                    @if($order->has_coordinates)
+                        {{-- Interactive Mini Map for Admin --}}
+                        <div id="admin-order-map" class="w-full h-44 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-xs relative z-0"></div>
+
+                        <div class="grid grid-cols-2 gap-2 pt-1">
+                            <a href="{{ $order->google_maps_url }}" target="_blank"
+                               class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                <span>Google Maps</span>
+                            </a>
+                            <a href="https://www.google.com/maps/dir/?api=1&destination={{ $order->effective_latitude }},{{ $order->effective_longitude }}" target="_blank"
+                               class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                                <span>Directions</span>
+                            </a>
+                        </div>
+                    @else
+                        <a href="{{ $order->google_maps_url }}" target="_blank"
+                           class="inline-flex items-center justify-center gap-1.5 w-full px-3 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 font-semibold text-xs border border-gray-200 dark:border-gray-700 transition">
+                            <svg class="w-3.5 h-3.5 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
+                            <span>Search Address on Google Maps ↗</span>
+                        </a>
+                    @endif
+                </div>
+
+                {{-- Customer Order Notes Section --}}
+                @if(!empty($order->notes) || !empty($order->order_notes))
                 <div class="pt-3 border-t border-gray-100 dark:border-gray-800">
-                    <span class="text-xs font-semibold text-gray-500 block mb-1">Customer Note:</span>
-                    <p class="text-xs text-gray-600 dark:text-gray-400 italic">"{{ $order->order_notes }}"</p>
+                    <div class="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80">
+                        <span class="text-xs font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1.5 mb-1">
+                            <svg class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                            </svg>
+                            Customer Delivery Note:
+                        </span>
+                        <p class="text-xs text-amber-950 dark:text-amber-100 font-medium whitespace-pre-line leading-relaxed">
+                            {{ $order->notes ?? $order->order_notes }}
+                        </p>
+                    </div>
                 </div>
                 @endif
             </div>
         </div>
     </div>
 </div>
+
+@if($order->has_coordinates)
+    @push('styles')
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    @endpush
+
+    @push('scripts')
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const mapEl = document.getElementById('admin-order-map');
+                if (!mapEl) return;
+
+                const lat = {{ (float) $order->effective_latitude }};
+                const lng = {{ (float) $order->effective_longitude }};
+
+                const map = L.map('admin-order-map', {
+                    scrollWheelZoom: false
+                }).setView([lat, lng], 16);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors',
+                    maxZoom: 19
+                }).addTo(map);
+
+                const icon = L.icon({
+                    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+                    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+                    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34],
+                    shadowSize: [41, 41]
+                });
+
+                const marker = L.marker([lat, lng], { icon: icon }).addTo(map);
+                marker.bindPopup('<strong>{{ addslashes($order->shipping_name) }}</strong><br>{{ addslashes($order->shipping_address) }}').openPopup();
+
+                setTimeout(() => map.invalidateSize(), 300);
+            });
+        </script>
+    @endpush
+@endif
 @endsection

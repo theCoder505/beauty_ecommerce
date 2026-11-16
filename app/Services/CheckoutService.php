@@ -77,9 +77,11 @@ class CheckoutService
                 'shipping_city'   => $data['shipping_city'],
                 'shipping_state'  => $data['shipping_state'] ?? null,
                 'shipping_zip'    => $data['shipping_zip'] ?? null,
-                'shipping_country'=> $data['shipping_country'] ?? 'BD',
-                'notes'           => $data['notes'] ?? null,
-                'idempotency_key' => $idempotencyKey,
+                'shipping_country'  => $data['shipping_country'] ?? 'BD',
+                'shipping_latitude' => $data['shipping_latitude'] ?? null,
+                'shipping_longitude'=> $data['shipping_longitude'] ?? null,
+                'notes'             => $data['notes'] ?? null,
+                'idempotency_key'   => $idempotencyKey,
             ]);
 
             // Create order items & decrement stock

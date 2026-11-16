@@ -178,14 +178,16 @@ class CheckoutController extends Controller
         }
 
         // Auto-fill all shipping snapshot fields securely from verified user & address models
-        $data['shipping_name']    = $userAddress->recipient_name ?: $user->name;
-        $data['shipping_email']   = $user->email;
-        $data['shipping_phone']   = $userAddress->phone ?: ($user->phone ?: 'N/A');
-        $data['shipping_address'] = $userAddress->address_line;
-        $data['shipping_city']    = $userAddress->city ?: 'Dhaka';
-        $data['shipping_state']   = $userAddress->state;
-        $data['shipping_zip']     = $userAddress->postal_code;
-        $data['shipping_country'] = $userAddress->country ?: 'BD';
+        $data['shipping_name']      = $userAddress->recipient_name ?: $user->name;
+        $data['shipping_email']     = $user->email;
+        $data['shipping_phone']     = $userAddress->phone ?: ($user->phone ?: 'N/A');
+        $data['shipping_address']   = $userAddress->address_line;
+        $data['shipping_city']      = $userAddress->city ?: 'Dhaka';
+        $data['shipping_state']     = $userAddress->state;
+        $data['shipping_zip']       = $userAddress->postal_code;
+        $data['shipping_country']   = $userAddress->country ?: 'BD';
+        $data['shipping_latitude']  = $userAddress->latitude;
+        $data['shipping_longitude'] = $userAddress->longitude;
 
         // Check transaction ID if manual / bank transfer
         if (in_array($data['payment_method'], ['manual', 'bank_transfer']) && empty(trim((string) ($data['transaction_id'] ?? '')))) {

@@ -56,7 +56,7 @@ class OrderController extends Controller
     public function show(Order $order): View
     {
         $order->load([
-            'user',
+            'user.addresses',
             'items.product.productImages',
             'payment',
             'statusHistories' => fn ($q) => $q->orderByDesc('created_at'),

@@ -1,5 +1,8 @@
 @extends('admin.layouts.app')
 @section('title', 'Orders')
+@php
+    $currency = app(\App\Services\SettingService::class)->get('currency_symbol', '৳');
+@endphp
 
 @section('content')
 <div class="space-y-6">
@@ -71,13 +74,25 @@
                         <td class="px-6 py-4">
                             <span class="font-semibold text-gray-900 dark:text-white block">{{ $o->shipping_name ?? $o->user?->name ?? 'Customer' }}</span>
                             <span class="text-xs text-gray-500">{{ $o->shipping_email ?? $o->user?->email }}</span>
+                            <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                                @if($o->has_coordinates)
+                                    <a href="{{ $o->google_maps_url }}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 px-1.5 py-0.5 rounded hover:bg-emerald-100 transition" title="Open GPS Location">
+                                        📍 GPS Map
+                                    </a>
+                                @endif
+                                @if(!empty($o->notes) || !empty($o->order_notes))
+                                    <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 px-1.5 py-0.5 rounded" title="Customer Note: {{ $o->notes ?? $o->order_notes }}">
+                                        📝 Note
+                                    </span>
+                                @endif
+                            </div>
                         </td>
                         <td class="px-6 py-4 text-xs text-gray-500 whitespace-nowrap">
                             {{ $o->created_at->format('M j, Y') }}
                             <span class="block text-gray-400">{{ $o->created_at->format('H:i') }}</span>
                         </td>
                         <td class="px-6 py-4 font-bold text-gray-900 dark:text-white">
-                            ${{ number_format($o->total, 2) }}
+                            {{ $currency }}{{ number_format($o->total, 2) }}
                         </td>
                         <td class="px-6 py-4">
                             <span class="text-xs font-medium uppercase block text-gray-700 dark:text-gray-300">
