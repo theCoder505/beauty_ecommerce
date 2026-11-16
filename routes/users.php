@@ -55,6 +55,8 @@ Route::middleware('auth')->group(function () {
     // Blog interactions
     Route::post('/blog/{post}/like', [User\BlogController::class, 'like'])->name('blog.like');
     Route::post('/blog/{post}/comment', [User\BlogController::class, 'comment'])->name('blog.comment');
+    Route::post('/blog/comments/{comment}/like', [User\BlogController::class, 'likeComment'])->name('blog.comment.like');
+    Route::delete('/blog/comments/{comment}', [User\BlogController::class, 'deleteComment'])->name('blog.comment.delete');
 
     // User Dashboard
     Route::get('/user/dashboard', fn () => redirect()->route('user.dashboard'));

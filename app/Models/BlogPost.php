@@ -38,6 +38,15 @@ class BlogPost extends Model
         return $this->hasMany(BlogComment::class)->where('status', 'approved');
     }
 
+    public function approvedTopComments()
+    {
+        return $this->hasMany(BlogComment::class)
+            ->whereNull('parent_id')
+            ->where('status', 'approved')
+            ->with(['user', 'replies.user', 'replies.likes', 'likes'])
+            ->orderBy('created_at', 'desc');
+    }
+
     public function likes()
     {
         return $this->hasMany(BlogLike::class);
@@ -61,6 +70,22 @@ class BlogPost extends Model
     public function getRouteKeyName(): string
     {
         return 'slug';
+    }
+
+    public function resolveRouteBinding($value, $field = null)
+    {
+        if ($field) {
+            return $this->where($field, $value)->first();
+        }
+
+        if (is_numeric($value)) {
+            $model = $this->where('id', $value)->first();
+            if ($model) {
+                return $model;
+            }
+        }
+
+        return $this->where('slug', $value)->first() ?? $this->where('id', $value)->first();
     }
 }
 

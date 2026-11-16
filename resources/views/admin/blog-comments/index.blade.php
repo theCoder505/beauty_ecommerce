@@ -8,6 +8,20 @@
             <h1 class="text-xl font-bold text-gray-900 dark:text-white">Blog Comments</h1>
             <p class="text-sm text-gray-500 mt-1">Moderate reader discussions and community feedback.</p>
         </div>
+
+        {{-- Bulk Actions --}}
+        <div>
+            <form id="bulk-delete-form" action="{{ route('admin.blog-comments.bulk-delete') }}" method="POST" onsubmit="return handleBulkDelete(event)">
+                @csrf
+                <button type="submit" id="bulk-delete-btn" disabled
+                    class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl bg-red-50 text-red-700 hover:bg-red-600 hover:text-white dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-600 dark:hover:text-white border border-red-200 dark:border-red-900 transition shadow-xs disabled:opacity-40 disabled:cursor-not-allowed">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    <span>Bulk Delete (<span id="selected-count">0</span>)</span>
+                </button>
+            </form>
+        </div>
     </div>
 
     <!-- Comments Table -->
@@ -16,6 +30,9 @@
             <table id="comments-datatable" class="w-full text-left text-sm">
                 <thead>
                     <tr class="bg-gray-50 dark:bg-gray-800/60 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                        <th class="w-10 px-4 py-4 text-center">
+                            <input type="checkbox" id="select-all-comments" class="rounded border-gray-300 dark:border-gray-700 text-teal-600 focus:ring-teal-500 cursor-pointer" title="Select All">
+                        </th>
                         <th class="px-6 py-4">Article</th>
                         <th class="px-6 py-4">Author</th>
                         <th class="px-6 py-4">Comment</th>
@@ -26,6 +43,9 @@
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                     @forelse($comments as $comment)
                     <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition">
+                        <td class="w-10 px-4 py-4 text-center">
+                            <input type="checkbox" name="ids[]" form="bulk-delete-form" value="{{ $comment->id }}" class="comment-row-checkbox rounded border-gray-300 dark:border-gray-700 text-teal-600 focus:ring-teal-500 cursor-pointer">
+                        </td>
                         <td class="px-6 py-4">
                             <span class="font-semibold text-gray-900 dark:text-white block">{{ $comment->post?->title ?? 'Deleted Article' }}</span>
                             <span class="text-xs text-gray-400">{{ $comment->created_at->format('M j, Y H:i') }}</span>
@@ -35,7 +55,13 @@
                             <span class="text-xs text-gray-500">{{ $comment->user?->email }}</span>
                         </td>
                         <td class="px-6 py-4 max-w-sm">
-                            <p class="text-gray-700 dark:text-gray-300 text-xs line-clamp-3 leading-relaxed">{{ $comment->content }}</p>
+                            @if($comment->parent_id)
+                                <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 px-2 py-0.5 rounded-md mb-1 border border-teal-200 dark:border-teal-900">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                                    Reply to {{ $comment->parent?->user?->name ?? 'Comment #' . $comment->parent_id }}
+                                </span>
+                            @endif
+                            <p class="text-gray-700 dark:text-gray-300 text-xs line-clamp-3 leading-relaxed">{{ $comment->body }}</p>
                         </td>
                         <td class="px-6 py-4">
                             @if($comment->status === 'approved')
@@ -85,11 +111,11 @@
 <script>
     $(document).ready(function() {
         $('#comments-datatable tbody tr td[colspan]').closest('tr').remove();
-        $('#comments-datatable').DataTable({
+        const table = $('#comments-datatable').DataTable({
             pageLength: 10,
             responsive: true,
             columnDefs: [
-                { orderable: false, targets: [2, 4] }
+                { orderable: false, targets: [0, 3, 5] }
             ],
             language: {
                 emptyTable: "No comments submitted yet.",
@@ -99,7 +125,63 @@
                 paginate: { previous: "‹ Prev", next: "Next ›" }
             }
         });
+
+        // Select all rows
+        $('#select-all-comments').on('change', function() {
+            const isChecked = $(this).is(':checked');
+            $('.comment-row-checkbox').prop('checked', isChecked);
+            updateBulkDeleteState();
+        });
+
+        // Individual row change
+        $(document).on('change', '.comment-row-checkbox', function() {
+            const total = $('.comment-row-checkbox').length;
+            const checked = $('.comment-row-checkbox:checked').length;
+            $('#select-all-comments').prop('checked', total > 0 && checked === total);
+            updateBulkDeleteState();
+        });
+
+        // Keep state synchronized across pagination redraws
+        table.on('draw', function() {
+            const total = $('.comment-row-checkbox').length;
+            const checked = $('.comment-row-checkbox:checked').length;
+            $('#select-all-comments').prop('checked', total > 0 && checked === total);
+            updateBulkDeleteState();
+        });
+
+        function updateBulkDeleteState() {
+            const count = $('.comment-row-checkbox:checked').length;
+            $('#selected-count').text(count);
+            $('#bulk-delete-btn').prop('disabled', count === 0);
+        }
     });
+
+    window.handleBulkDelete = function(e) {
+        e.preventDefault();
+        const count = $('.comment-row-checkbox:checked').length;
+        if (count === 0) return false;
+
+        const confirmMsg = `Are you sure you want to delete ${count} selected comment${count === 1 ? '' : 's'}? All nested replies will also be deleted.`;
+        if (window.Swal) {
+            Swal.fire({
+                title: 'Confirm Bulk Deletion',
+                text: confirmMsg,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                confirmButtonText: 'Yes, delete',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('bulk-delete-form').submit();
+                }
+            });
+        } else {
+            if (confirm(confirmMsg)) {
+                document.getElementById('bulk-delete-form').submit();
+            }
+        }
+        return false;
+    };
 </script>
 @endpush
-

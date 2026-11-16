@@ -53,6 +53,7 @@ Route::middleware('admin')->group(function () {
     Route::resource('blog-categories', Admin\BlogCategoryController::class);
     Route::resource('blog-posts', Admin\BlogPostController::class);
     Route::get('/blog-comments', [Admin\BlogCommentController::class, 'index'])->name('blog-comments.index');
+    Route::post('/blog-comments/bulk-delete', [Admin\BlogCommentController::class, 'bulkDelete'])->name('blog-comments.bulk-delete');
     Route::post('/blog-comments/{comment}/approve', [Admin\BlogCommentController::class, 'approve'])->name('blog-comments.approve');
     Route::post('/blog-comments/{comment}/hide', [Admin\BlogCommentController::class, 'hide'])->name('blog-comments.hide');
     Route::delete('/blog-comments/{comment}', [Admin\BlogCommentController::class, 'destroy'])->name('blog-comments.destroy');

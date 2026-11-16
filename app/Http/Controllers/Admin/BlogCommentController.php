@@ -10,7 +10,7 @@ class BlogCommentController extends Controller
 {
     public function index(Request $request)
     {
-        $comments = BlogComment::with(['user', 'post'])
+        $comments = BlogComment::with(['user', 'post', 'parent.user'])
             ->when($request->status, fn($q) => $q->where('status', $request->status))
             ->latest()->get();
         return view('admin.blog-comments.index', compact('comments'));
@@ -32,6 +32,18 @@ class BlogCommentController extends Controller
     {
         $comment->delete();
         return back()->with('success', 'Comment deleted.');
+    }
+
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'ids'   => 'required|array',
+            'ids.*' => 'exists:blog_comments,id',
+        ]);
+
+        $count = BlogComment::whereIn('id', $request->ids)->delete();
+
+        return back()->with('success', "{$count} " . ($count === 1 ? 'comment' : 'comments') . ' deleted successfully.');
     }
 }
 
