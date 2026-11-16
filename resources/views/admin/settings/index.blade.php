@@ -133,17 +133,17 @@
             </div>
 
             {{-- Timezone Quick Link in General Tab --}}
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl border-2 border-brand-300 dark:border-brand-700 bg-gradient-to-r from-brand-100/90 via-brand-50 to-indigo-50/70 dark:from-brand-950/80 dark:via-gray-900 dark:to-slate-900 shadow-sm">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl border-2 border-teal-300 dark:border-teal-700/80 bg-gradient-to-r from-teal-50 via-emerald-50/70 to-teal-100/60 dark:from-[#042f2e] dark:via-[#022c22] dark:to-[#0f3d39] shadow-sm">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-2xl bg-brand-700 text-white flex items-center justify-center shrink-0 shadow-md ring-4 ring-brand-700/20">
+                    <div class="w-10 h-10 rounded-2xl bg-teal-700 dark:bg-teal-600 text-white flex items-center justify-center shrink-0 shadow-md ring-4 ring-teal-700/20 dark:ring-teal-500/30">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </div>
                     <div>
-                        <h4 class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">Store & System Timezone</h4>
-                        <p class="text-xs text-gray-600 dark:text-gray-300 mt-0.5">Currently active: <span class="font-black text-brand-800 dark:text-brand-300 font-mono px-2 py-0.5 rounded bg-white dark:bg-gray-800 border border-brand-300 dark:border-brand-700">{{ config('app.timezone') }}</span> (PHP & JS Synchronized).</p>
+                        <h4 class="text-xs font-bold text-teal-950 dark:text-teal-100 uppercase tracking-wider">Store & System Timezone</h4>
+                        <p class="text-xs text-teal-900/80 dark:text-teal-200 mt-0.5">Currently active: <span class="font-black text-teal-800 dark:text-teal-200 font-mono px-2 py-0.5 rounded bg-white dark:bg-teal-950/90 border border-teal-300 dark:border-teal-700">{{ config('app.timezone') }}</span> (PHP & JS Synchronized).</p>
                     </div>
                 </div>
-                <button type="button" @click="tab = 'timezone'" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-700 hover:bg-brand-800 text-white text-xs font-bold shadow-md ring-2 ring-brand-700/30 transition self-start sm:self-auto shrink-0">
+                <button type="button" @click="tab = 'timezone'" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-500 text-white text-xs font-bold shadow-md ring-2 ring-teal-700/30 dark:ring-teal-500/30 transition self-start sm:self-auto shrink-0">
                     <span>Manage Timezone</span>
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
                 </button>

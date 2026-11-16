@@ -2,7 +2,7 @@
     $currency = app(\App\Services\SettingService::class)->get('currency_symbol', '৳');
     $isWishlisted = auth()->check() ? app(\App\Services\WishlistService::class)->isWishlisted($product->id) : false;
 @endphp
-<div class="product-card group bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl border border-cream-200 dark:border-gray-700 transition duration-300 flex flex-col">
+<div data-product-id="{{ $product->id }}" id="product-card-{{ $product->id }}" class="product-card group bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl border border-cream-200 dark:border-gray-700 transition duration-300 flex flex-col">
     {{-- Image --}}
     <div class="relative overflow-hidden aspect-square bg-cream-100 dark:bg-gray-700">
         <a href="{{ route('products.show', $product->slug) }}">
@@ -24,8 +24,8 @@
         {{-- Wishlist button (AJAX) --}}
         <button
             type="button"
-            onclick="toggleWishlist({{ $product->id }}, this)"
-            class="absolute bottom-3 right-3 bg-white/90 dark:bg-gray-800/90 backdrop-blur p-2 rounded-full shadow-md transition duration-200 {{ $isWishlisted ? 'text-red-500 opacity-100' : 'text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100' }}"
+            onclick="event.stopPropagation(); toggleWishlist({{ $product->id }}, this)"
+            class="absolute bottom-3 right-3 bg-white/90 dark:bg-gray-800/90 backdrop-blur p-2 rounded-full shadow-md transition duration-200 {{ $isWishlisted ? 'text-red-500 opacity-100' : 'text-gray-400 hover:text-red-500 opacity-90 sm:opacity-0 sm:group-hover:opacity-100' }}"
             title="{{ $isWishlisted ? 'Remove from wishlist' : 'Add to wishlist' }}"
             aria-label="Wishlist">
             <svg class="w-4 h-4 {{ $isWishlisted ? 'fill-current' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">

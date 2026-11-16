@@ -97,7 +97,7 @@
                 @php $isWl = auth()->check() ? app(\App\Services\WishlistService::class)->isWishlisted($product->id) : false; @endphp
                 <button
                     type="button"
-                    onclick="toggleWishlist({{ $product->id }}, this)"
+                    onclick="event.stopPropagation(); toggleWishlist({{ $product->id }}, this)"
                     class="p-3 rounded-2xl border border-cream-300 dark:border-gray-700 hover:border-red-300 dark:hover:border-red-900/40 bg-white dark:bg-gray-800 shadow-sm transition {{ $isWl ? 'text-red-500' : 'text-gray-400 hover:text-red-500' }}"
                     title="{{ $isWl ? 'Remove from wishlist' : 'Add to wishlist' }}"
                     aria-label="Wishlist">

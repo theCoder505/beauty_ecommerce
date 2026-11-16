@@ -14,7 +14,7 @@
     </div>
 
     <!-- Status Quick-Filter Pills -->
-    <div class="flex items-center gap-2 overflow-x-auto pb-1 -mt-1 scrollbar-thin">
+    <div class="flex flex-wrap items-center gap-2 overflow-x-auto pb-1 -mt-1 scrollbar-thin">
         @php
             $currentStatus = request('status');
             $allStatusesMap = \App\Services\OrderService::allStatuses();

@@ -47,7 +47,7 @@
     })">
         {{-- Header --}}
         <div class="mb-8">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300 border border-brand-200/60 dark:border-brand-800/50 mb-3">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-brand-50 text-brand-700 dark:bg-gray-800/90 dark:text-brand-300 border border-brand-200/60 dark:border-brand-800/50 mb-3">
                 <span class="w-1.5 h-1.5 rounded-full bg-brand-600 animate-pulse"></span>
                 <span>Final Step • Fast & Secure Checkout</span>
             </div>

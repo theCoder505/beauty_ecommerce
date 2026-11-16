@@ -25,14 +25,42 @@ class WishlistController extends Controller
         return view('users.pages.wishlist', compact('items'));
     }
 
-    public function toggle(Request $request, Product $product): JsonResponse
+    public function toggle(Request $request, $product = null): JsonResponse|RedirectResponse
     {
-        $wishlisted = $this->wishlistService->toggle($product->id);
+        $targetProduct = null;
+        if ($product instanceof Product) {
+            $targetProduct = $product;
+        } elseif (is_numeric($product)) {
+            $targetProduct = Product::find($product);
+        } elseif (is_string($product)) {
+            $targetProduct = Product::where('slug', $product)->orWhere('id', $product)->first();
+        }
 
-        return response()->json([
-            'wishlisted' => $wishlisted,
-            'count'      => $this->wishlistService->count(),
-        ]);
+        if (!$targetProduct && $request->filled('product_id')) {
+            $targetProduct = Product::find($request->input('product_id'));
+        }
+
+        if (!$targetProduct) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Product not found.'], 404);
+            }
+            return back()->with('error', 'Product not found.');
+        }
+
+        $wishlisted = $this->wishlistService->toggle($targetProduct->id);
+        $count = $this->wishlistService->count();
+        $message = $wishlisted ? 'Saved to your wishlist!' : 'Removed from wishlist.';
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success'    => true,
+                'wishlisted' => $wishlisted,
+                'count'      => $count,
+                'message'    => $message,
+            ]);
+        }
+
+        return back()->with('success', $message);
     }
 
     public function remove(Product $product): RedirectResponse

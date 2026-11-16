@@ -96,6 +96,22 @@ class Product extends Model
         return 'slug';
     }
 
+    public function resolveRouteBinding($value, $field = null)
+    {
+        if ($field) {
+            return $this->where($field, $value)->first();
+        }
+
+        if (is_numeric($value)) {
+            $product = $this->where('id', $value)->first();
+            if ($product) {
+                return $product;
+            }
+        }
+
+        return $this->where('slug', $value)->first();
+    }
+
     public function getAverageRatingAttribute(): float
     {
         return round($this->approvedReviews()->avg('rating') ?? 0, 1);
