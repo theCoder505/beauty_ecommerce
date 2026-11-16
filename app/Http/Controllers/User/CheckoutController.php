@@ -64,15 +64,39 @@ class CheckoutController extends Controller
 
         $paymentMethods = $this->getEnabledPaymentMethods();
         $user           = Auth::user();
+        if ($user) {
+            $user->load('addresses');
+        }
+        $addresses      = $user ? $user->addresses : collect();
+        $primaryAddress = $addresses->firstWhere('is_primary', true) ?? $addresses->first();
         $cartItems      = $items;
         $cartTotal      = $total;
         $cartCount      = $this->cartService->count();
 
-        return view('users.pages.checkout', compact('items', 'cartItems', 'paymentMethods', 'user', 'total', 'cartTotal', 'isBuyNow', 'cartCount'));
+        return view('users.pages.checkout', compact(
+            'items',
+            'cartItems',
+            'paymentMethods',
+            'user',
+            'total',
+            'cartTotal',
+            'isBuyNow',
+            'cartCount',
+            'addresses',
+            'primaryAddress'
+        ));
     }
 
     public function place(Request $request): RedirectResponse|\Illuminate\Http\Response
     {
+        $user = Auth::user();
+
+        // Enforce user name and email cannot be changed
+        $request->merge([
+            'shipping_name'  => $user->name,
+            'shipping_email' => $user->email,
+        ]);
+
         $data = $request->validate([
             'shipping_name'    => ['required', 'string', 'max:255'],
             'shipping_email'   => ['required', 'email', 'max:255'],
@@ -88,7 +112,12 @@ class CheckoutController extends Controller
             'buy_now'          => ['nullable', 'boolean'],
             'product_id'       => ['nullable', 'integer', 'exists:products,id'],
             'quantity'         => ['nullable', 'integer', 'min:1'],
+            'address_id'       => ['nullable', 'integer'],
         ]);
+
+        // Guarantee that shipping_name and shipping_email are exactly the authenticated user's name and email
+        $data['shipping_name']  = $user->name;
+        $data['shipping_email'] = $user->email;
 
         $enabledMethods = $this->getEnabledPaymentMethods();
 

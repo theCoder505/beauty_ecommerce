@@ -61,6 +61,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [User\DashboardController::class, 'index'])->name('dashboard');
         Route::get('/profile', [User\DashboardController::class, 'profile'])->name('profile');
         Route::post('/profile', [User\DashboardController::class, 'updateProfile'])->name('profile.update');
+        Route::post('/addresses', [User\DashboardController::class, 'storeAddress'])->name('addresses.store');
+        Route::put('/addresses/{address}', [User\DashboardController::class, 'updateAddress'])->name('addresses.update');
+        Route::delete('/addresses/{address}', [User\DashboardController::class, 'deleteAddress'])->name('addresses.delete');
+        Route::post('/addresses/{address}/primary', [User\DashboardController::class, 'setPrimaryAddress'])->name('addresses.primary');
         Route::get('/orders', [User\DashboardController::class, 'orders'])->name('orders');
         Route::get('/orders/{order}', [User\DashboardController::class, 'orderDetail'])->name('orders.show');
         Route::get('/wishlist', [User\DashboardController::class, 'wishlist'])->name('wishlist');

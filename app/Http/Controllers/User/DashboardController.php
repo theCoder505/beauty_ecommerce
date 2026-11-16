@@ -5,9 +5,11 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Mail\OtpMail;
 use App\Models\Order;
+use App\Models\UserAddress;
 use App\Models\Wishlist;
 use App\Services\ImageService;
 use App\Services\OtpService;
+use App\Services\SettingService;
 use App\Services\WishlistService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -19,6 +21,7 @@ class DashboardController extends Controller
         protected OtpService      $otpService,
         protected ImageService    $imageService,
         protected WishlistService $wishlistService,
+        protected SettingService  $settingService,
     ) {}
 
     public function index()
@@ -34,8 +37,129 @@ class DashboardController extends Controller
 
     public function profile()
     {
+        $user          = auth()->user()->load('addresses');
+        $addresses     = $user->addresses;
+        $googleMapsKey = config('services.google.maps_key') ?: (string) $this->settingService->get('google_maps_api_key', '');
+
+        return view('users.pages.profile', compact('user', 'addresses', 'googleMapsKey'));
+    }
+
+    public function storeAddress(Request $request)
+    {
         $user = auth()->user();
-        return view('users.pages.profile', compact('user'));
+
+        $validated = $request->validate([
+            'label'          => ['nullable', 'string', 'max:50'],
+            'recipient_name' => ['nullable', 'string', 'max:150'],
+            'phone'          => ['nullable', 'string', 'max:30'],
+            'address_line'   => ['required', 'string', 'max:500'],
+            'city'           => ['required', 'string', 'max:100'],
+            'state'          => ['nullable', 'string', 'max:100'],
+            'postal_code'    => ['nullable', 'string', 'max:20'],
+            'country'        => ['nullable', 'string', 'max:100'],
+            'latitude'       => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude'      => ['nullable', 'numeric', 'between:-180,180'],
+            'is_primary'     => ['nullable'],
+        ]);
+
+        $validated['country'] = $validated['country'] ?? 'BD';
+        $validated['label']   = !empty($validated['label']) ? $validated['label'] : 'Home';
+        $validated['recipient_name'] = !empty($validated['recipient_name']) ? $validated['recipient_name'] : $user->name;
+        $validated['phone'] = !empty($validated['phone']) ? $validated['phone'] : $user->phone;
+
+        $existingCount = $user->addresses()->count();
+        $isPrimary = $existingCount === 0 || $request->boolean('is_primary');
+        $validated['is_primary'] = $isPrimary;
+
+        if ($isPrimary) {
+            $user->addresses()->update(['is_primary' => false]);
+        }
+
+        $address = $user->addresses()->create($validated);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Address saved successfully.',
+                'address' => $address,
+            ]);
+        }
+
+        return back()->with('success', 'Address added successfully.');
+    }
+
+    public function updateAddress(Request $request, UserAddress $address)
+    {
+        abort_unless($address->user_id === auth()->id(), 403);
+
+        $validated = $request->validate([
+            'label'          => ['nullable', 'string', 'max:50'],
+            'recipient_name' => ['nullable', 'string', 'max:150'],
+            'phone'          => ['nullable', 'string', 'max:30'],
+            'address_line'   => ['required', 'string', 'max:500'],
+            'city'           => ['required', 'string', 'max:100'],
+            'state'          => ['nullable', 'string', 'max:100'],
+            'postal_code'    => ['nullable', 'string', 'max:20'],
+            'country'        => ['nullable', 'string', 'max:100'],
+            'latitude'       => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude'      => ['nullable', 'numeric', 'between:-180,180'],
+            'is_primary'     => ['nullable'],
+        ]);
+
+        $isPrimary = $request->boolean('is_primary');
+        $validated['is_primary'] = $isPrimary;
+
+        if ($isPrimary) {
+            auth()->user()->addresses()->where('id', '!=', $address->id)->update(['is_primary' => false]);
+        }
+
+        $address->update($validated);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Address updated successfully.',
+                'address' => $address,
+            ]);
+        }
+
+        return back()->with('success', 'Address updated successfully.');
+    }
+
+    public function deleteAddress(UserAddress $address)
+    {
+        abort_unless($address->user_id === auth()->id(), 403);
+        $wasPrimary = $address->is_primary;
+        $address->delete();
+
+        if ($wasPrimary) {
+            $latest = auth()->user()->addresses()->latest()->first();
+            $latest?->update(['is_primary' => true]);
+        }
+
+        if (request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Address deleted successfully.',
+            ]);
+        }
+
+        return back()->with('success', 'Address removed successfully.');
+    }
+
+    public function setPrimaryAddress(UserAddress $address)
+    {
+        abort_unless($address->user_id === auth()->id(), 403);
+        $address->makePrimary();
+
+        if (request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Primary address updated.',
+            ]);
+        }
+
+        return back()->with('success', 'Primary address updated successfully.');
     }
 
     public function updateProfile(Request $request)

@@ -3,6 +3,8 @@
     $settings = app(\App\Services\SettingService::class)->all();
     $currency = $settings['currency_symbol'] ?? '৳';
     $productUrl = route('products.show', $product->slug);
+    $canReview = $canReview ?? false;
+    $relatedProducts = $relatedProducts ?? collect();
 @endphp
 @section('content')
 <div class="max-w-7xl mx-auto px-4 py-10">
@@ -122,7 +124,7 @@
             <div class="flex items-baseline gap-3">
                 <span class="font-serif text-4xl font-bold text-brand-700 dark:text-brand-400">{{ $currency }}{{ number_format($product->current_price) }}</span>
                 @if($product->is_on_sale)
-                <span class="text-xl text-gray-400 line-through">{{ $currency }}{{ number_format($product->price) }}</span>
+                <span class="text-xl text-red-500 font-medium line-through">{{ $currency }}{{ number_format($product->price) }}</span>
                 <span class="bg-red-100 text-red-600 text-sm font-bold px-3 py-1 rounded-lg">Save {{ $product->discount_percent }}%</span>
                 @endif
             </div>
@@ -173,10 +175,11 @@
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
+                        <span x-show="!loading" class="font-bold text-xl leading-none">+</span>
                         <svg x-show="!loading" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                         </svg>
-                        <span x-text="loading ? 'Adding…' : 'Add to Cart'">Add to Cart</span>
+                        <span x-text="loading ? 'Adding…' : 'Cart'">Cart</span>
                     </button>
 
                     {{-- Buy Now Button with instant checkout redirect --}}

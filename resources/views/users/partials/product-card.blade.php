@@ -64,7 +64,7 @@
             <div>
                 <span class="font-bold text-brand-700 dark:text-brand-400 text-base">{{ $currency }}{{ number_format($product->current_price) }}</span>
                 @if($product->is_on_sale)
-                <span class="text-xs text-gray-400 line-through ml-1">{{ $currency }}{{ number_format($product->price) }}</span>
+                <span class="text-xs text-red-500 font-medium line-through ml-1">{{ $currency }}{{ number_format($product->price) }}</span>
                 @endif
             </div>
 
@@ -72,10 +72,11 @@
             <button
                 type="button"
                 onclick="addToCartAjax({{ $product->id }}, 1, this)"
-                class="bg-brand-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-brand-800 transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                class="bg-brand-700 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand-800 transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 shadow-sm"
                 aria-label="Add {{ $product->name }} to cart">
+                <span class="font-bold text-sm leading-none">+</span>
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                <span>Add to Cart</span>
+                <span>Cart</span>
             </button>
             @else
             <button
