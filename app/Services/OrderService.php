@@ -32,24 +32,38 @@ class OrderService
                         ->increment('stock', $item->quantity);
                 }
             }
+
+            // Decrement stock if transitioning back from a restocked status
+            if (!in_array($newStatus, self::RESTOCK_ON) && in_array($oldStatus, self::RESTOCK_ON)) {
+                foreach ($order->items as $item) {
+                    Product::withTrashed()->where('id', $item->product_id)
+                        ->decrement('stock', $item->quantity);
+                }
+            }
         });
+    }
+
+    public static function allStatuses(): array
+    {
+        return [
+            'pending'          => 'Pending',
+            'confirmed'        => 'Confirmed',
+            'processing'       => 'Processing',
+            'shipped'          => 'Shipped',
+            'out-for-delivery' => 'Out for delivery',
+            'delivered'        => 'Delivered',
+            'completed'        => 'Completed',
+            'cancelled'        => 'Cancelled',
+            'returned'         => 'Returned',
+            'refunded'         => 'Refunded',
+        ];
     }
 
     public function allowedTransitions(string $currentStatus): array
     {
-        return match($currentStatus) {
-            'pending'          => ['confirmed', 'cancelled'],
-            'confirmed'        => ['processing', 'cancelled'],
-            'processing'       => ['shipped', 'cancelled'],
-            'shipped'          => ['out-for-delivery', 'returned'],
-            'out-for-delivery' => ['delivered', 'returned'],
-            'delivered'        => ['completed', 'returned'],
-            'completed'        => ['refunded'],
-            'cancelled'        => [],
-            'returned'         => ['refunded'],
-            'refunded'         => [],
-            default            => [],
-        };
+        // For standard e-commerce business operations, admins can transition to any valid status
+        $all = array_keys(self::allStatuses());
+        return array_values(array_filter($all, fn($s) => $s !== $currentStatus));
     }
 }
 

@@ -35,16 +35,54 @@
                         <div class="flex justify-between font-bold text-gray-900 dark:text-white text-base pt-1 border-t border-cream-200 dark:border-gray-700"><span>Total</span><span>{{ $currency }}{{ number_format($order->total) }}</span></div>
                     </div>
                 </div>
-                {{-- Status History --}}
-                <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-cream-200 dark:border-gray-700">
-                    <h2 class="font-semibold text-gray-900 dark:text-white mb-4">Status History</h2>
-                    <div class="space-y-3">
-                        @foreach($order->statusHistories as $h)
-                        <div class="flex items-start gap-3">
-                            <div class="w-2 h-2 rounded-full bg-brand-700 mt-1.5 shrink-0"></div>
-                            <div><p class="text-sm font-semibold text-gray-900 dark:text-white capitalize">{{ str_replace('-',' ',$h->status) }}</p><p class="text-xs text-gray-400">{{ $h->created_at->format('M j, Y H:i') }}@if($h->note) — {{ $h->note }}@endif</p></div>
+                {{-- Status History Timeline --}}
+                <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-cream-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between pb-3 mb-6 border-b border-cream-100 dark:border-gray-700">
+                        <h2 class="font-semibold text-gray-900 dark:text-white text-base flex items-center gap-2">
+                            <svg class="w-4 h-4 text-brand-700 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                            <span>Delivery Progress & Status</span>
+                        </h2>
+                        <span class="text-xs text-gray-400">Chronological</span>
+                    </div>
+
+                    <div class="relative pl-1">
+                        @forelse($order->statusHistories as $h)
+                        @php $isLatest = $loop->last; @endphp
+                        <div class="relative flex items-start gap-4 pb-8 last:pb-1">
+                            {{-- Connecting vertical line --}}
+                            @if(!$loop->last)
+                                <div class="absolute left-3.5 top-7 -bottom-1 w-0.5 bg-gradient-to-b from-brand-600 via-brand-400 to-stone-200 dark:from-brand-500 dark:via-brand-700 dark:to-gray-700"></div>
+                            @endif
+
+                            {{-- Dot / Node --}}
+                            <div class="relative z-10 w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all
+                                {{ $isLatest ? 'bg-brand-700 text-white ring-4 ring-brand-700/20 shadow-sm' : 'bg-emerald-600 text-white shadow-xs' }}">
+                                @if($isLatest)
+                                    <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+                                @else
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                @endif
+                            </div>
+
+                            <div class="flex-1 min-w-0 pt-0.5">
+                                <div class="flex items-center justify-between gap-2 flex-wrap">
+                                    <span class="font-bold text-sm text-gray-900 dark:text-white capitalize">
+                                        {{ str_replace('-',' ',$h->status) }}
+                                    </span>
+                                    <span class="text-xs text-gray-400 font-mono">
+                                        {{ $h->created_at->format('M j, Y • g:i A') }}
+                                    </span>
+                                </div>
+                                @if($h->note)
+                                    <p class="text-xs text-gray-600 dark:text-gray-300 mt-1.5 bg-stone-50 dark:bg-gray-900/40 p-2.5 rounded-xl border border-stone-100 dark:border-gray-800 leading-relaxed">
+                                        {{ $h->note }}
+                                    </p>
+                                @endif
+                            </div>
                         </div>
-                        @endforeach
+                        @empty
+                            <p class="text-xs text-gray-400">Order placed.</p>
+                        @endforelse
                     </div>
                 </div>
             </div>

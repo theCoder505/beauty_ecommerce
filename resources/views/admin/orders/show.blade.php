@@ -93,24 +93,67 @@
 
             <!-- Status Transition History -->
             <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
-                <h3 class="font-semibold text-gray-900 dark:text-white text-base border-b border-gray-100 dark:border-gray-800 pb-3 mb-4">Status & Audit History</h3>
-                <div class="space-y-4">
+                <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3 mb-6">
+                    <h3 class="font-semibold text-gray-900 dark:text-white text-base flex items-center gap-2">
+                        <svg class="w-4 h-4 text-brand-700 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Status & Audit History</span>
+                    </h3>
+                    <span class="text-xs text-gray-400">Chronological Progress</span>
+                </div>
+
+                <div class="relative pl-1">
                     @forelse($order->statusHistories as $history)
-                    <div class="flex items-start gap-3 text-sm">
-                        <div class="w-2.5 h-2.5 rounded-full bg-brand-500 mt-1.5 shrink-0"></div>
-                        <div class="flex-1">
-                            <div class="flex items-center justify-between">
-                                <span class="font-semibold text-gray-900 dark:text-white capitalize">{{ str_replace('-', ' ', $history->status) }}</span>
-                                <span class="text-xs text-gray-400">{{ $history->created_at->format('M j, Y g:i A') }}</span>
-                            </div>
-                            @if($history->note)
-                                <p class="text-xs text-gray-500 mt-0.5">{{ $history->note }}</p>
+                    @php
+                        $isLatest = $loop->last;
+                    @endphp
+                    <div class="relative flex items-start gap-4 pb-8 last:pb-1">
+                        {{-- Connecting vertical line from one node to the next --}}
+                        @if(!$loop->last)
+                            <div class="absolute left-3.5 top-7 -bottom-1 w-0.5 bg-gradient-to-b from-brand-600 via-brand-400 to-stone-200 dark:from-brand-500 dark:via-brand-700 dark:to-gray-700"></div>
+                        @endif
+
+                        {{-- Timeline Dot / Badge --}}
+                        <div class="relative z-10 w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all
+                            {{ $isLatest ? 'bg-brand-700 text-white ring-4 ring-brand-700/25 shadow-md' : 'bg-emerald-600 text-white shadow-xs' }}">
+                            @if($isLatest)
+                                <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+                            @else
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                             @endif
-                            <span class="text-[10px] text-gray-400">By: {{ $history->changed_by }}</span>
+                        </div>
+
+                        {{-- Event Details --}}
+                        <div class="flex-1 min-w-0 pt-0.5">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="font-bold text-sm text-gray-900 dark:text-white capitalize">
+                                        {{ str_replace('-', ' ', $history->status) }}
+                                    </span>
+                                    @if($isLatest)
+                                        <span class="text-[10px] font-bold text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-slate-950 border border-brand-200 dark:border-brand-800 px-2 py-0.5 rounded-full">
+                                            Current Status
+                                        </span>
+                                    @endif
+                                </div>
+                                <span class="text-xs text-gray-400 font-mono">
+                                    {{ $history->created_at->format('M j, Y • g:i A') }}
+                                </span>
+                            </div>
+
+                            @if($history->note)
+                                <div class="mt-1.5 p-2 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-800 text-xs text-gray-700 dark:text-gray-300">
+                                    {{ $history->note }}
+                                </div>
+                            @endif
+
+                            <div class="mt-1 text-[11px] text-gray-400 flex items-center gap-1">
+                                <span>Updated by:</span>
+                                <span class="font-semibold text-gray-600 dark:text-gray-300">{{ $history->changed_by }}</span>
+                            </div>
                         </div>
                     </div>
                     @empty
-                    <p class="text-xs text-gray-500">No status changes recorded yet.</p>
+                        <p class="text-xs text-gray-500">No status changes recorded yet.</p>
                     @endforelse
                 </div>
             </div>
@@ -120,31 +163,88 @@
         <div class="space-y-6">
             <!-- Update Order Status -->
             <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
-                <h3 class="font-semibold text-gray-900 dark:text-white text-base border-b border-gray-100 dark:border-gray-800 pb-3 mb-4">Update Order Status</h3>
+                <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3 mb-4">
+                    <h3 class="font-semibold text-gray-900 dark:text-white text-base">Update Order Status</h3>
+                    <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border {{ $statusClasses[$order->status] ?? 'bg-gray-100 text-gray-800' }}">
+                        {{ ucfirst(str_replace('-', ' ', $order->status)) }}
+                    </span>
+                </div>
                 
-                @if(count($allowedTransitions) > 0)
-                <form action="{{ route('admin.orders.change-status', $order) }}" method="POST" class="space-y-3">
+                <form action="{{ route('admin.orders.change-status', $order) }}" method="POST" class="space-y-4">
                     @csrf
                     <div>
-                        <label for="status" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">New Status</label>
-                        <select name="status" id="status" required class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none">
-                            <option value="">Select Next Status</option>
-                            @foreach($allowedTransitions as $trans)
-                                <option value="{{ $trans }}">{{ ucfirst(str_replace('-', ' ', $trans)) }}</option>
-                            @endforeach
+                        <label for="status" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                            <span>Status</span>
+                            <span class="text-[11px] font-mono text-brand-600 dark:text-brand-400">Current: {{ ucfirst(str_replace('-', ' ', $order->status)) }}</span>
+                        </label>
+                        <select name="status" id="status" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            <option value="">-- Choose New Status --</option>
+                            <optgroup label="Fulfillment Pipeline">
+                                <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }}>
+                                    Pending {{ $order->status === 'pending' ? '✓ (Current)' : '' }}
+                                </option>
+                                <option value="confirmed" {{ $order->status === 'confirmed' ? 'selected' : '' }}>
+                                    Confirmed {{ $order->status === 'confirmed' ? '✓ (Current)' : '' }}
+                                </option>
+                                <option value="processing" {{ $order->status === 'processing' ? 'selected' : '' }}>
+                                    Processing {{ $order->status === 'processing' ? '✓ (Current)' : '' }}
+                                </option>
+                                <option value="shipped" {{ $order->status === 'shipped' ? 'selected' : '' }}>
+                                    Shipped {{ $order->status === 'shipped' ? '✓ (Current)' : '' }}
+                                </option>
+                                <option value="out-for-delivery" {{ $order->status === 'out-for-delivery' ? 'selected' : '' }}>
+                                    Out for delivery {{ $order->status === 'out-for-delivery' ? '✓ (Current)' : '' }}
+                                </option>
+                                <option value="delivered" {{ $order->status === 'delivered' ? 'selected' : '' }}>
+                                    Delivered {{ $order->status === 'delivered' ? '✓ (Current)' : '' }}
+                                </option>
+                                <option value="completed" {{ $order->status === 'completed' ? 'selected' : '' }}>
+                                    Completed {{ $order->status === 'completed' ? '✓ (Current)' : '' }}
+                                </option>
+                            </optgroup>
+                            <optgroup label="Exceptions & Returns">
+                                <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }}>
+                                    Cancelled {{ $order->status === 'cancelled' ? '✓ (Current)' : '' }}
+                                </option>
+                                <option value="returned" {{ $order->status === 'returned' ? 'selected' : '' }}>
+                                    Returned {{ $order->status === 'returned' ? '✓ (Current)' : '' }}
+                                </option>
+                                <option value="refunded" {{ $order->status === 'refunded' ? 'selected' : '' }}>
+                                    Refunded {{ $order->status === 'refunded' ? '✓ (Current)' : '' }}
+                                </option>
+                            </optgroup>
                         </select>
                     </div>
+
+                    {{-- Delivery Options Configured in Settings --}}
+                    @if(!empty($deliveryCharges) && count($deliveryCharges) > 0)
                     <div>
-                        <label for="note" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Status Note (Optional)</label>
-                        <textarea name="note" id="note" rows="2" placeholder="Tracking code, dispatch note, etc." class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs focus:ring-2 focus:ring-brand-600 focus:outline-none"></textarea>
+                        <label for="delivery_option" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                            <span>Delivery Option</span>
+                            <span class="text-[10px] text-gray-400 font-normal lowercase">(from settings)</span>
+                        </label>
+                        <select name="delivery_option" id="delivery_option" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            <option value="">Keep Current ({{ $order->shipping_title ?? 'Standard Delivery' }})</option>
+                            @foreach($deliveryCharges as $charge)
+                                @php
+                                    $cTitle = is_array($charge) ? ($charge['title'] ?? '') : $charge;
+                                    $cAmount = is_array($charge) ? ($charge['amount'] ?? '') : '';
+                                @endphp
+                                @if(!empty($cTitle))
+                                    <option value="{{ $cTitle }}" {{ ($order->shipping_title === $cTitle) ? 'selected' : '' }}>
+                                        {{ $cTitle }} {{ $cAmount !== '' ? '(' . $currency . number_format((float)$cAmount) . ')' : '' }}
+                                    </option>
+                                @endif
+                            @endforeach
+                        </select>
+                        <p class="text-[11px] text-gray-400 mt-1">Configured in Admin Settings &rarr; Shipping & Delivery.</p>
                     </div>
-                    <button type="submit" class="w-full bg-brand-700 hover:bg-brand-800 text-white text-xs font-semibold py-2.5 rounded-xl transition">
+                    @endif
+
+                    <button type="submit" class="w-full bg-brand-700 hover:bg-brand-800 text-white text-xs font-semibold py-2.5 rounded-xl transition shadow-sm">
                         Update Status
                     </button>
                 </form>
-                @else
-                <p class="text-xs text-gray-500">This order is at a terminal state (<span class="font-semibold">{{ $order->status }}</span>) and cannot be transitioned further.</p>
-                @endif
             </div>
 
             <!-- Payment Details & Verification -->

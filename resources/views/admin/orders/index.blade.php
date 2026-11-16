@@ -13,6 +13,49 @@
         </div>
     </div>
 
+    <!-- Status Quick-Filter Pills -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-1 -mt-1 scrollbar-thin">
+        @php
+            $currentStatus = request('status');
+            $allStatusesMap = \App\Services\OrderService::allStatuses();
+            $pillBadges = [
+                'pending'          => ['dot' => 'bg-amber-500', 'badge' => 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200'],
+                'confirmed'        => ['dot' => 'bg-blue-500', 'badge' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200'],
+                'processing'       => ['dot' => 'bg-indigo-500', 'badge' => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-200'],
+                'shipped'          => ['dot' => 'bg-purple-500', 'badge' => 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200'],
+                'out-for-delivery' => ['dot' => 'bg-cyan-500', 'badge' => 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/50 dark:text-cyan-200'],
+                'delivered'        => ['dot' => 'bg-emerald-500', 'badge' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200'],
+                'completed'        => ['dot' => 'bg-green-500', 'badge' => 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200'],
+                'cancelled'        => ['dot' => 'bg-red-500', 'badge' => 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200'],
+                'returned'         => ['dot' => 'bg-rose-500', 'badge' => 'bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-200'],
+                'refunded'         => ['dot' => 'bg-gray-500', 'badge' => 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'],
+            ];
+        @endphp
+        <a href="{{ route('admin.orders.index', request()->except('status')) }}"
+           class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all {{ empty($currentStatus) ? 'bg-brand-700 text-white shadow-sm ring-2 ring-brand-700/20' : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800' }}">
+            <span>All Orders</span>
+            <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ empty($currentStatus) ? 'bg-brand-800/80 text-white font-bold' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-bold' }}">
+                {{ $totalOrdersCount ?? 0 }}
+            </span>
+        </a>
+
+        @foreach($allStatusesMap as $stKey => $stLabel)
+            @php
+                $isActive = $currentStatus === $stKey;
+                $count = $statusCounts[$stKey] ?? 0;
+                $style = $pillBadges[$stKey] ?? ['dot' => 'bg-gray-400', 'badge' => 'bg-gray-100 text-gray-700'];
+            @endphp
+            <a href="{{ route('admin.orders.index', array_merge(request()->except('status'), ['status' => $stKey])) }}"
+               class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all {{ $isActive ? 'bg-brand-700 text-white shadow-sm ring-2 ring-brand-700/20' : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800' }}">
+                <span class="w-2 h-2 rounded-full {{ $isActive ? 'bg-white' : $style['dot'] }}"></span>
+                <span>{{ $stLabel }}</span>
+                <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold {{ $isActive ? 'bg-brand-800/80 text-white' : ($count > 0 ? $style['badge'] : 'bg-gray-100 dark:bg-gray-800 text-gray-400') }}">
+                    {{ $count }}
+                </span>
+            </a>
+        @endforeach
+    </div>
+
     <!-- Filters & Search -->
     <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
         <form method="GET" action="{{ route('admin.orders.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">

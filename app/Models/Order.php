@@ -84,7 +84,7 @@ class Order extends Model
 
     public function statusHistories()
     {
-        return $this->hasMany(OrderStatusHistory::class)->orderByDesc('created_at');
+        return $this->hasMany(OrderStatusHistory::class)->orderBy('created_at', 'asc');
     }
 
     public function getStatusLabelAttribute(): string

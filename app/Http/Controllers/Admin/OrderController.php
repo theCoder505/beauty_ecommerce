@@ -45,12 +45,15 @@ class OrderController extends Controller
 
         $orders = $query->orderByDesc('created_at')->get();
 
-        $statuses = [
-            'pending', 'confirmed', 'processing', 'shipped',
-            'out-for-delivery', 'delivered', 'completed', 'cancelled', 'returned', 'refunded',
-        ];
+        $statuses = array_keys(OrderService::allStatuses());
 
-        return view('admin.orders.index', compact('orders', 'statuses'));
+        $statusCounts = Order::selectRaw('status, count(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->toArray();
+        $totalOrdersCount = Order::count();
+
+        return view('admin.orders.index', compact('orders', 'statuses', 'statusCounts', 'totalOrdersCount'));
     }
 
     public function show(Order $order): View
@@ -59,28 +62,36 @@ class OrderController extends Controller
             'user.addresses',
             'items.product.productImages',
             'payment',
-            'statusHistories' => fn ($q) => $q->orderByDesc('created_at'),
+            'statusHistories' => fn ($q) => $q->orderBy('created_at', 'asc'),
         ]);
 
         $allowedTransitions = $this->orderService->allowedTransitions($order->status);
+        $allStatuses = OrderService::allStatuses();
+        $deliveryCharges = app(\App\Services\SettingService::class)->getDeliveryCharges();
 
-        return view('admin.orders.show', compact('order', 'allowedTransitions'));
+        return view('admin.orders.show', compact('order', 'allowedTransitions', 'allStatuses', 'deliveryCharges'));
     }
 
     public function changeStatus(Request $request, Order $order): RedirectResponse
     {
-        $allowed = $this->orderService->allowedTransitions($order->status);
+        $validStatuses = array_keys(OrderService::allStatuses());
 
         $request->validate([
-            'status' => ['required', 'string', 'in:' . implode(',', $allowed)],
-            'note'   => ['nullable', 'string', 'max:500'],
+            'status'          => ['required', 'string', 'in:' . implode(',', $validStatuses)],
+            'delivery_option' => ['nullable', 'string', 'max:255'],
         ]);
 
         $changedBy = 'admin:' . auth('admin')->id() . ':' . auth('admin')->user()->name;
 
-        $this->orderService->changeStatus($order, $request->status, $changedBy, $request->note);
+        $note = null;
+        if ($request->filled('delivery_option')) {
+            $note = 'Delivery Option: ' . $request->delivery_option;
+            $order->update(['shipping_title' => $request->delivery_option]);
+        }
 
-        return back()->with('success', 'Order status updated to ' . ucfirst($request->status) . '.');
+        $this->orderService->changeStatus($order, $request->status, $changedBy, $note);
+
+        return back()->with('success', 'Order status updated to ' . ucfirst(str_replace('-', ' ', $request->status)) . '.');
     }
 
     public function verifyPayment(Request $request, Order $order): RedirectResponse
