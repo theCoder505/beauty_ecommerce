@@ -141,5 +141,81 @@ class SettingService
             ]);
         }
     }
+
+    public function configureTimezone(): void
+    {
+        $timezone = $this->get('timezone') ?? $this->get('app_timezone');
+        if ($timezone && in_array($timezone, \DateTimeZone::listIdentifiers(), true)) {
+            config(['app.timezone' => $timezone]);
+            date_default_timezone_set($timezone);
+        }
+    }
+
+    public function getAppTimezone(): string
+    {
+        return $this->get('timezone') ?? $this->get('app_timezone') ?? config('app.timezone', 'UTC');
+    }
+
+    public static function getTimezonesGrouped(): array
+    {
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+        $timezones = [];
+
+        foreach (\DateTimeZone::listIdentifiers() as $tz) {
+            $parts = explode('/', $tz, 2);
+            $group = count($parts) > 1 ? $parts[0] : 'General';
+            $city = count($parts) > 1 ? str_replace('_', ' ', $parts[1]) : $tz;
+
+            try {
+                $tzObj = new \DateTimeZone($tz);
+                $offset = $tzObj->getOffset($now);
+                $hours = intdiv($offset, 3600);
+                $minutes = abs(intdiv($offset % 3600, 60));
+                $sign = $hours >= 0 ? '+' : '-';
+                $offsetFormatted = sprintf('UTC%s%02d:%02d', $sign, abs($hours), $minutes);
+            } catch (\Throwable) {
+                $offsetFormatted = 'UTC';
+            }
+
+            $timezones[$group][] = [
+                'identifier' => $tz,
+                'city'       => $city,
+                'label'      => "({$offsetFormatted}) " . str_replace('_', ' ', $tz),
+                'offset'     => $offsetFormatted,
+            ];
+        }
+
+        // Sort groups so major regions appear in logical order
+        $preferredOrder = ['Asia', 'America', 'Europe', 'Africa', 'Australia', 'Pacific', 'Atlantic', 'Indian', 'Antarctica', 'Arctic', 'General'];
+        uksort($timezones, function ($a, $b) use ($preferredOrder) {
+            $posA = array_search($a, $preferredOrder);
+            $posB = array_search($b, $preferredOrder);
+            if ($posA === false && $posB === false) return strcmp($a, $b);
+            if ($posA === false) return 1;
+            if ($posB === false) return -1;
+            return $posA <=> $posB;
+        });
+
+        return $timezones;
+    }
+
+    public static function getTimezonesFlat(): array
+    {
+        $grouped = self::getTimezonesGrouped();
+        $flat = [];
+        foreach ($grouped as $group => $items) {
+            foreach ($items as $item) {
+                $flat[] = [
+                    'identifier' => $item['identifier'],
+                    'city'       => $item['city'],
+                    'group'      => $group,
+                    'label'      => $item['label'],
+                    'offset'     => $item['offset'],
+                    'search'     => strtolower($item['identifier'] . ' ' . $item['city'] . ' ' . $item['label'] . ' ' . $group),
+                ];
+            }
+        }
+        return $flat;
+    }
 }
 

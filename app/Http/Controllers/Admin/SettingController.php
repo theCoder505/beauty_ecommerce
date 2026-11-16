@@ -44,6 +44,13 @@ class SettingController extends Controller
             $this->settingService->set('site_icon', '', false, 'general');
         }
 
+        // Validate Timezone if submitted
+        if ($request->filled('timezone')) {
+            $request->validate([
+                'timezone' => ['required', 'string', 'in:' . implode(',', \DateTimeZone::listIdentifiers())],
+            ]);
+        }
+
         // Handle Delivery Charges
         if ($request->has('delivery_charges')) {
             $chargesInput = $request->input('delivery_charges', []);
@@ -85,6 +92,9 @@ class SettingController extends Controller
         foreach ($boolKeys as $bKey) {
             $this->settingService->set($bKey, $request->has($bKey) ? '1' : '0', false, 'payment');
         }
+
+        // Reconfigure runtime timezone
+        $this->settingService->configureTimezone();
 
         return redirect()->route('admin.settings.index')->with('success', 'Settings saved.');
     }

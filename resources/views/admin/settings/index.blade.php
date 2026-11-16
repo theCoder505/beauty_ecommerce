@@ -12,11 +12,12 @@
 
     <!-- Tab navigation -->
     <div class="flex items-center gap-2 border-b border-gray-200 dark:border-gray-800 pb-2 overflow-x-auto">
-        <button @click="tab = 'general'" :class="tab === 'general' ? 'bg-brand-700 text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">General & Store</button>
-        <button @click="tab = 'shipping'" :class="tab === 'shipping' ? 'bg-brand-700 text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">Shipping & Delivery</button>
-        <button @click="tab = 'payments'" :class="tab === 'payments' ? 'bg-brand-700 text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">Payment Methods</button>
-        <button @click="tab = 'socialite'" :class="tab === 'socialite' ? 'bg-brand-700 text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">Google OAuth</button>
-        <button @click="tab = 'seo'" :class="tab === 'seo' ? 'bg-brand-700 text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">SEO & Social</button>
+        <button @click="tab = 'general'" :class="tab === 'general' ? 'bg-brand-700 text-white font-bold shadow-md ring-2 ring-brand-700/40' : 'text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">General & Store</button>
+        <button @click="tab = 'timezone'" :class="tab === 'timezone' ? 'bg-brand-700 text-white font-bold shadow-md ring-2 ring-brand-700/40' : 'text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">Timezone & Clock</button>
+        <button @click="tab = 'shipping'" :class="tab === 'shipping' ? 'bg-brand-700 text-white font-bold shadow-md ring-2 ring-brand-700/40' : 'text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">Shipping & Delivery</button>
+        <button @click="tab = 'payments'" :class="tab === 'payments' ? 'bg-brand-700 text-white font-bold shadow-md ring-2 ring-brand-700/40' : 'text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">Payment Methods</button>
+        <button @click="tab = 'socialite'" :class="tab === 'socialite' ? 'bg-brand-700 text-white font-bold shadow-md ring-2 ring-brand-700/40' : 'text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">Google OAuth</button>
+        <button @click="tab = 'seo'" :class="tab === 'seo' ? 'bg-brand-700 text-white font-bold shadow-md ring-2 ring-brand-700/40' : 'text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">SEO & Social</button>
     </div>
 
     @if(isset($errors) && $errors->any())
@@ -130,6 +131,28 @@
                     <input type="number" step="0.01" name="free_shipping_threshold" value="{{ $settings['free_shipping_threshold']->value ?? '100.00' }}" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none">
                 </div>
             </div>
+
+            {{-- Timezone Quick Link in General Tab --}}
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl border-2 border-brand-300 dark:border-brand-700 bg-gradient-to-r from-brand-100/90 via-brand-50 to-indigo-50/70 dark:from-brand-950/80 dark:via-gray-900 dark:to-slate-900 shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-brand-700 text-white flex items-center justify-center shrink-0 shadow-md ring-4 ring-brand-700/20">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">Store & System Timezone</h4>
+                        <p class="text-xs text-gray-600 dark:text-gray-300 mt-0.5">Currently active: <span class="font-black text-brand-800 dark:text-brand-300 font-mono px-2 py-0.5 rounded bg-white dark:bg-gray-800 border border-brand-300 dark:border-brand-700">{{ config('app.timezone') }}</span> (PHP & JS Synchronized).</p>
+                    </div>
+                </div>
+                <button type="button" @click="tab = 'timezone'" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-700 hover:bg-brand-800 text-white text-xs font-bold shadow-md ring-2 ring-brand-700/30 transition self-start sm:self-auto shrink-0">
+                    <span>Manage Timezone</span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab: Timezone & Clock (Dedicated Component View) -->
+        <div x-show="tab === 'timezone'" class="space-y-6">
+            <x-timezone-picker :selected="$settings['timezone']->value ?? null" />
         </div>
 
         <!-- Tab 2: Payments -->

@@ -10,6 +10,70 @@ Alpine.start();
 // Expose SweetAlert2 globally
 window.Swal = Swal;
 
+// Global App Timezone & Formatting Helper
+window.getAppTimezone = function() {
+    return window.APP_TIMEZONE || document.querySelector('meta[name="app-timezone"]')?.getAttribute('content') || 'UTC';
+};
+
+window.formatAppDateTime = function(dateInput, options = {}) {
+    if (!dateInput) return '';
+    const date = (dateInput instanceof Date) ? dateInput : new Date(dateInput);
+    if (isNaN(date.getTime())) return '';
+    return new Intl.DateTimeFormat(undefined, {
+        timeZone: window.getAppTimezone(),
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,
+        ...options
+    }).format(date);
+};
+
+window.formatAppDate = function(dateInput, options = {}) {
+    if (!dateInput) return '';
+    const date = (dateInput instanceof Date) ? dateInput : new Date(dateInput);
+    if (isNaN(date.getTime())) return '';
+    return new Intl.DateTimeFormat(undefined, {
+        timeZone: window.getAppTimezone(),
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        ...options
+    }).format(date);
+};
+
+window.formatAppTime = function(dateInput, options = {}) {
+    if (!dateInput) return '';
+    const date = (dateInput instanceof Date) ? dateInput : new Date(dateInput);
+    if (isNaN(date.getTime())) return '';
+    return new Intl.DateTimeFormat(undefined, {
+        timeZone: window.getAppTimezone(),
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,
+        ...options
+    }).format(date);
+};
+
+window.renderAppTimes = function() {
+    document.querySelectorAll('[data-app-time]').forEach(el => {
+        const raw = el.getAttribute('data-app-time');
+        if (!raw) return;
+        const formatType = el.getAttribute('data-format') || 'datetime';
+        if (formatType === 'date') {
+            el.textContent = window.formatAppDate(raw);
+        } else if (formatType === 'time') {
+            el.textContent = window.formatAppTime(raw);
+        } else {
+            el.textContent = window.formatAppDateTime(raw);
+        }
+    });
+};
+
 // Global Toast helper
 window.toast = function(title, icon = 'success') {
     const isDark = document.documentElement.classList.contains('dark');
@@ -367,6 +431,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize image previews
     window.setupImagePreviews();
+
+    // Render any data-app-time elements
+    window.renderAppTimes();
 
     // Auto-dismiss classic toasts if rendered
     document.querySelectorAll('.toast').forEach(el => {

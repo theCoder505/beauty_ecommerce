@@ -4,6 +4,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="app-timezone" content="{{ config('app.timezone') }}">
+    <script>
+        window.APP_TIMEZONE = @json(config('app.timezone'));
+    </script>
     @php $siteSettings = app(\App\Services\SettingService::class)->all(); @endphp
     <title>@yield('title', 'Dashboard') – {{ $siteSettings['site_name'] ?? 'Admin Panel' }}</title>
     

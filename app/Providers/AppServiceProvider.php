@@ -60,6 +60,7 @@ class AppServiceProvider extends ServiceProvider
         try {
             if (Schema::hasTable('settings')) {
                 $settingService = $this->app->make(SettingService::class);
+                $settingService->configureTimezone();
                 $settingService->configureSocialite();
                 $settingService->configureStripe();
             }
