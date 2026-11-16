@@ -35,7 +35,14 @@ class BlogPost extends Model
 
     public function approvedComments()
     {
-        return $this->hasMany(BlogComment::class)->where('status', 'approved');
+        return $this->hasMany(BlogComment::class)
+            ->where('status', 'approved')
+            ->where(function ($q) {
+                $q->whereNull('parent_id')
+                  ->orWhereHas('parent', function ($pq) {
+                      $pq->where('status', 'approved');
+                  });
+            });
     }
 
     public function approvedTopComments()

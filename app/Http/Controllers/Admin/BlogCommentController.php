@@ -19,19 +19,31 @@ class BlogCommentController extends Controller
     public function approve(BlogComment $comment)
     {
         $comment->update(['status' => 'approved']);
+
+        // If approving a parent, re-approve its replies that were hidden with it
+        $comment->allReplies()->where('status', 'hidden')->update(['status' => 'approved']);
+
+        // If approving a reply whose parent is not approved, approve the parent as well
+        if ($comment->parent_id && $comment->parent && $comment->parent->status !== 'approved') {
+            $comment->parent->update(['status' => 'approved']);
+        }
+
         return back()->with('success', 'Comment approved.');
     }
 
     public function hide(BlogComment $comment)
     {
         $comment->update(['status' => 'hidden']);
-        return back()->with('success', 'Comment hidden.');
+        $comment->allReplies()->update(['status' => 'hidden']);
+
+        return back()->with('success', 'Comment and its replies hidden.');
     }
 
     public function destroy(BlogComment $comment)
     {
+        $comment->allReplies()->delete();
         $comment->delete();
-        return back()->with('success', 'Comment deleted.');
+        return back()->with('success', 'Comment and its replies deleted.');
     }
 
     public function bulkDelete(Request $request)
@@ -41,6 +53,7 @@ class BlogCommentController extends Controller
             'ids.*' => 'exists:blog_comments,id',
         ]);
 
+        BlogComment::whereIn('parent_id', $request->ids)->delete();
         $count = BlogComment::whereIn('id', $request->ids)->delete();
 
         return back()->with('success', "{$count} " . ($count === 1 ? 'comment' : 'comments') . ' deleted successfully.');

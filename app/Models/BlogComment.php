@@ -17,6 +17,19 @@ class BlogComment extends Model
         'status',
     ];
 
+    protected static function booted()
+    {
+        static::updated(function ($comment) {
+            if ($comment->wasChanged('status') && $comment->status === 'hidden') {
+                $comment->allReplies()->update(['status' => 'hidden']);
+            }
+        });
+
+        static::deleted(function ($comment) {
+            $comment->allReplies()->delete();
+        });
+    }
+
     public function post()
     {
         return $this->belongsTo(BlogPost::class, 'blog_post_id');
@@ -36,6 +49,9 @@ class BlogComment extends Model
     {
         return $this->hasMany(BlogComment::class, 'parent_id')
             ->where('status', 'approved')
+            ->whereHas('parent', function ($pq) {
+                $pq->where('status', 'approved');
+            })
             ->orderBy('created_at', 'asc');
     }
 
