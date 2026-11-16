@@ -12,12 +12,16 @@ class DashboardController extends Controller
 
     public function index(): View
     {
-        $stats               = $this->analytics->getDashboardStats();
-        $recentOrders        = $this->analytics->recentOrders();
-        $lowStockProducts    = $this->analytics->lowStockProducts();
-        $topSellingProducts  = $this->analytics->topSellingProducts();
-        $mostViewedProducts  = $this->analytics->mostViewedProducts();
-        $mostReviewedProducts = $this->analytics->mostReviewedProducts();
+        $stats                = $this->analytics->getDashboardStats();
+        $orderCharts          = $this->analytics->getOrderChartData();
+        $countryStats         = $this->analytics->getCountryVisitorStats();
+        $deviceStats          = $this->analytics->getDeviceStats();
+        $visitorLogs          = $this->analytics->getVisitorLogs(15);
+        $recentOrders         = $this->analytics->recentOrders(8);
+        $lowStockProducts     = $this->analytics->lowStockProducts(10);
+        $topSellingProducts   = $this->analytics->topSellingProducts(6);
+        $mostViewedProducts   = $this->analytics->mostViewedProducts(6);
+        $mostReviewedProducts = $this->analytics->mostReviewedProducts(6);
 
         // Aliases for view backwards-compatibility
         $lowStock     = $lowStockProducts;
@@ -27,6 +31,10 @@ class DashboardController extends Controller
 
         return view('admin.dashboard', compact(
             'stats',
+            'orderCharts',
+            'countryStats',
+            'deviceStats',
+            'visitorLogs',
             'recentOrders',
             'lowStockProducts',
             'topSellingProducts',

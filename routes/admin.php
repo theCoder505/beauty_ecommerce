@@ -30,6 +30,7 @@ Route::middleware('admin')->group(function () {
 
     // Products
     Route::resource('products', Admin\ProductController::class);
+    Route::patch('/products/{product}/stock', [Admin\ProductController::class, 'updateStock'])->name('products.update-stock');
     Route::delete('/products/{product}/images/{image}', [Admin\ProductController::class, 'deleteImage'])->name('products.delete-image');
 
     // Orders

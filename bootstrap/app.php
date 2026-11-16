@@ -3,6 +3,7 @@
 use App\Http\Middleware\AdminAuthenticate;
 use App\Http\Middleware\CacheSessionKeepAliveMiddleware;
 use App\Http\Middleware\RedirectIfAdminAuthenticated;
+use App\Http\Middleware\TrackSiteVisitMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -34,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->appendToGroup('web', [
             CacheSessionKeepAliveMiddleware::class,
+            TrackSiteVisitMiddleware::class,
         ]);
 
         $middleware->alias([

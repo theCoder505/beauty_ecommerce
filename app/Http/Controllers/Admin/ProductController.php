@@ -212,4 +212,29 @@ class ProductController extends Controller
     {
         return $this->destroyImage($request, $product, $image);
     }
+
+    public function updateStock(Request $request, Product $product)
+    {
+        $validated = $request->validate([
+            'stock' => 'required|integer|min:0',
+        ]);
+
+        $product->update([
+            'stock' => $validated['stock'],
+        ]);
+
+        if ($request->wantsJson() || $request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json([
+                'success' => true,
+                'message' => "Stock updated to {$product->stock} units for '{$product->name}'.",
+                'product' => [
+                    'id'    => $product->id,
+                    'name'  => $product->name,
+                    'stock' => $product->stock,
+                ],
+            ]);
+        }
+
+        return back()->with('success', "Stock updated to {$product->stock} units for '{$product->name}'.");
+    }
 }
