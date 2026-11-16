@@ -118,8 +118,8 @@
             <template x-if="addressesList.length > 0">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <template x-for="addr in addressesList" :key="addr.id">
-                        <div class="rounded-2xl border transition-all duration-200 p-5 flex flex-col justify-between"
-                             :class="addr.is_primary ? 'border-brand-700 bg-brand-50/30 dark:bg-brand-900/10 shadow-sm ring-1 ring-brand-700/30' : 'border-stone-200 dark:border-gray-700 bg-stone-50/40 dark:bg-gray-800/40 hover:border-stone-300 dark:hover:border-gray-600'">
+                        <div class="rounded-2xl border-2 transition-all duration-200 p-5 flex flex-col justify-between"
+                             :class="addr.is_primary ? 'border-brand-700 bg-brand-100/90 dark:bg-brand-900/60 shadow-md ring-2 ring-brand-700/30 dark:ring-brand-400/40' : 'border-stone-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 hover:border-brand-300 dark:hover:border-gray-600'">
                             <div>
                                 <div class="flex items-center justify-between gap-2 mb-3">
                                     <div class="flex items-center gap-2">

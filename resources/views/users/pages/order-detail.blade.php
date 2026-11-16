@@ -58,7 +58,7 @@
                 @if($order->payment)
                 <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-cream-200 dark:border-gray-700">
                     <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Payment</p>
-                    <p class="text-sm text-gray-800 dark:text-gray-200 capitalize font-semibold">{{ $order->payment->method }}</p>
+                    <p class="text-sm text-gray-800 dark:text-gray-200 font-semibold uppercase">{{ $order->payment->method }}</p>
                     <span class="px-2 py-0.5 rounded-full text-[11px] font-bold {{ $order->payment->status==='verified'?'bg-green-100 text-green-700':'bg-amber-100 text-amber-700' }}">{{ ucfirst($order->payment->status) }}</span>
                 </div>
                 @endif

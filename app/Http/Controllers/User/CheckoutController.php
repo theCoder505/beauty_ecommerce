@@ -144,39 +144,61 @@ class CheckoutController extends Controller
         ]);
     }
 
-    public function place(Request $request): RedirectResponse|\Illuminate\Http\Response
+    public function place(Request $request): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $user = Auth::user();
 
-        // Enforce user name and email cannot be changed
-        $request->merge([
-            'shipping_name'  => $user->name,
-            'shipping_email' => $user->email,
-        ]);
-
         $data = $request->validate([
-            'shipping_name'      => ['required', 'string', 'max:255'],
-            'shipping_email'     => ['required', 'email', 'max:255'],
-            'shipping_phone'     => ['required', 'string', 'max:30'],
-            'shipping_address'   => ['required', 'string', 'max:500'],
-            'shipping_city'      => ['required', 'string', 'max:100'],
-            'shipping_state'     => ['nullable', 'string', 'max:100'],
-            'shipping_zip'       => ['nullable', 'string', 'max:20'],
-            'shipping_country'   => ['nullable', 'string', 'max:100'],
-            'notes'              => ['nullable', 'string', 'max:1000'],
+            'address_id'         => ['required', 'integer'],
+            'delivery_charge_id' => ['required', 'string'],
             'payment_method'     => ['required', 'string'],
             'transaction_id'     => ['nullable', 'string', 'max:255'],
+            'notes'              => ['nullable', 'string', 'max:1000'],
             'buy_now'            => ['nullable', 'boolean'],
             'product_id'         => ['nullable', 'integer', 'exists:products,id'],
             'quantity'           => ['nullable', 'integer', 'min:1'],
-            'address_id'         => ['nullable', 'integer'],
-            'delivery_charge_id' => ['required', 'string'],
             'coupon_code'        => ['nullable', 'string', 'max:50'],
         ]);
 
-        // Guarantee that shipping_name and shipping_email are exactly the authenticated user's name and email
-        $data['shipping_name']  = $user->name;
-        $data['shipping_email'] = $user->email;
+        // Securely retrieve the user's saved address
+        $userAddress = $user->addresses()->find($data['address_id'])
+            ?? $user->primaryAddress
+            ?? $user->addresses()->first();
+
+        if (!$userAddress) {
+            $msg = 'Please add a delivery address in your profile before checking out.';
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $msg,
+                    'errors'  => ['address_id' => [$msg]],
+                ], 422);
+            }
+            return back()->withErrors(['address_id' => $msg]);
+        }
+
+        // Auto-fill all shipping snapshot fields securely from verified user & address models
+        $data['shipping_name']    = $userAddress->recipient_name ?: $user->name;
+        $data['shipping_email']   = $user->email;
+        $data['shipping_phone']   = $userAddress->phone ?: ($user->phone ?: 'N/A');
+        $data['shipping_address'] = $userAddress->address_line;
+        $data['shipping_city']    = $userAddress->city ?: 'Dhaka';
+        $data['shipping_state']   = $userAddress->state;
+        $data['shipping_zip']     = $userAddress->postal_code;
+        $data['shipping_country'] = $userAddress->country ?: 'BD';
+
+        // Check transaction ID if manual / bank transfer
+        if (in_array($data['payment_method'], ['manual', 'bank_transfer']) && empty(trim((string) ($data['transaction_id'] ?? '')))) {
+            $msg = 'Please enter the Transaction ID / Reference Number for your mobile banking or bank transfer.';
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $msg,
+                    'errors'  => ['transaction_id' => [$msg]],
+                ], 422);
+            }
+            return back()->withErrors(['transaction_id' => $msg]);
+        }
 
         // Resolve Delivery Charge chosen by user
         $deliveryCharges = $this->settingService->getDeliveryCharges();
@@ -190,7 +212,15 @@ class CheckoutController extends Controller
         $enabledMethods = $this->getEnabledPaymentMethods();
 
         if (! in_array($data['payment_method'], $enabledMethods)) {
-            return back()->withErrors(['payment_method' => 'Selected payment method is not available.']);
+            $msg = 'Selected payment method is not available.';
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $msg,
+                    'errors'  => ['payment_method' => [$msg]],
+                ], 422);
+            }
+            return back()->withErrors(['payment_method' => $msg]);
         }
 
         $isBuyNow = !empty($data['buy_now']) && !empty($data['product_id']);
@@ -241,7 +271,18 @@ class CheckoutController extends Controller
         }
 
         // COD / Manual bank transfer / other methods
-        $order = $this->checkoutService->placeOrder($data, $data['payment_method'], $customItems, !$isBuyNow);
+        try {
+            $order = $this->checkoutService->placeOrder($data, $data['payment_method'], $customItems, !$isBuyNow);
+        } catch (\RuntimeException $e) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'errors'  => ['general' => [$e->getMessage()]],
+                ], 422);
+            }
+            return back()->withErrors(['general' => $e->getMessage()]);
+        }
 
         try {
             $order->load('items');
@@ -254,7 +295,16 @@ class CheckoutController extends Controller
 
         session()->forget('checkout_idempotency_key');
 
-        return redirect()->route('checkout.success', $order->id)
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success'      => true,
+                'redirect_url' => route('user.orders'),
+                'order_id'     => $order->id,
+                'message'      => 'Order placed successfully!',
+            ]);
+        }
+
+        return redirect()->route('user.orders')
             ->with('success', 'Order placed successfully!');
     }
 
@@ -323,25 +373,33 @@ class CheckoutController extends Controller
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
 
     private function getEnabledPaymentMethods(): array
     {
         $methods = [];
 
-        if ($this->settingService->get('payment_cod_enabled')) {
+        $cod = $this->settingService->get('cod_enabled');
+        if ($cod === null || $cod == '1' || $this->settingService->get('payment_cod_enabled')) {
             $methods[] = 'cod';
         }
-        if ($this->settingService->get('payment_stripe_enabled')) {
-            $methods[] = 'stripe';
-        }
-        if ($this->settingService->get('payment_bank_transfer_enabled')) {
+
+        $manual = $this->settingService->get('manual_payment_enabled');
+        if ($manual === null || $manual == '1' || $this->settingService->get('payment_bank_transfer_enabled')) {
+            $methods[] = 'manual';
             $methods[] = 'bank_transfer';
+        }
+
+        $stripe = $this->settingService->get('stripe_enabled');
+        if ($stripe == '1' || $this->settingService->get('payment_stripe_enabled')) {
+            $methods[] = 'stripe';
         }
 
         return $methods;
     }
 
-    private function handleStripeCheckout(array $data, ?\Illuminate\Support\Collection $customItems = null, bool $isBuyNow = false): RedirectResponse
+    private function handleStripeCheckout(array $data, ?\Illuminate\Support\Collection $customItems = null, bool $isBuyNow = false): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         Stripe::setApiKey($this->settingService->get('stripe_secret_key'));
 
@@ -381,6 +439,14 @@ class CheckoutController extends Controller
 
         // Store Stripe session ID as transaction_id on the payment record
         $order->payment()->update(['transaction_id' => $stripeSession->id]);
+
+        if (request()->expectsJson() || request()->ajax()) {
+            return response()->json([
+                'success'      => true,
+                'redirect_url' => $stripeSession->url,
+                'order_id'     => $order->id,
+            ]);
+        }
 
         return redirect()->away($stripeSession->url);
     }
