@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\User\BlogController;
+use App\Http\Controllers\User\ContactController;
 use App\Http\Controllers\User\HomeController;
 use App\Http\Controllers\User\ProductController;
 use App\Http\Controllers\User\SeoController;
@@ -28,4 +29,10 @@ Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name
 // Blog
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{post:slug}', [BlogController::class, 'show'])->name('blog.show');
+
+// Contact & FAQs
+Route::get('/contact', [ContactController::class, 'show'])->name('contact');
+Route::post('/contact/send-otp', [ContactController::class, 'sendOtp'])->name('contact.send-otp');
+Route::post('/contact/resend-otp', [ContactController::class, 'resendOtp'])->name('contact.resend-otp');
+Route::post('/contact/submit', [ContactController::class, 'submit'])->name('contact.submit');
 

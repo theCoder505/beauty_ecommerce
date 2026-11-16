@@ -81,6 +81,14 @@ class HomeController extends Controller
             ['is_active' => true],
         );
 
+        \App\Services\NotificationService::notifyAdmins(
+            'newsletter_subscribe',
+            'New Subscriber',
+            "{$data['email']} subscribed to the newsletter.",
+            route('admin.subscribers.index'),
+            'subscribe'
+        );
+
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,

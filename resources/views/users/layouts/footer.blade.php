@@ -87,6 +87,12 @@
                     {{ $settings['contact_address'] }}
                 </li>
                 @endif
+                <li class="pt-2">
+                    <a href="{{ route('contact') }}" class="inline-flex items-center gap-1.5 text-brand-400 hover:text-brand-300 font-medium transition">
+                        <span>Send Message & View FAQs</span>
+                        <span>→</span>
+                    </a>
+                </li>
             </ul>
         </div>
     </div>

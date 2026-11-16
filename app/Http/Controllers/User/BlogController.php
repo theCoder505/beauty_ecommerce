@@ -64,6 +64,14 @@ class BlogController extends Controller
         } else {
             BlogLike::create(['blog_post_id' => $post->id, 'user_id' => $user->id]);
             $liked = true;
+
+            \App\Services\NotificationService::notifyAdmins(
+                'blog_like',
+                'New Post Like',
+                "{$user->name} liked your blog post \"{$post->title}\".",
+                route('blog.show', $post->slug),
+                'like'
+            );
         }
 
         return response()->json(['liked' => $liked, 'count' => $post->likes()->count()]);
@@ -77,6 +85,7 @@ class BlogController extends Controller
         ]);
 
         $parentId = $request->parent_id;
+        $parentComment = null;
         if ($parentId) {
             $parentComment = BlogComment::find($parentId);
             if ($parentComment && $parentComment->parent_id) {
@@ -94,6 +103,40 @@ class BlogController extends Controller
         ]);
 
         $comment->load(['user', 'likes']);
+        $currentUser = auth()->user();
+
+        // Send notifications
+        if ($parentId && $parentComment) {
+            // Reply notification to parent comment author
+            if ($parentComment->user_id && $parentComment->user_id !== auth()->id()) {
+                \App\Services\NotificationService::notifyUser(
+                    $parentComment->user_id,
+                    'comment_reply',
+                    'New Reply to Your Comment',
+                    "{$currentUser->name} replied to your comment on \"{$post->title}\".",
+                    route('blog.show', $post->slug) . '#comments',
+                    'reply'
+                );
+            }
+
+            // Notification to admin
+            \App\Services\NotificationService::notifyAdmins(
+                'blog_reply',
+                'New Comment Reply',
+                "{$currentUser->name} replied to a comment on \"{$post->title}\".",
+                route('admin.blog-comments.index'),
+                'reply'
+            );
+        } else {
+            // New comment notification to admin
+            \App\Services\NotificationService::notifyAdmins(
+                'blog_comment',
+                'New Blog Comment',
+                "{$currentUser->name} commented on \"{$post->title}\".",
+                route('admin.blog-comments.index'),
+                'comment'
+            );
+        }
 
         if ($request->expectsJson() || $request->ajax()) {
             $html = view('users.pages.partials.comment-item', [
@@ -131,6 +174,21 @@ class BlogController extends Controller
                 'user_id'         => $user->id,
             ]);
             $liked = true;
+
+            // Notify comment author if it's not the same person
+            if ($comment->user_id && $comment->user_id !== $user->id) {
+                $post = $comment->blogPost;
+                $postTitle = $post ? $post->title : 'a blog post';
+                $postSlug = $post ? $post->slug : '';
+                \App\Services\NotificationService::notifyUser(
+                    $comment->user_id,
+                    'comment_like',
+                    'Comment Liked',
+                    "{$user->name} liked your comment on \"{$postTitle}\".",
+                    $postSlug ? route('blog.show', $postSlug) . '#comments' : null,
+                    'like'
+                );
+            }
         }
 
         return response()->json([

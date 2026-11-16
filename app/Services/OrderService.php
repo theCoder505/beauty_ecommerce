@@ -40,6 +40,19 @@ class OrderService
                         ->decrement('stock', $item->quantity);
                 }
             }
+
+            // Notify user about order status change
+            if ($order->user_id && $oldStatus !== $newStatus) {
+                $statusLabel = self::allStatuses()[$newStatus] ?? ucfirst(str_replace('-', ' ', $newStatus));
+                \App\Services\NotificationService::notifyUser(
+                    $order->user_id,
+                    'order_status',
+                    'Order Status Updated',
+                    "Your order #{$order->order_number} status has been updated to {$statusLabel}.",
+                    route('user.orders.show', $order->id),
+                    'status'
+                );
+            }
         });
     }
 

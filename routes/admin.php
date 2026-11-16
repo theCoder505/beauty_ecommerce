@@ -71,5 +71,31 @@ Route::middleware('admin')->group(function () {
     // Visitor activity logs
     Route::delete('/visitor-logs/{visit}', [Admin\DashboardController::class, 'destroyVisitorLog'])->name('visitor-logs.destroy');
     Route::post('/visitor-logs/bulk-delete', [Admin\DashboardController::class, 'bulkDeleteVisitorLogs'])->name('visitor-logs.bulk-delete');
+
+    // Users Management
+    Route::get('/users', [Admin\UserController::class, 'index'])->name('users.index');
+    Route::get('/users/{user}', [Admin\UserController::class, 'show'])->name('users.show');
+    Route::post('/users/{user}/toggle-block', [Admin\UserController::class, 'toggleBlock'])->name('users.toggle-block');
+    Route::delete('/users/{user}', [Admin\UserController::class, 'destroy'])->name('users.destroy');
+
+    // FAQs Management
+    Route::get('/faqs', [Admin\FaqController::class, 'index'])->name('faqs.index');
+    Route::post('/faqs', [Admin\FaqController::class, 'store'])->name('faqs.store');
+    Route::put('/faqs/{faq}', [Admin\FaqController::class, 'update'])->name('faqs.update');
+    Route::post('/faqs/{faq}/toggle', [Admin\FaqController::class, 'toggle'])->name('faqs.toggle');
+    Route::delete('/faqs/{faq}', [Admin\FaqController::class, 'destroy'])->name('faqs.destroy');
+
+    // Contact Inquiries Management
+    Route::get('/contact-messages', [Admin\ContactMessageController::class, 'index'])->name('contact-messages.index');
+    Route::get('/contact-messages/{contact_message}', [Admin\ContactMessageController::class, 'show'])->name('contact-messages.show');
+    Route::post('/contact-messages/{contact_message}/reply', [Admin\ContactMessageController::class, 'reply'])->name('contact-messages.reply');
+    Route::delete('/contact-messages/{contact_message}', [Admin\ContactMessageController::class, 'destroy'])->name('contact-messages.destroy');
+
+    // Notifications
+    Route::get('/notifications', [Admin\NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/mark-all-read', [Admin\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::post('/notifications/{id}/read', [Admin\NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::delete('/notifications/clear', [Admin\NotificationController::class, 'clear'])->name('notifications.clear');
+    Route::delete('/notifications/{id}', [Admin\NotificationController::class, 'destroy'])->name('notifications.destroy');
 });
 

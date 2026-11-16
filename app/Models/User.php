@@ -14,6 +14,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name', 'email', 'password', 'avatar', 'phone',
         'google_id', 'provider', 'is_active',
+        'is_blocked', 'blocked_at', 'blocked_reason',
     ];
 
     protected $hidden = [
@@ -27,6 +28,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'is_blocked' => 'boolean',
+            'blocked_at' => 'datetime',
         ];
     }
 

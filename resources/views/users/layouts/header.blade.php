@@ -3,6 +3,11 @@
     $cartCount = app(\App\Services\CartService::class)->count();
     $wlCount = auth()->check() ? app(\App\Services\WishlistService::class)->count() : 0;
     $siteName = $settings['site_name'] ?? config('app.name');
+
+    $isHome = request()->routeIs('home');
+    $isShop = request()->routeIs('shop.*') || request()->routeIs('products.*');
+    $isBlog = request()->routeIs('blog.*');
+    $isContact = request()->routeIs('contact*');
 @endphp
 <header
     class="sticky top-0 z-50 bg-cream-50/95 dark:bg-gray-950/95 backdrop-blur border-b border-cream-200 dark:border-gray-800"
@@ -25,12 +30,35 @@
         </a>
 
         {{-- Nav (desktop) --}}
-        <nav class="hidden md:flex items-center gap-6 ml-6 text-sm font-medium text-gray-700 dark:text-gray-300">
-            <a href="{{ route('home') }}" class="hover:text-brand-700 dark:hover:text-brand-400 transition">Home</a>
+        <nav class="hidden md:flex items-center gap-6 ml-6 text-sm font-medium">
+            <a href="{{ route('home') }}"
+                class="relative py-1 transition {{ $isHome ? 'text-brand-700 dark:text-brand-400 font-semibold' : 'text-gray-700 dark:text-gray-300 hover:text-brand-700 dark:hover:text-brand-400' }}">
+                <span>Home</span>
+                @if($isHome)
+                    <span class="absolute -bottom-1.5 left-0 w-full h-0.5 bg-brand-700 dark:bg-brand-400 rounded-full"></span>
+                @endif
+            </a>
             <a href="{{ route('shop.index') }}"
-                class="hover:text-brand-700 dark:hover:text-brand-400 transition">Shop</a>
+                class="relative py-1 transition {{ $isShop ? 'text-brand-700 dark:text-brand-400 font-semibold' : 'text-gray-700 dark:text-gray-300 hover:text-brand-700 dark:hover:text-brand-400' }}">
+                <span>Shop</span>
+                @if($isShop)
+                    <span class="absolute -bottom-1.5 left-0 w-full h-0.5 bg-brand-700 dark:bg-brand-400 rounded-full"></span>
+                @endif
+            </a>
             <a href="{{ route('blog.index') }}"
-                class="hover:text-brand-700 dark:hover:text-brand-400 transition">Blog</a>
+                class="relative py-1 transition {{ $isBlog ? 'text-brand-700 dark:text-brand-400 font-semibold' : 'text-gray-700 dark:text-gray-300 hover:text-brand-700 dark:hover:text-brand-400' }}">
+                <span>Blog</span>
+                @if($isBlog)
+                    <span class="absolute -bottom-1.5 left-0 w-full h-0.5 bg-brand-700 dark:bg-brand-400 rounded-full"></span>
+                @endif
+            </a>
+            <a href="{{ route('contact') }}"
+                class="relative py-1 transition {{ $isContact ? 'text-brand-700 dark:text-brand-400 font-semibold' : 'text-gray-700 dark:text-gray-300 hover:text-brand-700 dark:hover:text-brand-400' }}">
+                <span>Contact</span>
+                @if($isContact)
+                    <span class="absolute -bottom-1.5 left-0 w-full h-0.5 bg-brand-700 dark:bg-brand-400 rounded-full"></span>
+                @endif
+            </a>
         </nav>
 
         <div class="ml-auto flex items-center gap-2 sm:gap-3">
@@ -90,7 +118,7 @@
 
             {{-- Wishlist --}}
             <a href="{{ auth()->check() ? route('wishlist.index') : route('login') }}"
-                class="relative p-2 rounded-full hover:bg-cream-200 dark:hover:bg-gray-800 transition"
+                class="relative p-2 rounded-full hover:bg-cream-200 dark:hover:bg-gray-800 transition {{ request()->routeIs('wishlist.*') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/60 ring-1 ring-brand-500/20' : 'text-gray-700 dark:text-gray-300' }}"
                 aria-label="Wishlist">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -102,7 +130,7 @@
 
             {{-- Cart --}}
             <a href="{{ route('cart.index') }}"
-                class="relative p-2 rounded-full hover:bg-cream-200 dark:hover:bg-gray-800 transition"
+                class="relative p-2 rounded-full hover:bg-cream-200 dark:hover:bg-gray-800 transition {{ request()->routeIs('cart.*') ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/60 ring-1 ring-brand-500/20' : 'text-gray-700 dark:text-gray-300' }}"
                 aria-label="Cart">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -112,23 +140,166 @@
                     class="{{ $cartCount > 0 ? '' : 'hidden' }} absolute -top-1 -right-1 bg-brand-700 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{{ $cartCount }}</span>
             </a>
 
+            {{-- User Notifications (when authenticated) --}}
+            @auth
+                <div class="relative" x-data="{
+                    open: false,
+                    unreadCount: 0,
+                    notifications: [],
+                    loading: false,
+                    async fetchNotifications() {
+                        this.loading = true;
+                        try {
+                            const res = await fetch('{{ route('notifications.index') }}');
+                            if (res.ok) {
+                                const data = await res.json();
+                                this.unreadCount = data.unread_count || 0;
+                                this.notifications = data.notifications || [];
+                            }
+                        } catch (e) {
+                            console.error('Failed to load user notifications', e);
+                        } finally {
+                            this.loading = false;
+                        }
+                    },
+                    async markAllRead() {
+                        try {
+                            const res = await fetch('{{ route('notifications.mark-all-read') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Accept': 'application/json'
+                                }
+                            });
+                            if (res.ok) {
+                                this.unreadCount = 0;
+                                this.notifications.forEach(n => n.read = true);
+                            }
+                        } catch (e) {
+                            console.error(e);
+                        }
+                    },
+                    async clickNotification(notif) {
+                        if (!notif.read) {
+                            fetch('{{ url('notifications') }}/' + notif.id + '/read', {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Accept': 'application/json'
+                                }
+                            });
+                            notif.read = true;
+                            if (this.unreadCount > 0) this.unreadCount--;
+                        }
+                        if (notif.url) {
+                            window.location.href = notif.url;
+                        }
+                    }
+                }" x-init="fetchNotifications()">
+                    <button @click="open = !open" type="button"
+                        class="relative p-2 rounded-full hover:bg-cream-200 dark:hover:bg-gray-800 transition text-gray-700 dark:text-gray-300"
+                        aria-label="Notifications">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                        <span x-show="unreadCount > 0" x-text="unreadCount > 99 ? '99+' : unreadCount"
+                            class="absolute -top-1 -right-1 bg-brand-700 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full min-w-4 text-center leading-tight"></span>
+                    </button>
+
+                    {{-- Dropdown Panel --}}
+                    <div x-show="open" @click.away="open = false" x-cloak x-transition
+                        class="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                        <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-cream-50/50 dark:bg-gray-950/50">
+                            <div class="flex items-center gap-2">
+                                <span class="font-semibold text-sm text-gray-900 dark:text-gray-100">Notifications</span>
+                                <span x-show="unreadCount > 0" x-text="unreadCount + ' new'"
+                                    class="text-[10px] font-semibold bg-brand-100 text-brand-800 dark:bg-brand-900/40 dark:text-brand-300 px-2 py-0.5 rounded-full"></span>
+                            </div>
+                            <button x-show="unreadCount > 0" @click="markAllRead()" type="button"
+                                class="text-xs text-brand-700 hover:text-brand-800 dark:text-brand-400 font-medium transition">
+                                Mark all read
+                            </button>
+                        </div>
+
+                        <div class="max-h-80 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800">
+                            <template x-if="notifications.length === 0">
+                                <div class="py-8 text-center text-gray-400 dark:text-gray-500 text-xs">
+                                    No notifications yet
+                                </div>
+                            </template>
+                            <template x-for="notif in notifications" :key="notif.id">
+                                <div @click="clickNotification(notif)"
+                                    class="p-3.5 hover:bg-cream-50 dark:hover:bg-gray-800/60 cursor-pointer transition flex items-start gap-3"
+                                    :class="!notif.read ? 'bg-brand-50/40 dark:bg-brand-950/20' : ''">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs"
+                                        :class="!notif.read ? 'bg-brand-700 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'">
+                                        <template x-if="notif.type.includes('order')">
+                                            <span>📦</span>
+                                        </template>
+                                        <template x-if="notif.type.includes('like')">
+                                            <span>❤️</span>
+                                        </template>
+                                        <template x-if="notif.type.includes('reply') || notif.type.includes('comment')">
+                                            <span>💬</span>
+                                        </template>
+                                        <template x-if="!['order', 'like', 'reply', 'comment'].some(t => notif.type.includes(t))">
+                                            <span>🔔</span>
+                                        </template>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between gap-1">
+                                            <p class="text-xs font-semibold text-gray-900 dark:text-gray-100 truncate" x-text="notif.title"></p>
+                                            <span class="text-[10px] text-gray-400 whitespace-nowrap" x-text="notif.created_at"></span>
+                                        </div>
+                                        <p class="text-xs text-gray-600 dark:text-gray-300 mt-0.5 line-clamp-2" x-text="notif.message"></p>
+                                    </div>
+                                    <span x-show="!notif.read" class="w-2 h-2 rounded-full bg-brand-600 shrink-0 mt-1.5"></span>
+                                </div>
+                            </template>
+                        </div>
+
+                        <div class="p-2.5 border-t border-gray-100 dark:border-gray-800 text-center bg-cream-50/50 dark:bg-gray-950/50">
+                            <a href="{{ route('user.notifications') }}" class="text-xs font-semibold text-brand-700 hover:text-brand-800 dark:text-brand-400 block transition">
+                                View All Notifications →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            @endauth
+
             {{-- User menu --}}
             @auth
                 <div class="relative" x-data="{ open: false }">
                     <button @click="open = !open"
-                        class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-brand-700 dark:hover:text-brand-400 transition">
+                        class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-brand-700 dark:hover:text-brand-400 transition"
+                        title="Account Menu">
                         <img src="{{ auth()->user()->avatar_url }}" alt="{{ auth()->user()->name }}"
-                            class="w-8 h-8 rounded-full object-cover border border-cream-300">
+                            class="w-8 h-8 rounded-full object-cover transition {{ request()->routeIs('user.*') ? 'border-2 border-brand-700 dark:border-brand-400 ring-2 ring-brand-500/30' : 'border border-cream-300 dark:border-gray-700' }}">
                     </button>
                     <div x-show="open" @click.away="open = false" x-transition
                         class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl py-1 z-50">
                         <a href="{{ route('user.dashboard') }}"
-                            class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-cream-100 dark:hover:bg-gray-800">Dashboard</a>
+                            class="block px-4 py-2 text-sm transition {{ request()->routeIs('user.dashboard') ? 'text-brand-700 dark:text-brand-400 font-semibold bg-cream-50 dark:bg-gray-800' : 'text-gray-700 dark:text-gray-200 hover:bg-cream-100 dark:hover:bg-gray-800' }}">
+                            Dashboard
+                        </a>
                         <a href="{{ route('user.orders') }}"
-                            class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-cream-100 dark:hover:bg-gray-800">My
-                            Orders</a>
+                            class="block px-4 py-2 text-sm transition {{ request()->routeIs('user.orders*') ? 'text-brand-700 dark:text-brand-400 font-semibold bg-cream-50 dark:bg-gray-800' : 'text-gray-700 dark:text-gray-200 hover:bg-cream-100 dark:hover:bg-gray-800' }}">
+                            My Orders
+                        </a>
+                        <a href="{{ route('user.notifications') }}"
+                            class="block px-4 py-2 text-sm transition flex items-center justify-between {{ request()->routeIs('user.notifications*') ? 'text-brand-700 dark:text-brand-400 font-semibold bg-cream-50 dark:bg-gray-800' : 'text-gray-700 dark:text-gray-200 hover:bg-cream-100 dark:hover:bg-gray-800' }}">
+                            <span>Notifications</span>
+                            @if(auth()->user()->unreadNotifications()->count() > 0)
+                                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-brand-700 text-white">
+                                    {{ auth()->user()->unreadNotifications()->count() }}
+                                </span>
+                            @endif
+                        </a>
                         <a href="{{ route('user.profile') }}"
-                            class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-cream-100 dark:hover:bg-gray-800">Profile</a>
+                            class="block px-4 py-2 text-sm transition {{ request()->routeIs('user.profile') ? 'text-brand-700 dark:text-brand-400 font-semibold bg-cream-50 dark:bg-gray-800' : 'text-gray-700 dark:text-gray-200 hover:bg-cream-100 dark:hover:bg-gray-800' }}">
+                            Profile
+                        </a>
                         <hr class="my-1 border-gray-200 dark:border-gray-700">
                         <form method="POST" action="{{ route('logout') }}">@csrf
                             <button type="submit"
@@ -157,13 +328,28 @@
 
     {{-- Mobile nav --}}
     <div x-show="mobileOpen" x-transition x-collapse
-        class="md:hidden border-t border-cream-200 dark:border-gray-800 bg-cream-50 dark:bg-gray-950 px-4 py-4 space-y-3 text-sm font-medium">
-        <a href="{{ route('home') }}" class="block py-2 text-gray-700 dark:text-gray-200">Home</a>
-        <a href="{{ route('shop.index') }}" class="block py-2 text-gray-700 dark:text-gray-200">Shop</a>
-        <a href="{{ route('blog.index') }}" class="block py-2 text-gray-700 dark:text-gray-200">Blog</a>
+        class="md:hidden border-t border-cream-200 dark:border-gray-800 bg-cream-50 dark:bg-gray-950 px-4 py-4 space-y-1 text-sm font-medium">
+        <a href="{{ route('home') }}"
+            class="block px-3 py-2 rounded-xl transition {{ $isHome ? 'bg-brand-100 text-brand-800 dark:bg-brand-950/60 dark:text-brand-300 font-semibold' : 'text-gray-700 dark:text-gray-200 hover:bg-cream-100 dark:hover:bg-gray-900' }}">
+            Home
+        </a>
+        <a href="{{ route('shop.index') }}"
+            class="block px-3 py-2 rounded-xl transition {{ $isShop ? 'bg-brand-100 text-brand-800 dark:bg-brand-950/60 dark:text-brand-300 font-semibold' : 'text-gray-700 dark:text-gray-200 hover:bg-cream-100 dark:hover:bg-gray-900' }}">
+            Shop
+        </a>
+        <a href="{{ route('blog.index') }}"
+            class="block px-3 py-2 rounded-xl transition {{ $isBlog ? 'bg-brand-100 text-brand-800 dark:bg-brand-950/60 dark:text-brand-300 font-semibold' : 'text-gray-700 dark:text-gray-200 hover:bg-cream-100 dark:hover:bg-gray-900' }}">
+            Blog
+        </a>
+        <a href="{{ route('contact') }}"
+            class="block px-3 py-2 rounded-xl transition {{ $isContact ? 'bg-brand-100 text-brand-800 dark:bg-brand-950/60 dark:text-brand-300 font-semibold' : 'text-gray-700 dark:text-gray-200 hover:bg-cream-100 dark:hover:bg-gray-900' }}">
+            Contact
+        </a>
         @guest
-            <a href="{{ route('login') }}" class="block py-2 text-gray-700 dark:text-gray-200">Sign In</a>
-            <a href="{{ route('register') }}" class="block py-2 text-brand-700">Create Account</a>
+            <div class="pt-2 border-t border-cream-200 dark:border-gray-800 mt-2 space-y-1">
+                <a href="{{ route('login') }}" class="block px-3 py-2 text-gray-700 dark:text-gray-200 hover:bg-cream-100 dark:hover:bg-gray-900 rounded-xl">Sign In</a>
+                <a href="{{ route('register') }}" class="block px-3 py-2 text-brand-700 font-semibold hover:bg-brand-50 dark:hover:bg-brand-950/40 rounded-xl">Create Account</a>
+            </div>
         @endguest
     </div>
 </header>

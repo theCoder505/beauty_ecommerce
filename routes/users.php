@@ -71,6 +71,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/orders', [User\DashboardController::class, 'orders'])->name('orders');
         Route::get('/orders/{order}', [User\DashboardController::class, 'orderDetail'])->name('orders.show');
         Route::get('/wishlist', [User\DashboardController::class, 'wishlist'])->name('wishlist');
+        Route::get('/notifications', [User\NotificationController::class, 'index'])->name('notifications');
 
         Route::get('/change-password', [User\DashboardController::class, 'changePasswordForm'])->name('change-password');
         Route::post('/change-password/otp', [User\DashboardController::class, 'sendChangeOtp'])->name('change-password.otp');
@@ -81,4 +82,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/change-email/verify', [User\DashboardController::class, 'verifyAndChangeEmail'])->name('change-email.verify');
         Route::post('/security/resend-otp', [User\DashboardController::class, 'resendOtp'])->name('security.resend-otp');
     });
+
+    // User Notifications
+    Route::get('/notifications', [User\NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/mark-all-read', [User\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::post('/notifications/{id}/read', [User\NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::delete('/notifications/clear', [User\NotificationController::class, 'clear'])->name('notifications.clear');
+    Route::delete('/notifications/{id}', [User\NotificationController::class, 'destroy'])->name('notifications.destroy');
 });

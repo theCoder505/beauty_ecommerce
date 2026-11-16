@@ -195,6 +195,11 @@ class AuthController extends Controller
                 'is_active' => true,
             ]);
         } else {
+            if ($user->is_blocked) {
+                return redirect()->route('login')
+                    ->with('error', 'Your account has been blocked by an administrator. Please contact us through our contact page.');
+            }
+
             if (! $user->google_id) {
                 $user->update(['google_id' => $googleUser->getId(), 'provider' => 'google']);
             }
@@ -390,6 +395,13 @@ class AuthController extends Controller
             'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
+
+        $existingUser = User::where('email', $credentials['email'])->first();
+        if ($existingUser && $existingUser->is_blocked) {
+            return back()->withErrors([
+                'email' => 'Your account has been blocked by an administrator. Please contact us via our contact page.',
+            ])->onlyInput('email');
+        }
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();

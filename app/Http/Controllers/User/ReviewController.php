@@ -99,6 +99,18 @@ class ReviewController extends Controller
             }
         }
 
+        // Send notification to admin
+        $product = \App\Models\Product::find($productId);
+        $productTitle = $product ? $product->name : 'a product';
+        $userName = auth()->user()->name ?? 'A customer';
+        \App\Services\NotificationService::notifyAdmins(
+            'review_submitted',
+            'New Product Review',
+            "{$userName} submitted a {$data['rating']}★ review for \"{$productTitle}\".",
+            route('admin.reviews.index'),
+            'review'
+        );
+
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
