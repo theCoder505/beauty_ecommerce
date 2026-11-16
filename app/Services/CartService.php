@@ -34,7 +34,11 @@ class CartService
 
     public function count(): int
     {
-        return $this->query()->sum('quantity');
+        try {
+            return (int) $this->query()->sum('quantity');
+        } catch (\Throwable $e) {
+            return 0;
+        }
     }
 
     public function total(): float

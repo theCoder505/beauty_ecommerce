@@ -1,24 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\User;
-
-// Sitemap & Robots
-Route::get('/sitemap.xml', [User\SeoController::class, 'sitemap'])->name('sitemap');
-Route::get('/robots.txt', [User\SeoController::class, 'robots'])->name('robots');
-
-// Public storefront
-Route::get('/', [User\HomeController::class, 'index'])->name('home');
-Route::post('/newsletter/subscribe', [User\HomeController::class, 'subscribe'])->name('newsletter.subscribe');
-
-// Shop & Products
-Route::get('/shop', [User\ShopController::class, 'index'])->name('shop.index');
-Route::get('/shop/category/{category:slug}', [User\ShopController::class, 'category'])->name('shop.category');
-Route::get('/products/{product:slug}', [User\ProductController::class, 'show'])->name('products.show');
-
-// Blog
-Route::get('/blog', [User\BlogController::class, 'index'])->name('blog.index');
-Route::get('/blog/{post:slug}', [User\BlogController::class, 'show'])->name('blog.show');
+use Illuminate\Support\Facades\Route;
 
 // Auth (Guest only)
 Route::middleware('guest')->group(function () {
@@ -92,4 +75,3 @@ Route::middleware('auth')->group(function () {
         Route::post('/security/resend-otp', [User\DashboardController::class, 'resendOtp'])->name('security.resend-otp');
     });
 });
-

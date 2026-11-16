@@ -39,6 +39,12 @@ html { scroll-behavior: smooth; }
     color: #e5e5e5;
 }
 
+/* Admin Panel bluish dark theme (matching the sidebar) */
+.dark body.admin-body {
+    background-color: #0b1329;
+    color: #e2e8f0;
+}
+
 /* Product card hover */
 .product-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
 .product-card:hover { transform: translateY(-4px); }

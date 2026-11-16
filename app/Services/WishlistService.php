@@ -39,8 +39,12 @@ class WishlistService
 
     public function count(): int
     {
-        if (!Auth::check()) return 0;
-        return Wishlist::where('user_id', Auth::id())->count();
+        try {
+            if (!Auth::check()) return 0;
+            return Wishlist::where('user_id', Auth::id())->count();
+        } catch (\Throwable $e) {
+            return 0;
+        }
     }
 }
 

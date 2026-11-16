@@ -30,7 +30,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
     @stack('styles')
 </head>
-<body class="font-sans bg-gray-100 dark:bg-gray-950 text-gray-900 dark:text-gray-100 antialiased"
+<body class="admin-body font-sans bg-gray-100 dark:bg-[#0b1329] text-gray-900 dark:text-gray-100 antialiased"
     x-data="{
         sidebarOpen: false,
         sidebarCollapsed: localStorage.getItem('admin_sidebar_collapsed') === 'true',
@@ -49,10 +49,10 @@
             sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
             sidebarCollapsed ? 'lg:w-20' : 'lg:w-64'
         ]"
-        class="fixed top-0 left-0 h-full w-64 bg-gray-900 dark:bg-gray-950 z-40 transition-all duration-300 flex flex-col border-r border-gray-800">
+        class="fixed top-0 left-0 h-full w-64 bg-gray-900 dark:bg-[#0c1427] z-40 transition-all duration-300 flex flex-col border-r border-gray-800 dark:border-slate-800/80">
 
         {{-- Logo & Toggle --}}
-        <div class="h-16 px-4 border-b border-gray-800 flex items-center justify-between">
+        <div class="h-16 px-4 border-b border-gray-800 dark:border-slate-800/80 flex items-center justify-between">
             <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 overflow-hidden transition-all duration-300" :class="sidebarCollapsed ? 'lg:hidden' : ''">
                 @if(!empty($siteSettings['site_logo']))
                     <img src="{{ asset('storage/'.$siteSettings['site_logo']) }}" alt="{{ $siteSettings['site_name'] ?? 'Logo' }}" class="h-8 max-w-[140px] object-contain">
@@ -115,7 +115,7 @@
         </nav>
 
         {{-- User info --}}
-        <div class="p-3 border-t border-gray-800">
+        <div class="p-3 border-t border-gray-800 dark:border-slate-800/80">
             <div class="flex items-center gap-3" :class="sidebarCollapsed ? 'lg:justify-center' : ''">
                 <img src="{{ auth('admin')->user()?->avatar_url ?? asset('images/placeholder-avatar.jpg') }}" class="w-9 h-9 rounded-full object-cover shrink-0" title="{{ auth('admin')->user()?->name ?? 'Admin' }}">
                 <div class="min-w-0" :class="sidebarCollapsed ? 'lg:hidden' : ''">
@@ -139,7 +139,7 @@
     <div :class="sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'"
         class="min-h-screen flex flex-col transition-all duration-300">
         {{-- Top bar --}}
-        <header class="sticky top-0 z-20 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 h-16 flex items-center px-4 gap-4">
+        <header class="sticky top-0 z-20 bg-white dark:bg-[#0f172a] border-b border-gray-200 dark:border-slate-800/80 h-16 flex items-center px-4 gap-4">
             {{-- Mobile drawer toggle --}}
             <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition" aria-label="Open mobile menu">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>

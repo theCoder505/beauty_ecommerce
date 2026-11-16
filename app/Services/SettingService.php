@@ -13,14 +13,18 @@ class SettingService
 
     public function all(): array
     {
-        return Cache::remember(self::CACHE_KEY, self::CACHE_TTL, function () {
-            return Setting::all()->mapWithKeys(function ($setting) {
-                $value = $setting->is_encrypted
-                    ? $this->safeDecrypt($setting->value)
-                    : $setting->value;
-                return [$setting->key => $value];
-            })->toArray();
-        });
+        try {
+            return Cache::remember(self::CACHE_KEY, self::CACHE_TTL, function () {
+                return Setting::all()->mapWithKeys(function ($setting) {
+                    $value = $setting->is_encrypted
+                        ? $this->safeDecrypt($setting->value)
+                        : $setting->value;
+                    return [$setting->key => $value];
+                })->toArray();
+            });
+        } catch (\Throwable $e) {
+            return [];
+        }
     }
 
     public function get(string $key, mixed $default = null): mixed
