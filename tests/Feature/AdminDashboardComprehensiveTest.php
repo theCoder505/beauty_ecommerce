@@ -5,8 +5,9 @@ use App\Models\Category;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\Setting;
 use App\Models\SiteVisit;
-use App\Services\AnalyticsService;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 
@@ -26,8 +27,15 @@ test('guest cannot view dashboard', function () {
     $response->assertRedirect(route('admin.login'));
 });
 
-test('admin can view comprehensive dashboard with charts, geo stats, device stats, and clickable products', function () {
+test('admin can view comprehensive dashboard with charts, geo stats, device stats, datatable, and clickable products', function () {
     $admin = createDashboardAdmin();
+
+    Setting::create([
+        'key'          => 'currency_symbol',
+        'group'        => 'general',
+        'value'        => '৳',
+        'is_encrypted' => false,
+    ]);
 
     $category = Category::create([
         'name'      => 'Skincare',
@@ -57,7 +65,7 @@ test('admin can view comprehensive dashboard with charts, geo stats, device stat
         'views_count' => 320,
     ]);
 
-    $user = \App\Models\User::create([
+    $user = User::create([
         'name'     => 'Alice Johnson',
         'email'    => 'alice@example.com',
         'password' => Hash::make('password123'),
@@ -91,7 +99,7 @@ test('admin can view comprehensive dashboard with charts, geo stats, device stat
     ]);
 
     // Create visitor log
-    SiteVisit::create([
+    $visit = SiteVisit::create([
         'session_id'   => 'test_sess_1',
         'ip_address'   => '64.233.160.1',
         'url'          => 'http://localhost/shop',
@@ -115,6 +123,19 @@ test('admin can view comprehensive dashboard with charts, geo stats, device stat
     $response->assertSee('Recent Visitor Activity Logs');
     $response->assertSee('Low Stock Alert');
     $response->assertSee('Low Stock Inventory Manager');
+
+    // Verify currency symbol from settings is rendered
+    $response->assertSee('৳140.00');
+
+    // Verify World Map container height (h-[460px]) & minimize controls
+    $response->assertSee('h-[460px]');
+    $response->assertSee('mapZoomOut()', false);
+    $response->assertSee('toggleMapHeight()', false);
+
+    // Verify Visitor Logs DataTable and AJAX delete buttons
+    $response->assertSee('id="visitor-logs-datatable"', false);
+    $response->assertSee('deleteVisitorLogAjax', false);
+    $response->assertSee('bulkDeleteVisitorLogsAjax', false);
 
     // Verify clickable products
     $response->assertSee(route('admin.products.edit', $productLowStock));
@@ -171,4 +192,84 @@ test('admin can quickly update product stock from dashboard', function () {
     ]);
 
     expect($product->fresh()->stock)->toBe(25);
+});
+
+test('admin can delete a single visitor log via ajax json', function () {
+    $admin = createDashboardAdmin();
+
+    $visit = SiteVisit::create([
+        'session_id'   => 'del_sess_1',
+        'ip_address'   => '192.168.1.50',
+        'url'          => 'http://localhost/products',
+        'device'       => 'Mobile',
+        'platform'     => 'Android',
+        'browser'      => 'Chrome',
+        'country'      => 'Bangladesh',
+        'country_code' => 'BD',
+        'visited_date' => now()->toDateString(),
+    ]);
+
+    $response = $this->actingAs($admin, 'admin')->deleteJson(route('admin.visitor-logs.destroy', $visit));
+
+    $response->assertOk();
+    $response->assertJson([
+        'success' => true,
+        'message' => 'Visitor log removed successfully.',
+    ]);
+    $this->assertDatabaseMissing('site_visits', ['id' => $visit->id]);
+});
+
+test('admin can bulk delete multiple visitor logs via ajax json', function () {
+    $admin = createDashboardAdmin();
+
+    $v1 = SiteVisit::create([
+        'session_id'   => 'bulk_1',
+        'ip_address'   => '1.1.1.1',
+        'url'          => 'http://localhost/',
+        'visited_date' => now()->toDateString(),
+    ]);
+
+    $v2 = SiteVisit::create([
+        'session_id'   => 'bulk_2',
+        'ip_address'   => '2.2.2.2',
+        'url'          => 'http://localhost/shop',
+        'visited_date' => now()->toDateString(),
+    ]);
+
+    $v3 = SiteVisit::create([
+        'session_id'   => 'bulk_3',
+        'ip_address'   => '3.3.3.3',
+        'url'          => 'http://localhost/blog',
+        'visited_date' => now()->toDateString(),
+    ]);
+
+    $response = $this->actingAs($admin, 'admin')->postJson(route('admin.visitor-logs.bulk-delete'), [
+        'ids' => [$v1->id, $v2->id],
+    ]);
+
+    $response->assertOk();
+    $response->assertJson([
+        'success' => true,
+        'count'   => 2,
+    ]);
+
+    $this->assertDatabaseMissing('site_visits', ['id' => $v1->id]);
+    $this->assertDatabaseMissing('site_visits', ['id' => $v2->id]);
+    $this->assertDatabaseHas('site_visits', ['id' => $v3->id]);
+});
+
+test('bulk delete visitor logs requires valid ids', function () {
+    $admin = createDashboardAdmin();
+
+    $response = $this->actingAs($admin, 'admin')->postJson(route('admin.visitor-logs.bulk-delete'), [
+        'ids' => [],
+    ]);
+    $response->assertStatus(422);
+    $response->assertJsonValidationErrors(['ids']);
+
+    $responseInvalid = $this->actingAs($admin, 'admin')->postJson(route('admin.visitor-logs.bulk-delete'), [
+        'ids' => [999999],
+    ]);
+    $responseInvalid->assertStatus(422);
+    $responseInvalid->assertJsonValidationErrors(['ids.0']);
 });

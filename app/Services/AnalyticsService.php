@@ -217,10 +217,17 @@ class AnalyticsService
     public function ensureVisitorDataPopulated(): void
     {
         try {
-            $hasGeoVisits = SiteVisit::whereNotNull('country_code')->exists();
-            if ($hasGeoVisits) {
+            if (Cache::has('visitor_geo_initialized')) {
                 return;
             }
+
+            $hasGeoVisits = SiteVisit::whereNotNull('country_code')->exists();
+            if ($hasGeoVisits) {
+                Cache::forever('visitor_geo_initialized', true);
+                return;
+            }
+
+            Cache::forever('visitor_geo_initialized', true);
 
             // Sample realistic distribution of visits
             $samples = [
@@ -591,13 +598,16 @@ class AnalyticsService
     /**
      * Real-time visitor activity logs.
      */
-    public function getVisitorLogs(int $limit = 20)
+    public function getVisitorLogs(?int $limit = null)
     {
         $this->ensureVisitorDataPopulated();
 
-        return SiteVisit::latest('updated_at')
-            ->limit($limit)
-            ->get();
+        $query = SiteVisit::latest('updated_at');
+        if ($limit !== null) {
+            $query->limit($limit);
+        }
+
+        return $query->get();
     }
 
     public function topSellingProducts(int $limit = 10)

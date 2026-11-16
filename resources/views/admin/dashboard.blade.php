@@ -17,12 +17,36 @@
     .dark .jvm-container {
         background-color: transparent !important;
     }
+    .jvm-zoom-btn {
+        background-color: #ffffff !important;
+        color: #111827 !important;
+        border: 1px solid #d1d5db !important;
+        border-radius: 0.5rem !important;
+        width: 28px !important;
+        height: 28px !important;
+        line-height: 26px !important;
+        font-weight: bold !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+        cursor: pointer !important;
+    }
+    .dark .jvm-zoom-btn {
+        background-color: #1f2937 !important;
+        color: #f9fafb !important;
+        border-color: #374151 !important;
+    }
+    .jvm-zoom-btn:hover {
+        background-color: #f3f4f6 !important;
+    }
+    .dark .jvm-zoom-btn:hover {
+        background-color: #374151 !important;
+    }
 </style>
 @endpush
 
 @section('content')
 
 @php
+    $currency        = app(\App\Services\SettingService::class)->get('currency_symbol', '৳');
     $lowStockItems   = $lowStockProducts ?? $lowStock ?? collect();
     $topSellingItems = $topSellingProducts ?? $topSelling ?? collect();
     $mostViewedItems = $mostViewedProducts ?? $mostViewed ?? collect();
@@ -38,8 +62,8 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
         </div>
-        <p class="font-bold text-2xl text-gray-900 dark:text-white">${{ number_format($stats['total_revenue'] ?? 0, 2) }}</p>
-        <p class="text-xs text-gray-400 mt-1">${{ number_format($stats['today_revenue'] ?? 0, 2) }} today</p>
+        <p class="font-bold text-2xl text-gray-900 dark:text-white">{{ $currency }}{{ number_format($stats['total_revenue'] ?? 0, 2) }}</p>
+        <p class="text-xs text-gray-400 mt-1">{{ $currency }}{{ number_format($stats['today_revenue'] ?? 0, 2) }} today</p>
     </div>
 
     {{-- Total Orders --}}
@@ -154,7 +178,7 @@
             </div>
             <div>
                 <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Gross Revenue</p>
-                <p id="kpi-period-revenue" class="text-lg font-bold text-gray-900 dark:text-white">${{ number_format($orderCharts['month']['summary']['total_revenue'], 2) }}</p>
+                <p id="kpi-period-revenue" class="text-lg font-bold text-gray-900 dark:text-white">{{ $currency }}{{ number_format($orderCharts['month']['summary']['total_revenue'], 2) }}</p>
             </div>
         </div>
         <div class="flex items-center gap-3">
@@ -163,7 +187,7 @@
             </div>
             <div>
                 <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Average Order Value</p>
-                <p id="kpi-period-avg" class="text-lg font-bold text-gray-900 dark:text-white">${{ number_format($orderCharts['month']['summary']['avg_value'], 2) }}</p>
+                <p id="kpi-period-avg" class="text-lg font-bold text-gray-900 dark:text-white">{{ $currency }}{{ number_format($orderCharts['month']['summary']['avg_value'], 2) }}</p>
             </div>
         </div>
     </div>
@@ -174,7 +198,7 @@
         <div class="lg:col-span-2 bg-gray-50/50 dark:bg-gray-800/30 rounded-xl p-4 border border-gray-100 dark:border-gray-800">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Order Volume & Trends (Bar Chart)</h3>
-                <span class="text-[11px] text-gray-400">Total orders plotted over time</span>
+                <span class="text-[11px] text-gray-400">Total orders & revenue plotted over time</span>
             </div>
             <div class="relative h-72">
                 <canvas id="ordersBarChart"></canvas>
@@ -195,7 +219,7 @@
     </div>
 </div>
 
-{{-- SECTION 2: GEOGRAPHIC VISITOR TRAFFIC (WORLD MAP & TOP COUNTRIES BY IP) --}}
+{{-- SECTION 2: GEOGRAPHIC VISITOR TRAFFIC (WORLD MAP - FULL WIDTH & MINIMIZE CONTROLS) --}}
 <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm p-6 mb-8">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-gray-100 dark:border-gray-800">
         <div>
@@ -213,18 +237,26 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6 items-start">
-        {{-- Vector World Map --}}
+        {{-- Vector World Map Container with Interactive Controls --}}
         <div class="lg:col-span-8 bg-gray-50/50 dark:bg-gray-800/20 rounded-2xl p-4 border border-gray-100 dark:border-gray-800 relative">
-            <div class="flex items-center justify-between text-xs text-gray-400 mb-2">
-                <span>Interactive Vector Map · Hover country to inspect visitor volume</span>
-                <div class="flex items-center gap-2">
-                    <span class="inline-block w-3 h-3 rounded-full bg-emerald-500"></span>
-                    <span>High Traffic</span>
-                    <span class="inline-block w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-700 ml-2"></span>
-                    <span>Zero</span>
+            <div class="flex flex-wrap items-center justify-between text-xs text-gray-400 mb-3 gap-2">
+                <span>Full-width Mercator view · Hover country to inspect visitors</span>
+                <div class="flex items-center gap-1.5">
+                    <button type="button" onclick="mapZoomOut()" class="px-2.5 py-1 text-xs rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-bold transition shadow-2xs" title="Zoom Out (Can minimize smaller than default)">
+                        − Zoom Out
+                    </button>
+                    <button type="button" onclick="mapZoomIn()" class="px-2.5 py-1 text-xs rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-bold transition shadow-2xs" title="Zoom In">
+                        + Zoom In
+                    </button>
+                    <button type="button" onclick="mapReset()" class="px-2.5 py-1 text-xs rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium transition shadow-2xs" title="Reset View">
+                        ⟲ Fit
+                    </button>
+                    <button type="button" onclick="toggleMapHeight()" id="toggle-map-size-btn" class="px-2.5 py-1 text-xs rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium transition shadow-2xs" title="Toggle Compact or Normal Height">
+                        Minimize Height
+                    </button>
                 </div>
             </div>
-            <div id="world-map-container" class="h-96 w-full rounded-xl overflow-hidden"></div>
+            <div id="world-map-container" class="h-[460px] w-full rounded-xl overflow-hidden transition-all duration-300"></div>
         </div>
 
         {{-- Countries Leaderboard List --}}
@@ -233,12 +265,12 @@
                 <span>Top Visitor Countries</span>
                 <span class="text-gray-400 text-[11px] font-normal">{{ $countryStats['total_visitors'] }} total visits</span>
             </h3>
-            <div class="space-y-3.5 max-h-88 overflow-y-auto pr-1">
+            <div id="countries-leaderboard-list" class="space-y-3 max-h-[430px] overflow-y-auto pr-1">
                 @forelse($countryStats['country_list'] as $c)
-                <div class="space-y-1">
+                <div class="space-y-1.5 p-2 rounded-xl hover:bg-gray-100/70 dark:hover:bg-gray-800/60 transition">
                     <div class="flex items-center justify-between text-xs">
                         <span class="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                            <span class="font-mono text-[11px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold">{{ $c['country_code'] }}</span>
+                            <span class="font-mono text-[11px] px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold">{{ $c['country_code'] }}</span>
                             <span>{{ $c['country'] }}</span>
                         </span>
                         <span class="font-semibold text-gray-900 dark:text-white">{{ $c['count'] }} <span class="text-gray-400 font-normal">({{ $c['percentage'] }}%)</span></span>
@@ -332,65 +364,86 @@
     </div>
 </div>
 
-{{-- SECTION 4: REAL-TIME VISITOR ACTIVITY LOGS TABLE --}}
+{{-- SECTION 4: VISITOR ACTIVITY LOGS TABLE (JQUERY DATATABLE - 10 PER PAGE FRONTEND PAGINATION & AJAX DELETION) --}}
 <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden mb-8">
-    <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 border-b border-gray-100 dark:border-gray-800">
         <div>
             <h2 class="font-bold text-gray-900 dark:text-white text-sm flex items-center gap-2">
                 <span>Recent Visitor Activity Logs</span>
-                <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Live Logging
+                <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-900">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> 10 Per Page · Frontend Paginated
                 </span>
             </h2>
-            <p class="text-xs text-gray-500 mt-0.5">Comprehensive audit trail of recent visitor IPs, device signatures, and requested URLs.</p>
+            <p class="text-xs text-gray-500 mt-0.5">Instant client-side search, sorting, and seamless AJAX deletion without page reloads.</p>
+        </div>
+
+        {{-- Bulk Delete Action for Visitor Logs (AJAX) --}}
+        <div>
+            <button type="button" id="bulk-delete-visitor-logs-btn" disabled onclick="bulkDeleteVisitorLogsAjax(this)"
+                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-red-50 text-red-700 hover:bg-red-600 hover:text-white dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-600 dark:hover:text-white border border-red-200 dark:border-red-900 transition shadow-xs disabled:opacity-40 disabled:cursor-not-allowed">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                <span>Bulk Delete (<span id="selected-visitor-logs-count">0</span>)</span>
+            </button>
         </div>
     </div>
-    <div class="overflow-x-auto">
-        <table class="w-full text-sm text-left">
+
+    <div class="p-4 overflow-x-auto">
+        <table id="visitor-logs-datatable" class="w-full text-sm text-left">
             <thead>
                 <tr class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50/60 dark:bg-gray-800/40 border-b border-gray-100 dark:border-gray-800">
-                    <th class="px-5 py-3">IP Address</th>
-                    <th class="px-5 py-3">Location (Country / City)</th>
-                    <th class="px-5 py-3">Device & OS</th>
-                    <th class="px-5 py-3">Browser</th>
-                    <th class="px-5 py-3">Visited URL</th>
-                    <th class="px-5 py-3 text-right">Time</th>
+                    <th class="w-10 px-4 py-3.5 text-center">
+                        <input type="checkbox" id="select-all-visitor-logs" class="rounded border-gray-300 dark:border-gray-700 text-teal-600 focus:ring-teal-500 cursor-pointer" title="Select All">
+                    </th>
+                    <th class="px-5 py-3.5">IP Address</th>
+                    <th class="px-5 py-3.5">Location</th>
+                    <th class="px-5 py-3.5">Device & OS</th>
+                    <th class="px-5 py-3.5">Browser</th>
+                    <th class="px-5 py-3.5">Visited URL</th>
+                    <th class="px-5 py-3.5">Time</th>
+                    <th class="px-5 py-3.5 text-right">Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                 @forelse($visitorLogs as $log)
                 <tr class="hover:bg-gray-50/60 dark:hover:bg-gray-800/40 transition">
-                    <td class="px-5 py-3.5 font-mono text-xs text-gray-900 dark:text-white">
+                    <td class="w-10 px-4 py-3 text-center">
+                        <input type="checkbox" value="{{ $log->id }}" class="visitor-log-row-checkbox rounded border-gray-300 dark:border-gray-700 text-teal-600 focus:ring-teal-500 cursor-pointer">
+                    </td>
+                    <td class="px-5 py-3 font-mono text-xs text-gray-900 dark:text-white">
                         {{ $log->ip_address }}
                     </td>
-                    <td class="px-5 py-3.5 text-xs text-gray-800 dark:text-gray-200">
+                    <td class="px-5 py-3 text-xs text-gray-800 dark:text-gray-200">
                         <span class="inline-flex items-center gap-1.5 font-medium">
-                            <span class="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 font-mono text-[10px]">{{ $log->country_code ?? 'XX' }}</span>
+                            <span class="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 font-mono text-[10px] font-bold">{{ $log->country_code ?? 'XX' }}</span>
                             <span>{{ $log->country ?? 'Unknown' }}</span>
                         </span>
                         @if($log->city)
                         <span class="text-gray-400 block text-[11px]">{{ $log->city }}</span>
                         @endif
                     </td>
-                    <td class="px-5 py-3.5 text-xs">
+                    <td class="px-5 py-3 text-xs">
                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium">
                             {{ $log->device ?? 'Desktop' }} · {{ $log->platform ?? 'OS' }}
                         </span>
                     </td>
-                    <td class="px-5 py-3.5 text-xs text-gray-700 dark:text-gray-300">
+                    <td class="px-5 py-3 text-xs text-gray-700 dark:text-gray-300">
                         <span class="font-medium">{{ $log->browser ?? 'Browser' }}</span>
                     </td>
-                    <td class="px-5 py-3.5 text-xs text-gray-500 max-w-xs truncate" title="{{ $log->url }}">
+                    <td class="px-5 py-3 text-xs text-gray-500 max-w-xs truncate" title="{{ $log->url }}">
                         {{ parse_url($log->url, PHP_URL_PATH) ?: '/' }}
                     </td>
-                    <td class="px-5 py-3.5 text-right text-xs text-gray-400 whitespace-nowrap">
-                        {{ $log->updated_at ? $log->updated_at->diffForHumans() : 'Just now' }}
+                    <td class="px-5 py-3 text-xs text-gray-400 whitespace-nowrap">
+                        <span class="hidden">{{ $log->updated_at?->timestamp ?? 0 }}</span>
+                        <span>{{ $log->updated_at ? $log->updated_at->diffForHumans() : 'Just now' }}</span>
+                        <span class="text-[10px] text-gray-400 block">{{ $log->updated_at?->format('M j, Y H:i') }}</span>
+                    </td>
+                    <td class="px-5 py-3 text-right whitespace-nowrap">
+                        <button type="button" onclick="deleteVisitorLogAjax({{ $log->id }}, this)" class="inline-flex items-center justify-center w-7 h-7 text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 rounded-lg transition" title="Delete Log">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
                     </td>
                 </tr>
                 @empty
-                <tr>
-                    <td colspan="6" class="px-5 py-8 text-center text-xs text-gray-400">No visitor records logged yet.</td>
-                </tr>
                 @endforelse
             </tbody>
         </table>
@@ -417,14 +470,14 @@
                     <img src="{{ $p->thumbnail_url }}" alt="{{ $p->name }}" class="w-11 h-11 rounded-xl object-cover shrink-0 border border-gray-200 dark:border-gray-700 group-hover:ring-2 group-hover:ring-brand-500 transition">
                     <div class="min-w-0">
                         <p class="text-xs font-semibold text-gray-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 truncate transition">{{ $p->name }}</p>
-                        <p class="text-[11px] text-gray-400 truncate">{{ $p->category?->name ?? 'Uncategorized' }} · ${{ number_format($p->price, 2) }}</p>
+                        <p class="text-[11px] text-gray-400 truncate">{{ $p->category?->name ?? 'Uncategorized' }} · {{ $currency }}{{ number_format($p->price, 2) }}</p>
                     </div>
                 </a>
                 <div class="flex items-center gap-2 shrink-0">
                     <div class="text-right">
                         <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 block">{{ $item->total_sold }} sold</span>
                         @if(!empty($item->total_revenue))
-                        <span class="text-[10px] text-gray-400">${{ number_format($item->total_revenue, 2) }}</span>
+                        <span class="text-[10px] text-gray-400">{{ $currency }}{{ number_format($item->total_revenue, 2) }}</span>
                         @endif
                     </div>
                     <a href="{{ route('admin.products.edit', $p) }}" class="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/30 transition" title="Edit Product">
@@ -543,7 +596,7 @@
                         <a href="{{ route('admin.orders.show', $order->id) }}" class="text-brand-600 dark:text-brand-400 hover:underline font-semibold">{{ $order->order_number }}</a>
                     </td>
                     <td class="px-5 py-3.5 text-gray-800 dark:text-gray-200 text-xs">{{ $order->shipping_name ?? $order->user?->name ?? 'Customer' }}</td>
-                    <td class="px-5 py-3.5 font-semibold text-xs text-gray-900 dark:text-white">${{ number_format($order->total, 2) }}</td>
+                    <td class="px-5 py-3.5 font-semibold text-xs text-gray-900 dark:text-white">{{ $currency }}{{ number_format($order->total, 2) }}</td>
                     <td class="px-5 py-3.5">
                         <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
                             {{ $order->status_label }}
@@ -591,7 +644,7 @@
                         <a href="{{ route('admin.products.edit', $p) }}" class="font-semibold text-sm text-gray-900 dark:text-white hover:text-brand-600 dark:hover:text-brand-400 transition block truncate">
                             {{ $p->name }}
                         </a>
-                        <p class="text-xs text-gray-400 truncate">{{ $p->sku ?: 'No SKU' }} · {{ $p->category?->name ?? 'Uncategorized' }} · ${{ number_format($p->price, 2) }}</p>
+                        <p class="text-xs text-gray-400 truncate">{{ $p->sku ?: 'No SKU' }} · {{ $p->category?->name ?? 'Uncategorized' }} · {{ $currency }}{{ number_format($p->price, 2) }}</p>
                         <span class="product-stock-badge-{{ $p->id }} inline-block text-[11px] font-bold mt-0.5 {{ $p->stock == 0 ? 'text-red-600' : 'text-amber-500' }}">
                             {{ $p->stock == 0 ? 'OUT OF STOCK (0 units)' : $p->stock . ' units in stock' }}
                         </span>
@@ -639,7 +692,8 @@
 <script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/maps/world.js"></script>
 
 <script>
-    // Embedded chart and geo data
+    // Embedded chart, geo data, and currency
+    const currencySymbol = @json($currency);
     const orderChartsData = @json($orderCharts);
     const countryStatsData = @json($countryStats);
     const deviceStatsData = @json($deviceStats);
@@ -648,11 +702,13 @@
     let ordersPieChartInstance = null;
     let deviceDoughnutChartInstance = null;
     let worldMapInstance = null;
+    let visitorLogsTable = null;
 
     document.addEventListener('DOMContentLoaded', function() {
         initOrdersCharts();
         initDeviceDoughnutChart();
         initWorldMap();
+        initVisitorLogsDataTable();
     });
 
     // 1. ORDERS CHARTS (BAR & PIE)
@@ -681,7 +737,7 @@
                         yAxisID: 'yOrders'
                     },
                     {
-                        label: 'Revenue ($)',
+                        label: `Revenue (${currencySymbol})`,
                         data: currentData.revenues,
                         type: 'line',
                         borderColor: '#3b82f6', // blue
@@ -715,7 +771,7 @@
                         callbacks: {
                             label: function(context) {
                                 if (context.dataset.yAxisID === 'yRevenue') {
-                                    return ` Revenue: $${Number(context.raw).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                                    return ` Revenue: ${currencySymbol}${Number(context.raw).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
                                 }
                                 return ` Orders: ${context.raw}`;
                             }
@@ -745,7 +801,7 @@
                         beginAtZero: true,
                         ticks: {
                             color: textColor,
-                            callback: (val) => '$' + val,
+                            callback: (val) => currencySymbol + val,
                             font: { size: 10 }
                         },
                         grid: { display: false }
@@ -801,11 +857,11 @@
             activeBtn.className = 'period-tab-btn px-3 py-1.5 rounded-lg transition text-gray-900 dark:text-white bg-white dark:bg-gray-700 shadow-xs font-semibold';
         }
 
-        // Update badge & KPI strips
+        // Update badge & KPI strips with settings currency symbol
         document.getElementById('current-period-badge').textContent = data.period_name;
         document.getElementById('kpi-period-orders').textContent = Number(data.summary.total_orders).toLocaleString();
-        document.getElementById('kpi-period-revenue').textContent = '$' + Number(data.summary.total_revenue).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        document.getElementById('kpi-period-avg').textContent = '$' + Number(data.summary.avg_value).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        document.getElementById('kpi-period-revenue').textContent = currencySymbol + Number(data.summary.total_revenue).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        document.getElementById('kpi-period-avg').textContent = currencySymbol + Number(data.summary.avg_value).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
         // Update Bar Chart
         if (ordersBarChartInstance) {
@@ -865,7 +921,7 @@
         });
     }
 
-    // 3. INTERACTIVE WORLD MAP (JSVectorMap)
+    // 3. INTERACTIVE WORLD MAP (JSVectorMap - FULL WIDTH ASPECT RATIO & ZOOM CONTROLS)
     function initWorldMap() {
         const mapContainer = document.getElementById('world-map-container');
         if (!mapContainer || typeof jsVectorMap === 'undefined') return;
@@ -879,6 +935,9 @@
                 map: 'world',
                 zoomButtons: true,
                 zoomOnScroll: false,
+                zoomMin: 0.35,  // Allows minimizing smaller than default scale!
+                zoomMax: 12,
+                zoomStep: 1.4,
                 backgroundColor: 'transparent',
                 regionStyle: {
                     initial: {
@@ -916,7 +975,251 @@
         }
     }
 
-    // 4. LOW STOCK MODAL HANDLERS
+    // World map zoom & size helpers
+    window.mapZoomOut = function() {
+        const zoomOutBtn = document.querySelector('.jvm-zoom-btn.jvm-zoomout');
+        if (zoomOutBtn) {
+            zoomOutBtn.click();
+        } else if (worldMapInstance && typeof worldMapInstance.zoomOut === 'function') {
+            worldMapInstance.zoomOut();
+        }
+    };
+
+    window.mapZoomIn = function() {
+        const zoomInBtn = document.querySelector('.jvm-zoom-btn.jvm-zoomin');
+        if (zoomInBtn) {
+            zoomInBtn.click();
+        } else if (worldMapInstance && typeof worldMapInstance.zoomIn === 'function') {
+            worldMapInstance.zoomIn();
+        }
+    };
+
+    window.mapReset = function() {
+        if (worldMapInstance && typeof worldMapInstance.reset === 'function') {
+            worldMapInstance.reset();
+        }
+    };
+
+    window.toggleMapHeight = function() {
+        const container = document.getElementById('world-map-container');
+        const btn = document.getElementById('toggle-map-size-btn');
+        if (!container) return;
+
+        const isCompact = container.classList.contains('h-[320px]');
+        if (isCompact) {
+            container.classList.remove('h-[320px]');
+            container.classList.add('h-[460px]');
+            if (btn) btn.textContent = 'Minimize Height';
+        } else {
+            container.classList.remove('h-[460px]');
+            container.classList.add('h-[320px]');
+            if (btn) btn.textContent = 'Expand Height';
+        }
+
+        if (worldMapInstance && typeof worldMapInstance.updateSize === 'function') {
+            worldMapInstance.updateSize();
+        }
+    };
+
+    // 4. JQUERY DATATABLE FOR VISITOR LOGS (10 PER PAGE FRONTEND PAGINATION & AJAX DELETION)
+    function initVisitorLogsDataTable() {
+        $('#visitor-logs-datatable tbody tr td[colspan]').closest('tr').remove();
+        visitorLogsTable = $('#visitor-logs-datatable').DataTable({
+            pageLength: 10,
+            responsive: true,
+            order: [[6, 'desc']],
+            columnDefs: [
+                { orderable: false, targets: [0, 7] }
+            ],
+            language: {
+                emptyTable: "No visitor records logged yet.",
+                zeroRecords: "No matching visitor logs found.",
+                search: "_INPUT_",
+                searchPlaceholder: "Search logs (IP, country, device, URL)...",
+                paginate: {
+                    previous: "‹ Prev",
+                    next: "Next ›"
+                }
+            }
+        });
+
+        // Select all rows across the DataTable
+        $('#select-all-visitor-logs').on('change', function() {
+            const isChecked = $(this).is(':checked');
+            visitorLogsTable.$('.visitor-log-row-checkbox').prop('checked', isChecked);
+            updateVisitorLogsBulkState();
+        });
+
+        // Individual row checkbox change
+        $('#visitor-logs-datatable').on('change', '.visitor-log-row-checkbox', function() {
+            const total = visitorLogsTable.$('.visitor-log-row-checkbox').length;
+            const checked = visitorLogsTable.$('.visitor-log-row-checkbox:checked').length;
+            $('#select-all-visitor-logs').prop('checked', total > 0 && checked === total);
+            updateVisitorLogsBulkState();
+        });
+
+        // Synchronize checkbox state on table redraw (pagination, search, etc.)
+        visitorLogsTable.on('draw', function() {
+            const total = visitorLogsTable.$('.visitor-log-row-checkbox').length;
+            const checked = visitorLogsTable.$('.visitor-log-row-checkbox:checked').length;
+            $('#select-all-visitor-logs').prop('checked', total > 0 && checked === total);
+            updateVisitorLogsBulkState();
+        });
+
+        function updateVisitorLogsBulkState() {
+            const count = visitorLogsTable.$('.visitor-log-row-checkbox:checked').length;
+            $('#selected-visitor-logs-count').text(count);
+            $('#bulk-delete-visitor-logs-btn').prop('disabled', count === 0);
+        }
+        window.updateVisitorLogsBulkState = updateVisitorLogsBulkState;
+    }
+
+    // 5. AJAX DELETE VISITOR LOG (NO PAGE RELOAD)
+    window.deleteVisitorLogAjax = function(id, btn) {
+        const confirmMsg = "Are you sure you want to permanently delete this visitor log?";
+
+        const doDelete = async () => {
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="w-3.5 h-3.5 animate-spin mx-auto" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>';
+
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                const res = await fetch(`/admin/visitor-logs/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': token,
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    if (window.toast) window.toast(data.message, 'success');
+                    const tr = $(btn).closest('tr');
+                    visitorLogsTable.row(tr).remove().draw(false);
+                    if (typeof window.updateVisitorLogsBulkState === 'function') {
+                        window.updateVisitorLogsBulkState();
+                    }
+                } else {
+                    if (window.toast) window.toast(data.message || 'Failed to delete log', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                }
+            } catch (err) {
+                if (window.toast) window.toast('Error deleting visitor log', 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        };
+
+        if (window.Swal) {
+            const isDark = document.documentElement.classList.contains('dark');
+            Swal.fire({
+                title: 'Delete Visitor Log?',
+                text: confirmMsg,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, delete',
+                cancelButtonText: 'Cancel',
+                background: isDark ? '#111827' : '#ffffff',
+                color: isDark ? '#f3f4f6' : '#111827',
+                customClass: {
+                    popup: 'rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xl'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) doDelete();
+            });
+        } else {
+            if (confirm(confirmMsg)) doDelete();
+        }
+    };
+
+    // 6. AJAX BULK DELETE VISITOR LOGS (NO PAGE RELOAD)
+    window.bulkDeleteVisitorLogsAjax = function(btn) {
+        const checkedBoxes = visitorLogsTable.$('.visitor-log-row-checkbox:checked');
+        const count = checkedBoxes.length;
+        if (count === 0) return;
+
+        const ids = [];
+        checkedBoxes.each(function() {
+            ids.push($(this).val());
+        });
+
+        const confirmMsg = `Are you sure you want to permanently delete ${count} selected visitor log${count === 1 ? '' : 's'}?`;
+
+        const doBulkDelete = async () => {
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="w-3.5 h-3.5 animate-spin mx-auto" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>';
+
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                const res = await fetch('/admin/visitor-logs/bulk-delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': token,
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ ids: ids })
+                });
+
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    if (window.toast) window.toast(data.message, 'success');
+                    checkedBoxes.each(function() {
+                        const tr = $(this).closest('tr');
+                        visitorLogsTable.row(tr).remove();
+                    });
+                    visitorLogsTable.draw(false);
+                    $('#select-all-visitor-logs').prop('checked', false);
+                    if (typeof window.updateVisitorLogsBulkState === 'function') {
+                        window.updateVisitorLogsBulkState();
+                    }
+                } else {
+                    if (window.toast) window.toast(data.message || 'Failed to bulk delete logs', 'error');
+                }
+            } catch (err) {
+                if (window.toast) window.toast('Error performing bulk delete', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+                if (typeof window.updateVisitorLogsBulkState === 'function') {
+                    window.updateVisitorLogsBulkState();
+                }
+            }
+        };
+
+        if (window.Swal) {
+            const isDark = document.documentElement.classList.contains('dark');
+            Swal.fire({
+                title: 'Confirm Bulk Deletion',
+                text: confirmMsg,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, delete',
+                cancelButtonText: 'Cancel',
+                background: isDark ? '#111827' : '#ffffff',
+                color: isDark ? '#f3f4f6' : '#111827',
+                customClass: {
+                    popup: 'rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xl'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) doBulkDelete();
+            });
+        } else {
+            if (confirm(confirmMsg)) doBulkDelete();
+        }
+    };
+
+    // 7. LOW STOCK MODAL HANDLERS
     window.openLowStockModal = function() {
         const modal = document.getElementById('lowStockModal');
         if (modal) {
@@ -941,7 +1244,7 @@
         if (e.target === this) closeLowStockModal();
     });
 
-    // 5. QUICK STOCK UPDATE VIA AJAX
+    // 8. QUICK STOCK UPDATE VIA AJAX
     window.quickUpdateStock = async function(productId, btnEl) {
         const inputEl = document.getElementById(`quick-stock-input-${productId}`);
         const modalInputEl = document.getElementById(`modal-stock-input-${productId}`);
