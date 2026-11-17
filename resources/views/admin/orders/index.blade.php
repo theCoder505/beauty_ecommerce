@@ -112,7 +112,13 @@
                             <a href="{{ route('admin.orders.show', $o) }}" class="hover:text-brand-600 transition">
                                 #{{ $o->order_number }}
                             </a>
-                            <span class="block text-xs text-gray-400 font-sans font-normal">{{ $o->items_count }} items</span>
+                            <span class="block text-xs text-gray-400 font-sans font-normal"
+                                @if($o->items->isNotEmpty())
+                                    title="{{ $o->items->map(fn($it) => $it->product_name . (!empty($it->product_sku ?: $it->product?->sku) ? ' (' . ($it->product_sku ?: $it->product?->sku) . ')' : ''))->implode(', ') }}"
+                                @endif
+                            >
+                                {{ $o->items_count }} items
+                            </span>
                         </td>
                         <td class="px-6 py-4">
                             <span class="font-semibold text-gray-900 dark:text-white block">{{ $o->shipping_name ?? $o->user?->name ?? 'Customer' }}</span>

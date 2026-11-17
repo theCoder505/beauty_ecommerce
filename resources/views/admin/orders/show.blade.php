@@ -57,10 +57,21 @@
                 </div>
                 <div class="divide-y divide-gray-100 dark:divide-gray-800">
                     @foreach($order->items as $item)
+                    @php
+                        $itemSku = $item->product_sku ?: $item->product?->sku;
+                    @endphp
                     <div class="p-5 flex items-center gap-4">
                         <img src="{{ $item->product?->thumbnail_url ?? asset('images/placeholder-product.jpg') }}" alt="{{ $item->product_name }}" class="w-16 h-16 rounded-xl object-cover border border-gray-200 dark:border-gray-700 bg-gray-50 shrink-0">
                         <div class="flex-1 min-w-0">
-                            <h4 class="font-semibold text-sm text-gray-900 dark:text-white truncate">{{ $item->product_name }}</h4>
+                            <h4 class="font-semibold text-sm text-gray-900 dark:text-white truncate">
+                                @if($item->product)
+                                    <a href="{{ route('admin.products.edit', $item->product) }}" class="hover:text-brand-600 transition" title="Edit Product">
+                                        {{ $item->product_name }}@if(!empty($itemSku)) <span class="text-xs font-mono font-normal text-gray-500 dark:text-gray-400">({{ $itemSku }})</span>@endif
+                                    </a>
+                                @else
+                                    {{ $item->product_name }}@if(!empty($itemSku)) <span class="text-xs font-mono font-normal text-gray-500 dark:text-gray-400">({{ $itemSku }})</span>@endif
+                                @endif
+                            </h4>
                             <p class="text-xs text-gray-500 mt-0.5">Price: {{ $currency }}{{ number_format($item->unit_price ?? $item->price, 2) }} &times; {{ $item->quantity }}</p>
                         </div>
                         <div class="text-right">

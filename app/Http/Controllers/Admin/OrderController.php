@@ -15,7 +15,7 @@ class OrderController extends Controller
 
     public function index(Request $request): View
     {
-        $query = Order::with(['user', 'payment'])
+        $query = Order::with(['user', 'payment', 'items.product'])
             ->withCount('items');
 
         if ($request->filled('status')) {
