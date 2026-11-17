@@ -142,18 +142,26 @@
 
             {{-- User Notifications (when authenticated) --}}
             @auth
+                @php
+                    $headerUserUnread = auth()->user()?->unreadNotifications()->count() ?? 0;
+                @endphp
                 <div class="relative" x-data="{
                     open: false,
-                    unreadCount: 0,
+                    unreadCount: {{ $headerUserUnread }},
                     notifications: [],
                     loading: false,
                     async fetchNotifications() {
                         this.loading = true;
                         try {
-                            const res = await fetch('{{ route('notifications.index') }}');
+                            const res = await fetch('{{ route('notifications.feed') }}', {
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                }
+                            });
                             if (res.ok) {
                                 const data = await res.json();
-                                this.unreadCount = data.unread_count || 0;
+                                this.unreadCount = (typeof data.unread_count !== 'undefined') ? data.unread_count : {{ $headerUserUnread }};
                                 this.notifications = data.notifications || [];
                             }
                         } catch (e) {
@@ -168,7 +176,8 @@
                                 method: 'POST',
                                 headers: {
                                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                    'Accept': 'application/json'
+                                    'Accept': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest'
                                 }
                             });
                             if (res.ok) {
@@ -185,7 +194,8 @@
                                 method: 'POST',
                                 headers: {
                                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                    'Accept': 'application/json'
+                                    'Accept': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest'
                                 }
                             });
                             notif.read = true;
@@ -204,7 +214,7 @@
                                 d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                         </svg>
                         <span x-show="unreadCount > 0" x-text="unreadCount > 99 ? '99+' : unreadCount"
-                            class="absolute -top-1 -right-1 bg-brand-700 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full min-w-4 text-center leading-tight"></span>
+                            class="absolute -top-1 -right-1 bg-brand-700 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full min-w-4 text-center leading-tight {{ $headerUserUnread > 0 ? '' : 'hidden' }}">{{ $headerUserUnread > 99 ? '99+' : ($headerUserUnread > 0 ? $headerUserUnread : '') }}</span>
                     </button>
 
                     {{-- Dropdown Panel --}}

@@ -136,7 +136,6 @@
                 ['route' => 'admin.contact-messages.index', 'icon' => 'M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4', 'label' => 'Contact Messages'],
                 ['route' => 'admin.faqs.index',         'icon' => 'M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 'label' => 'FAQs'],
                 ['route' => 'admin.subscribers.index',  'icon' => 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',                                                        'label' => 'Subscribers'],
-                ['route' => 'admin.notifications.index','icon' => 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9', 'label' => 'Notifications'],
                 ['route' => 'admin.settings.index',     'icon' => 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z', 'label' => 'Settings'],
             ];
             @endphp
@@ -204,18 +203,26 @@
             <h1 class="font-semibold text-gray-800 dark:text-white text-sm">@yield('title', 'Dashboard')</h1>
             <div class="ml-auto flex items-center gap-2 sm:gap-3">
                 {{-- Admin Notification Dropdown --}}
+                @php
+                    $adminUnread = auth('admin')->user()?->unreadNotifications()->count() ?? 0;
+                @endphp
                 <div class="relative" x-data="{
                     open: false,
-                    unreadCount: 0,
+                    unreadCount: {{ $adminUnread }},
                     notifications: [],
                     loading: false,
                     async fetchNotifications() {
                         this.loading = true;
                         try {
-                            const res = await fetch('{{ route('admin.notifications.index') }}');
+                            const res = await fetch('{{ route('admin.notifications.feed') }}', {
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                }
+                            });
                             if (res.ok) {
                                 const data = await res.json();
-                                this.unreadCount = data.unread_count || 0;
+                                this.unreadCount = (typeof data.unread_count !== 'undefined') ? data.unread_count : {{ $adminUnread }};
                                 this.notifications = data.notifications || [];
                             }
                         } catch (e) {
@@ -230,7 +237,8 @@
                                 method: 'POST',
                                 headers: {
                                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                    'Accept': 'application/json'
+                                    'Accept': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest'
                                 }
                             });
                             if (res.ok) {
@@ -247,7 +255,8 @@
                                 method: 'POST',
                                 headers: {
                                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                    'Accept': 'application/json'
+                                    'Accept': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest'
                                 }
                             });
                             notif.read = true;
@@ -263,7 +272,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                         </svg>
                         <span x-show="unreadCount > 0" x-text="unreadCount > 99 ? '99+' : unreadCount"
-                            class="absolute top-1 right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full min-w-4 text-center leading-tight"></span>
+                            class="absolute top-1 right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full min-w-4 text-center leading-tight {{ $adminUnread > 0 ? '' : 'hidden' }}">{{ $adminUnread > 99 ? '99+' : ($adminUnread > 0 ? $adminUnread : '') }}</span>
                     </button>
 
                     {{-- Dropdown Panel --}}

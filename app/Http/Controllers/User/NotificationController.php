@@ -10,35 +10,48 @@ use Illuminate\View\View;
 
 class NotificationController extends Controller
 {
+    /**
+     * JSON feed for top header notification bell & dropdown.
+     */
+    public function feed(Request $request): JsonResponse
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return response()->json(['unread_count' => 0, 'notifications' => []], 401);
+        }
+
+        $notifications = $user->notifications()->limit(15)->get()->map(function ($n) {
+            return [
+                'id'         => $n->id,
+                'read'       => $n->read(),
+                'type'       => $n->data['type'] ?? 'general',
+                'title'      => $n->data['title'] ?? 'Notification',
+                'message'    => $n->data['message'] ?? '',
+                'url'        => $n->data['url'] ?? null,
+                'icon'       => $n->data['icon'] ?? 'bell',
+                'created_at' => $n->created_at->diffForHumans(),
+            ];
+        });
+
+        return response()->json([
+            'unread_count'  => $user->unreadNotifications()->count(),
+            'notifications' => $notifications,
+        ]);
+    }
+
     public function index(Request $request): View|JsonResponse|RedirectResponse
     {
         $user = auth()->user();
         if (!$user) {
-            if ($request->wantsJson() || $request->ajax()) {
+            if ($request->wantsJson() || $request->ajax() || $request->query('format') === 'json') {
                 return response()->json(['unread_count' => 0, 'notifications' => []], 401);
             }
             return redirect()->route('login');
         }
 
         // Return JSON for header dropdown
-        if ($request->wantsJson() || $request->ajax()) {
-            $notifications = $user->notifications()->limit(15)->get()->map(function ($n) {
-                return [
-                    'id'         => $n->id,
-                    'read'       => $n->read(),
-                    'type'       => $n->data['type'] ?? 'general',
-                    'title'      => $n->data['title'] ?? 'Notification',
-                    'message'    => $n->data['message'] ?? '',
-                    'url'        => $n->data['url'] ?? null,
-                    'icon'       => $n->data['icon'] ?? 'bell',
-                    'created_at' => $n->created_at->diffForHumans(),
-                ];
-            });
-
-            return response()->json([
-                'unread_count'  => $user->unreadNotifications()->count(),
-                'notifications' => $notifications,
-            ]);
+        if ($request->wantsJson() || $request->ajax() || $request->query('format') === 'json') {
+            return $this->feed($request);
         }
 
         // Full Page for User Notifications

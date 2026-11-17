@@ -92,6 +92,7 @@ Route::middleware('admin')->group(function () {
     Route::delete('/contact-messages/{contact_message}', [Admin\ContactMessageController::class, 'destroy'])->name('contact-messages.destroy');
 
     // Notifications
+    Route::get('/notifications/feed', [Admin\NotificationController::class, 'feed'])->name('notifications.feed');
     Route::get('/notifications', [Admin\NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/mark-all-read', [Admin\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
     Route::post('/notifications/{id}/read', [Admin\NotificationController::class, 'markAsRead'])->name('notifications.read');

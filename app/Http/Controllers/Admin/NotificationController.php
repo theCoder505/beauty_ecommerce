@@ -10,35 +10,48 @@ use Illuminate\View\View;
 
 class NotificationController extends Controller
 {
-    public function index(Request $request): View|JsonResponse
+    /**
+     * JSON feed for top header notification bell & dropdown.
+     */
+    public function feed(Request $request): JsonResponse
     {
         $admin = auth('admin')->user();
         if (!$admin) {
-            if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['unread_count' => 0, 'notifications' => []], 401);
+        }
+
+        $notifications = $admin->notifications()->limit(15)->get()->map(function ($n) {
+            return [
+                'id'         => $n->id,
+                'read'       => $n->read(),
+                'type'       => $n->data['type'] ?? 'general',
+                'title'      => $n->data['title'] ?? 'Notification',
+                'message'    => $n->data['message'] ?? '',
+                'url'        => $n->data['url'] ?? null,
+                'icon'       => $n->data['icon'] ?? 'bell',
+                'created_at' => $n->created_at->diffForHumans(),
+            ];
+        });
+
+        return response()->json([
+            'unread_count'  => $admin->unreadNotifications()->count(),
+            'notifications' => $notifications,
+        ]);
+    }
+
+    public function index(Request $request): View|JsonResponse|RedirectResponse
+    {
+        $admin = auth('admin')->user();
+        if (!$admin) {
+            if ($request->wantsJson() || $request->ajax() || $request->query('format') === 'json') {
                 return response()->json(['unread_count' => 0, 'notifications' => []], 401);
             }
             return redirect()->route('admin.login');
         }
 
         // Return JSON for header dropdown
-        if ($request->wantsJson() || $request->ajax()) {
-            $notifications = $admin->notifications()->limit(15)->get()->map(function ($n) {
-                return [
-                    'id'         => $n->id,
-                    'read'       => $n->read(),
-                    'type'       => $n->data['type'] ?? 'general',
-                    'title'      => $n->data['title'] ?? 'Notification',
-                    'message'    => $n->data['message'] ?? '',
-                    'url'        => $n->data['url'] ?? null,
-                    'icon'       => $n->data['icon'] ?? 'bell',
-                    'created_at' => $n->created_at->diffForHumans(),
-                ];
-            });
-
-            return response()->json([
-                'unread_count'  => $admin->unreadNotifications()->count(),
-                'notifications' => $notifications,
-            ]);
+        if ($request->wantsJson() || $request->ajax() || $request->query('format') === 'json') {
+            return $this->feed($request);
         }
 
         // Full Page for Admin Notifications

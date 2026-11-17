@@ -84,6 +84,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // User Notifications
+    Route::get('/notifications/feed', [User\NotificationController::class, 'feed'])->name('notifications.feed');
     Route::get('/notifications', [User\NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/mark-all-read', [User\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
     Route::post('/notifications/{id}/read', [User\NotificationController::class, 'markAsRead'])->name('notifications.read');
