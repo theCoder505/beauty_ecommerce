@@ -25,10 +25,10 @@ return [
     'settings'      => [
         'default' => [
             'HTML.Doctype'             => 'HTML 4.01 Transitional',
-            'HTML.Allowed'             => 'h1,h2,h3,h4,h5,h6,p[style|class],div[style|class],span[style|class],b,strong,i,em,u,s,strike,del,a[href|title|target|rel],ul,ol,li[style|class|data-list],blockquote,pre[class],code,br,hr,img[src|alt|title|width|height|style|class],table,thead,tbody,tr,th,td',
+            'HTML.Allowed'             => 'h1[style|class],h2[style|class],h3[style|class],h4[style|class],h5[style|class],h6[style|class],p[style|class],div[style|class],span[style|class],b,strong,i,em,u,s,strike,del,sub,sup,a[href|title|target|rel|style|class],ul[style|class],ol[style|class],li[style|class|data-list],blockquote[style|class],pre[class|style],code[class|style],br,hr[style|class],img[src|alt|title|width|height|style|class],table[style|class|border|cellspacing|cellpadding],thead[style|class],tbody[style|class],tr[style|class],th[style|class|colspan|rowspan],td[style|class|colspan|rowspan]',
             'CSS.AllowTricky'          => true,
             'CSS.Proprietary'          => true,
-            'CSS.AllowedProperties'    => 'font,font-size,font-weight,font-style,font-family,text-decoration,text-decoration-thickness,text-underline-offset,padding,padding-left,padding-right,padding-top,padding-bottom,color,background-color,text-align,width,height,max-width,min-width,margin,margin-left,margin-right,margin-top,margin-bottom,display,float,clear,border-radius,line-height,aspect-ratio',
+            'CSS.AllowedProperties'    => 'font,font-size,font-weight,font-style,font-family,text-decoration,text-decoration-thickness,padding,padding-left,padding-right,padding-top,padding-bottom,color,background-color,text-align,width,height,max-width,min-width,margin,margin-left,margin-right,margin-top,margin-bottom,display,float,clear,border-radius,line-height,aspect-ratio',
             'Attr.AllowedClasses'      => null,
             'AutoFormat.AutoParagraph' => false,
             'AutoFormat.RemoveEmpty'   => false,
@@ -49,8 +49,8 @@ return [
         ],
         'custom_definition' => [
             'id'  => 'html5-definitions',
-            'rev' => 1,
-            'debug' => false,
+            'rev' => 2,
+            'debug' => true,
             'elements' => [
                 // http://developers.whatwg.org/sections.html
                 ['section', 'Block', 'Flow', 'Common'],
@@ -103,10 +103,12 @@ return [
                 ['tr', 'width', 'Text'],
                 ['tr', 'height', 'Text'],
                 ['tr', 'border', 'Text'],
+                ['li', 'data-list', 'Text'],
             ],
         ],
         'custom_attributes' => [
             ['a', 'target', 'Enum#_blank,_self,_target,_top'],
+            ['li', 'data-list', 'Text'],
         ],
         'custom_elements' => [
             ['u', 'Inline', 'Inline', 'Common'],

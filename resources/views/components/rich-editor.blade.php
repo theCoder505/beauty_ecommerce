@@ -153,18 +153,30 @@
     .ql-editor p.ql-align-center,
     .ql-editor h1.ql-align-center,
     .ql-editor h2.ql-align-center,
-    .ql-editor h3.ql-align-center {
+    .ql-editor h3.ql-align-center,
+    .ql-editor h4.ql-align-center,
+    .ql-editor h5.ql-align-center,
+    .ql-editor h6.ql-align-center {
         text-align: center;
     }
     .ql-editor .ql-align-right,
     .ql-editor p.ql-align-right,
     .ql-editor h1.ql-align-right,
     .ql-editor h2.ql-align-right,
-    .ql-editor h3.ql-align-right {
+    .ql-editor h3.ql-align-right,
+    .ql-editor h4.ql-align-right,
+    .ql-editor h5.ql-align-right,
+    .ql-editor h6.ql-align-right {
         text-align: right;
     }
     .ql-editor .ql-align-left,
-    .ql-editor p.ql-align-left {
+    .ql-editor p.ql-align-left,
+    .ql-editor h1.ql-align-left,
+    .ql-editor h2.ql-align-left,
+    .ql-editor h3.ql-align-left,
+    .ql-editor h4.ql-align-left,
+    .ql-editor h5.ql-align-left,
+    .ql-editor h6.ql-align-left {
         text-align: left;
     }
     .ql-editor .ql-align-justify,
@@ -569,6 +581,7 @@
 
                     if (selectedImg.parentElement && selectedImg.parentElement.tagName === 'P') {
                         selectedImg.parentElement.classList.remove('ql-align-center', 'ql-align-right');
+                        selectedImg.parentElement.classList.add('ql-align-left');
                     }
                 } else if (action === 'align-right') {
                     // Right float alignment
@@ -583,6 +596,7 @@
 
                     if (selectedImg.parentElement && selectedImg.parentElement.tagName === 'P') {
                         selectedImg.parentElement.classList.remove('ql-align-center', 'ql-align-left');
+                        selectedImg.parentElement.classList.add('ql-align-right');
                     }
                 } else if (action === 'size-25') {
                     selectedImg.style.width = '25%';

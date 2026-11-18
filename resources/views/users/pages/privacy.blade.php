@@ -23,7 +23,7 @@
         {{-- Content Card --}}
         <div class="bg-white dark:bg-gray-900 rounded-3xl p-8 sm:p-12 border border-cream-200 dark:border-gray-800 shadow-sm leading-relaxed text-gray-700 dark:text-gray-300">
             @if(!empty($content))
-                <div class="rich-content prose dark:prose-invert max-w-none text-sm leading-relaxed">
+                <div class="rich-content prose dark:prose-invert max-w-none text-base leading-relaxed">
                     @if(strip_tags($content) !== $content)
                         {!! $content !!}
                     @else

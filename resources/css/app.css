@@ -445,6 +445,14 @@ table.dataTable.no-footer {
     margin-bottom: 0.35rem;
     line-height: 1.7;
 }
+
+/* Quill Lists - ensure bullet lists display disc bullets, not decimal numbers */
+.rich-content ol:has(> li[data-list="bullet"]),
+.prose ol:has(> li[data-list="bullet"]),
+.rich-content ol:has(li[data-list="bullet"]),
+.prose ol:has(li[data-list="bullet"]) {
+    list-style-type: disc !important;
+}
 .rich-content li[data-list="bullet"],
 .prose li[data-list="bullet"] {
     list-style-type: disc !important;
@@ -452,6 +460,122 @@ table.dataTable.no-footer {
 .rich-content li[data-list="ordered"],
 .prose li[data-list="ordered"] {
     list-style-type: decimal !important;
+}
+
+/* Hide Quill internal UI spans on surface */
+.rich-content .ql-ui,
+.prose .ql-ui {
+    display: none !important;
+}
+
+/* Quill Indents */
+.rich-content .ql-indent-1,
+.prose .ql-indent-1 {
+    padding-left: 2.5rem !important;
+}
+.rich-content .ql-indent-2,
+.prose .ql-indent-2 {
+    padding-left: 5rem !important;
+}
+.rich-content .ql-indent-3,
+.prose .ql-indent-3 {
+    padding-left: 7.5rem !important;
+}
+.rich-content .ql-indent-4,
+.prose .ql-indent-4 {
+    padding-left: 10rem !important;
+}
+.rich-content .ql-indent-5,
+.prose .ql-indent-5 {
+    padding-left: 12.5rem !important;
+}
+.rich-content .ql-indent-6,
+.prose .ql-indent-6 {
+    padding-left: 15rem !important;
+}
+.rich-content .ql-indent-7,
+.prose .ql-indent-7 {
+    padding-left: 17.5rem !important;
+}
+.rich-content .ql-indent-8,
+.prose .ql-indent-8 {
+    padding-left: 20rem !important;
+}
+
+/* Quill Sizes & Fonts */
+.rich-content .ql-size-small,
+.prose .ql-size-small {
+    font-size: 0.75em !important;
+}
+.rich-content .ql-size-large,
+.prose .ql-size-large {
+    font-size: 1.35em !important;
+}
+.rich-content .ql-size-huge,
+.prose .ql-size-huge {
+    font-size: 1.85em !important;
+}
+.rich-content .ql-font-serif,
+.prose .ql-font-serif {
+    font-family: Georgia, Cambria, 'Times New Roman', Times, serif !important;
+}
+.rich-content .ql-font-monospace,
+.prose .ql-font-monospace {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+}
+
+/* Subscript and Superscript */
+.rich-content sub,
+.prose sub {
+    vertical-align: sub !important;
+    font-size: 0.75em !important;
+    line-height: 0;
+}
+.rich-content sup,
+.prose sup {
+    vertical-align: super !important;
+    font-size: 0.75em !important;
+    line-height: 0;
+}
+
+/* Empty paragraph spacing (preserves user line-breaks created in editor) */
+.rich-content p:empty,
+.prose p:empty,
+.rich-content p:has(> br:only-child),
+.prose p:has(> br:only-child) {
+    min-height: 1.5rem;
+}
+
+/* Tables */
+.rich-content table,
+.prose table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 1.5rem 0 !important;
+    font-size: 0.9em !important;
+}
+.rich-content th,
+.prose th,
+.rich-content td,
+.prose td {
+    border: 1px solid #e5e7eb !important;
+    padding: 0.65rem 0.85rem !important;
+    text-align: left !important;
+}
+.dark .rich-content th,
+.dark .prose th,
+.dark .rich-content td,
+.dark .prose td {
+    border-color: #374151 !important;
+}
+.rich-content th,
+.prose th {
+    background-color: #f9fafb !important;
+    font-weight: 600 !important;
+}
+.dark .rich-content th,
+.dark .prose th {
+    background-color: #1f2937 !important;
 }
 
 /* Blockquotes */
@@ -546,8 +670,24 @@ table.dataTable.no-footer {
 .prose h2.ql-align-center,
 .rich-content h3.ql-align-center,
 .prose h3.ql-align-center,
+.rich-content h4.ql-align-center,
+.prose h4.ql-align-center,
+.rich-content h5.ql-align-center,
+.prose h5.ql-align-center,
+.rich-content h6.ql-align-center,
+.prose h6.ql-align-center,
+.rich-content div.ql-align-center,
+.prose div.ql-align-center,
+.rich-content blockquote.ql-align-center,
+.prose blockquote.ql-align-center,
+.rich-content li.ql-align-center,
+.prose li.ql-align-center,
+.rich-content [align="center"],
+.prose [align="center"],
 .rich-content [style*="text-align: center"],
 .prose [style*="text-align: center"],
+.rich-content [style*="text-align:center"],
+.prose [style*="text-align:center"],
 .rich-content .text-center,
 .prose .text-center {
     text-align: center !important;
@@ -563,19 +703,62 @@ table.dataTable.no-footer {
 .prose h2.ql-align-right,
 .rich-content h3.ql-align-right,
 .prose h3.ql-align-right,
+.rich-content h4.ql-align-right,
+.prose h4.ql-align-right,
+.rich-content h5.ql-align-right,
+.prose h5.ql-align-right,
+.rich-content h6.ql-align-right,
+.prose h6.ql-align-right,
+.rich-content div.ql-align-right,
+.prose div.ql-align-right,
+.rich-content blockquote.ql-align-right,
+.prose blockquote.ql-align-right,
+.rich-content li.ql-align-right,
+.prose li.ql-align-right,
+.rich-content [align="right"],
+.prose [align="right"],
 .rich-content [style*="text-align: right"],
 .prose [style*="text-align: right"],
+.rich-content [style*="text-align:right"],
+.prose [style*="text-align:right"],
 .rich-content .text-right,
 .prose .text-right {
     text-align: right !important;
+}
+
+.rich-content li.ql-align-right,
+.prose li.ql-align-right {
+    list-style-position: inside !important;
 }
 
 .rich-content .ql-align-left,
 .prose .ql-align-left,
 .rich-content p.ql-align-left,
 .prose p.ql-align-left,
+.rich-content h1.ql-align-left,
+.prose h1.ql-align-left,
+.rich-content h2.ql-align-left,
+.prose h2.ql-align-left,
+.rich-content h3.ql-align-left,
+.prose h3.ql-align-left,
+.rich-content h4.ql-align-left,
+.prose h4.ql-align-left,
+.rich-content h5.ql-align-left,
+.prose h5.ql-align-left,
+.rich-content h6.ql-align-left,
+.prose h6.ql-align-left,
+.rich-content div.ql-align-left,
+.prose div.ql-align-left,
+.rich-content blockquote.ql-align-left,
+.prose blockquote.ql-align-left,
+.rich-content li.ql-align-left,
+.prose li.ql-align-left,
+.rich-content [align="left"],
+.prose [align="left"],
 .rich-content [style*="text-align: left"],
 .prose [style*="text-align: left"],
+.rich-content [style*="text-align:left"],
+.prose [style*="text-align:left"],
 .rich-content .text-left,
 .prose .text-left {
     text-align: left !important;
@@ -585,8 +768,12 @@ table.dataTable.no-footer {
 .prose .ql-align-justify,
 .rich-content p.ql-align-justify,
 .prose p.ql-align-justify,
+.rich-content [align="justify"],
+.prose [align="justify"],
 .rich-content [style*="text-align: justify"],
 .prose [style*="text-align: justify"],
+.rich-content [style*="text-align:justify"],
+.prose [style*="text-align:justify"],
 .rich-content .text-justify,
 .prose .text-justify {
     text-align: justify !important;
@@ -604,6 +791,18 @@ table.dataTable.no-footer {
 }
 
 /* Image Alignments */
+/* Center Alignments - Image is centered in block, following text starts on next line */
+.rich-content p.ql-align-center,
+.prose p.ql-align-center,
+.rich-content p:has(> img.ql-align-center),
+.prose p:has(> img.ql-align-center),
+.rich-content p:has(> img.editor-img-center),
+.prose p:has(> img.editor-img-center) {
+    text-align: center !important;
+    clear: both !important;
+    display: block !important;
+}
+
 .rich-content img.ql-align-center,
 .prose img.ql-align-center,
 .rich-content img.editor-img-center,
@@ -611,7 +810,11 @@ table.dataTable.no-footer {
 .rich-content .ql-align-center > img,
 .prose .ql-align-center > img,
 .rich-content p.ql-align-center img,
-.prose p.ql-align-center img {
+.prose p.ql-align-center img,
+.rich-content img[style*="display: block"][style*="margin-left: auto"],
+.rich-content img[style*="display:block"][style*="margin-left:auto"],
+.rich-content p[style*="text-align: center"] > img,
+.rich-content p[style*="text-align:center"] > img {
     display: block !important;
     margin-left: auto !important;
     margin-right: auto !important;
@@ -619,6 +822,7 @@ table.dataTable.no-footer {
     clear: both !important;
 }
 
+/* Left Alignments - Image floats left, texts auto-fit to the right */
 .rich-content img.ql-align-left,
 .prose img.ql-align-left,
 .rich-content img.editor-img-left,
@@ -626,15 +830,26 @@ table.dataTable.no-footer {
 .rich-content .ql-align-left > img,
 .prose .ql-align-left > img,
 .rich-content p.ql-align-left img,
-.prose p.ql-align-left img {
+.prose p.ql-align-left img,
+.rich-content img[style*="float: left"],
+.rich-content img[style*="float:left"] {
     float: left !important;
     margin-right: 1.5rem !important;
-    margin-bottom: 1rem !important;
-    margin-top: 0.5rem !important;
+    margin-bottom: 0.75rem !important;
+    margin-top: 0.25rem !important;
+    margin-left: 0 !important;
     display: inline-block !important;
-    clear: left;
+    clear: none !important;
 }
 
+.rich-content p:has(> img.ql-align-left),
+.prose p:has(> img.ql-align-left),
+.rich-content p:has(> img.editor-img-left),
+.prose p:has(> img.editor-img-left) {
+    clear: none !important;
+}
+
+/* Right Alignments - Image floats right, texts auto-fit to the left */
 .rich-content img.ql-align-right,
 .prose img.ql-align-right,
 .rich-content img.editor-img-right,
@@ -642,40 +857,83 @@ table.dataTable.no-footer {
 .rich-content .ql-align-right > img,
 .prose .ql-align-right > img,
 .rich-content p.ql-align-right img,
-.prose p.ql-align-right img {
+.prose p.ql-align-right img,
+.rich-content img[style*="float: right"],
+.rich-content img[style*="float:right"] {
     float: right !important;
     margin-left: 1.5rem !important;
-    margin-bottom: 1rem !important;
-    margin-top: 0.5rem !important;
+    margin-bottom: 0.75rem !important;
+    margin-top: 0.25rem !important;
+    margin-right: 0 !important;
     display: inline-block !important;
-    clear: right;
+    clear: none !important;
 }
 
-/* Float Clearing */
+.rich-content p:has(> img.ql-align-right),
+.prose p:has(> img.ql-align-right),
+.rich-content p:has(> img.editor-img-right),
+.prose p:has(> img.editor-img-right) {
+    clear: none !important;
+}
+
+/* Non-floated block container alignments for images */
+.rich-content p.ql-align-right > img:not(.editor-img-left):not(.editor-img-right):not([style*="float"]),
+.prose p.ql-align-right > img:not(.editor-img-left):not(.editor-img-right):not([style*="float"]) {
+    display: inline-block !important;
+    float: none !important;
+}
+
+.rich-content p.ql-align-left > img:not(.editor-img-left):not(.editor-img-right):not([style*="float"]),
+.prose p.ql-align-left > img:not(.editor-img-left):not(.editor-img-right):not([style*="float"]) {
+    display: inline-block !important;
+    float: none !important;
+}
+
+/* Float Clearing: container-level clear so paragraphs and headings wrap cleanly */
 .rich-content::after,
-.prose::after,
-.rich-content p::after,
-.prose p::after {
+.prose::after {
     content: "";
     display: table;
     clear: both;
 }
 
-/* Mobile responsive resets for floated images */
+.rich-content hr,
+.prose hr,
+.rich-content .clear-both,
+.prose .clear-both {
+    clear: both !important;
+}
+
+/* Mobile responsive alignments for images */
 @media (max-width: 640px) {
     .rich-content img.ql-align-left,
     .prose img.ql-align-left,
     .rich-content img.editor-img-left,
     .prose img.editor-img-left,
+    .rich-content p.ql-align-left img,
+    .prose p.ql-align-left img {
+        margin-left: 0 !important;
+        margin-right: 1rem !important;
+        max-width: 100% !important;
+    }
+
     .rich-content img.ql-align-right,
     .prose img.ql-align-right,
     .rich-content img.editor-img-right,
     .prose img.editor-img-right,
-    .rich-content p.ql-align-left img,
-    .prose p.ql-align-left img,
     .rich-content p.ql-align-right img,
     .prose p.ql-align-right img {
-        float: none !important;
+        margin-left: 1rem !important;
+        margin-right: 0 !important;
+        max-width: 100% !important;
+    }
+
+    .rich-content img.ql-align-center,
+    .prose img.ql-align-center,
+    .rich-content img.editor-img-center,
+    .prose img.editor-img-center,
+    .rich-content p.ql-align-center img,
+    .prose p.ql-align-center img {
         margin-left: auto !important;
         margin-right: auto !important;
         display: block !important;

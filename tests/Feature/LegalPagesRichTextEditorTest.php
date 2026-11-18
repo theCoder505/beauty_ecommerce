@@ -194,6 +194,44 @@ class LegalPagesRichTextEditorTest extends TestCase
         $this->assertStringContainsString('logo.avif', $saved);
         $this->assertStringContainsString('display:block', $saved);
         $this->assertStringContainsString('border-radius:8px', $saved);
+        $this->assertStringContainsString('ql-align-center', $saved);
+        $this->assertStringContainsString('editor-img-center', $saved);
+    }
+
+    /**
+     * Test admin can save left and right aligned text and images, and surface page renders them properly.
+     */
+    public function test_left_and_right_alignment_preserved_and_rendered(): void
+    {
+        $content = '<p class="ql-align-right">Right aligned header text</p>'
+            . '<p class="ql-align-left">Left aligned paragraph text</p>'
+            . '<p><img src="https://example.com/left.jpg" alt="Left Image" class="editor-img-left ql-align-left" style="display:inline-block;float:left;margin-right:1.5rem;margin-bottom:1rem;margin-top:0.5rem;"></p>'
+            . '<p>Flowing text next to left image</p>'
+            . '<p><img src="https://example.com/right.jpg" alt="Right Image" class="editor-img-right ql-align-right" style="display:inline-block;float:right;margin-left:1.5rem;margin-bottom:1rem;margin-top:0.5rem;"></p>'
+            . '<p>Flowing text next to right image</p>';
+
+        $response = $this->actingAs($this->admin, 'admin')->post(route('admin.privacy.update'), [
+            'content' => $content,
+        ]);
+
+        $response->assertRedirect(route('admin.privacy.edit'));
+
+        $saved = Setting::where('key', 'privacy_policy')->value('value');
+        $this->assertStringContainsString('ql-align-right', $saved);
+        $this->assertStringContainsString('ql-align-left', $saved);
+        $this->assertStringContainsString('editor-img-left', $saved);
+        $this->assertStringContainsString('editor-img-right', $saved);
+        $this->assertStringContainsString('float:left', $saved);
+        $this->assertStringContainsString('float:right', $saved);
+
+        $publicRes = $this->get(route('privacy'));
+        $publicRes->assertOk();
+        $publicRes->assertSee('ql-align-right', false);
+        $publicRes->assertSee('ql-align-left', false);
+        $publicRes->assertSee('editor-img-left', false);
+        $publicRes->assertSee('editor-img-right', false);
+        $publicRes->assertSee('float:left', false);
+        $publicRes->assertSee('float:right', false);
     }
 
     /**
