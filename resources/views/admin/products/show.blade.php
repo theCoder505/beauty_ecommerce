@@ -76,7 +76,7 @@
                 @if($product->description)
                 <div>
                     <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Description</h4>
-                    <div class="prose prose-sm dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
+                    <div class="rich-content prose prose-sm dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
                         {!! $product->description !!}
                     </div>
                 </div>

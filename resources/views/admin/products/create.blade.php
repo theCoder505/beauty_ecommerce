@@ -1,54 +1,6 @@
 @extends('admin.layouts.app')
 @section('title', 'Add New Product')
 
-@push('styles')
-<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet" />
-<style>
-    .ql-toolbar.ql-snow {
-        border-top-left-radius: 0.75rem;
-        border-top-right-radius: 0.75rem;
-        border-color: #e5e7eb;
-        background-color: #f9fafb;
-    }
-    .dark .ql-toolbar.ql-snow {
-        border-color: #374151;
-        background-color: #1f2937;
-    }
-    .dark .ql-toolbar .ql-stroke {
-        stroke: #9ca3af;
-    }
-    .dark .ql-toolbar .ql-fill {
-        fill: #9ca3af;
-    }
-    .dark .ql-toolbar .ql-picker {
-        color: #9ca3af;
-    }
-    .dark .ql-toolbar .ql-picker-options {
-        background-color: #1f2937;
-        border-color: #374151;
-    }
-    .ql-container.ql-snow {
-        border-bottom-left-radius: 0.75rem;
-        border-bottom-right-radius: 0.75rem;
-        border-color: #e5e7eb;
-        font-family: inherit;
-        font-size: 0.875rem;
-    }
-    .dark .ql-container.ql-snow {
-        border-color: #374151;
-        background-color: #111827;
-        color: #f3f4f6;
-    }
-    .ql-editor {
-        min-height: 220px;
-    }
-    .ql-editor.ql-blank::before {
-        color: #9ca3af;
-        font-style: normal;
-    }
-</style>
-@endpush
-
 @section('content')
 <div class="max-w-4xl mx-auto space-y-6">
     <div class="flex items-center justify-between">
@@ -101,9 +53,14 @@
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Editorial Description</label>
-                <div id="quill-editor" class="bg-white dark:bg-gray-900">{!! old('description') !!}</div>
-                <input type="hidden" name="description" id="hidden-description" value="{{ old('description') }}">
+                <x-rich-editor
+                    name="description"
+                    id="product-description-editor"
+                    :value="old('description')"
+                    label="Editorial Description"
+                    placeholder="Describe scent notes, ingredients, mood, and application details..."
+                    height="320px"
+                />
             </div>
         </div>
 
@@ -195,37 +152,3 @@
     </form>
 </div>
 @endsection
-
-@push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const quill = new Quill('#quill-editor', {
-        theme: 'snow',
-        placeholder: 'Describe scent notes, ingredients, mood, and application details...',
-        modules: {
-            toolbar: [
-                [{ 'header': [2, 3, false] }],
-                ['bold', 'italic', 'underline', 'strike'],
-                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                ['blockquote', 'link'],
-                ['clean']
-            ]
-        }
-    });
-
-    const hiddenInput = document.getElementById('hidden-description');
-    
-    quill.on('text-change', function() {
-        hiddenInput.value = quill.root.innerHTML === '<p><br></p>' ? '' : quill.root.innerHTML;
-    });
-
-    const form = hiddenInput.closest('form');
-    if (form) {
-        form.addEventListener('submit', function() {
-            hiddenInput.value = quill.root.innerHTML === '<p><br></p>' ? '' : quill.root.innerHTML;
-        });
-    }
-});
-</script>
-@endpush

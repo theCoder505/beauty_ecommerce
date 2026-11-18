@@ -23,7 +23,7 @@
     @endif
 
     {{-- Content --}}
-    <div class="mt-10 prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 leading-relaxed font-sans">
+    <div class="mt-10 rich-content prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 leading-relaxed font-sans">
         {!! $post->content !!}
     </div>
 

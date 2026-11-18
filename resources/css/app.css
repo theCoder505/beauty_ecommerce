@@ -288,3 +288,399 @@ table.dataTable.no-footer {
     display: -webkit-box !important;
 }
 
+/* ========================================================
+   Rich Content / Editorial Typography Styles
+   Used across Blogs, Products, Terms & Privacy surface pages
+   ======================================================== */
+.rich-content,
+.prose {
+    color: #374151; /* gray-700 */
+    line-height: 1.8;
+    font-size: 0.95rem;
+    word-break: break-word;
+}
+.dark .rich-content,
+.dark .prose {
+    color: #d1d5db; /* gray-300 */
+}
+
+/* Headings */
+.rich-content h1,
+.prose h1 {
+    font-family: var(--font-serif);
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.25;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: #111827;
+}
+.dark .rich-content h1,
+.dark .prose h1 {
+    color: #ffffff;
+}
+
+.rich-content h2,
+.prose h2 {
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.35;
+    margin-top: 1.75rem;
+    margin-bottom: 0.85rem;
+    color: #111827;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    padding-bottom: 0.35rem;
+}
+.dark .rich-content h2,
+.dark .prose h2 {
+    color: #f9fafb;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.rich-content h3,
+.prose h3 {
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-top: 1.5rem;
+    margin-bottom: 0.65rem;
+    color: #1f2937;
+}
+.dark .rich-content h3,
+.dark .prose h3 {
+    color: #f3f4f6;
+}
+
+.rich-content h4,
+.prose h4,
+.rich-content h5,
+.prose h5,
+.rich-content h6,
+.prose h6 {
+    font-family: var(--font-sans);
+    font-size: 1.1rem;
+    font-weight: 600;
+    line-height: 1.5;
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+    color: #1f2937;
+}
+.dark .rich-content h4,
+.dark .prose h4,
+.dark .rich-content h5,
+.dark .prose h5,
+.dark .rich-content h6,
+.dark .prose h6 {
+    color: #e5e7eb;
+}
+
+/* Paragraphs */
+.rich-content p,
+.prose p {
+    margin-top: 0.85rem;
+    margin-bottom: 0.85rem;
+    line-height: 1.8;
+}
+
+/* Underline, Strike, Bold, Italic */
+.rich-content u,
+.prose u {
+    text-decoration: underline !important;
+    text-underline-offset: 3px !important;
+    text-decoration-thickness: 1.5px !important;
+    text-decoration-color: currentColor !important;
+}
+
+.rich-content s,
+.prose s,
+.rich-content strike,
+.prose strike,
+.rich-content del,
+.prose del {
+    text-decoration: line-through !important;
+    opacity: 0.85;
+}
+
+.rich-content strong,
+.prose strong,
+.rich-content b,
+.prose b {
+    font-weight: 700;
+    color: #111827;
+}
+.dark .rich-content strong,
+.dark .prose strong,
+.dark .rich-content b,
+.dark .prose b {
+    color: #ffffff;
+}
+
+.rich-content em,
+.prose em,
+.rich-content i,
+.prose i {
+    font-style: italic;
+}
+
+/* Lists */
+.rich-content ul,
+.prose ul {
+    list-style-type: disc !important;
+    padding-left: 1.75rem !important;
+    margin-top: 0.75rem !important;
+    margin-bottom: 0.75rem !important;
+}
+.rich-content ol,
+.prose ol {
+    list-style-type: decimal !important;
+    padding-left: 1.75rem !important;
+    margin-top: 0.75rem !important;
+    margin-bottom: 0.75rem !important;
+}
+.rich-content li,
+.prose li {
+    margin-top: 0.35rem;
+    margin-bottom: 0.35rem;
+    line-height: 1.7;
+}
+.rich-content li[data-list="bullet"],
+.prose li[data-list="bullet"] {
+    list-style-type: disc !important;
+}
+.rich-content li[data-list="ordered"],
+.prose li[data-list="ordered"] {
+    list-style-type: decimal !important;
+}
+
+/* Blockquotes */
+.rich-content blockquote,
+.prose blockquote {
+    border-left: 4px solid #16a34a !important;
+    background: rgba(22, 163, 74, 0.05);
+    padding: 0.85rem 1.25rem !important;
+    margin: 1.5rem 0 !important;
+    border-radius: 0 0.75rem 0.75rem 0;
+    font-style: italic;
+    color: #4b5563;
+}
+.dark .rich-content blockquote,
+.dark .prose blockquote {
+    background: rgba(22, 163, 74, 0.1);
+    color: #9ca3af;
+    border-left-color: #22c55e !important;
+}
+
+/* Links */
+.rich-content a,
+.prose a {
+    color: #15803d;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+.rich-content a:hover,
+.prose a:hover {
+    color: #166534;
+}
+.dark .rich-content a,
+.dark .prose a {
+    color: #4ade80;
+}
+.dark .rich-content a:hover,
+.dark .prose a:hover {
+    color: #86efac;
+}
+
+/* Code & Preformatted */
+.rich-content code,
+.prose code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.875em;
+    background-color: #f3f4f6;
+    color: #b91c1c;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.375rem;
+}
+.dark .rich-content code,
+.dark .prose code {
+    background-color: #1f2937;
+    color: #f87171;
+}
+
+.rich-content pre,
+.prose pre {
+    background-color: #111827;
+    color: #f9fafb;
+    padding: 1.25rem;
+    border-radius: 0.75rem;
+    overflow-x: auto;
+    margin: 1.25rem 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.875rem;
+    line-height: 1.6;
+}
+
+/* Horizontal Rules */
+.rich-content hr,
+.prose hr {
+    border: none;
+    border-top: 1px solid #e5e7eb;
+    margin: 2rem 0;
+}
+.dark .rich-content hr,
+.dark .prose hr {
+    border-top-color: #374151;
+}
+
+/* Text Alignments */
+.rich-content .ql-align-center,
+.prose .ql-align-center,
+.rich-content p.ql-align-center,
+.prose p.ql-align-center,
+.rich-content h1.ql-align-center,
+.prose h1.ql-align-center,
+.rich-content h2.ql-align-center,
+.prose h2.ql-align-center,
+.rich-content h3.ql-align-center,
+.prose h3.ql-align-center,
+.rich-content [style*="text-align: center"],
+.prose [style*="text-align: center"],
+.rich-content .text-center,
+.prose .text-center {
+    text-align: center !important;
+}
+
+.rich-content .ql-align-right,
+.prose .ql-align-right,
+.rich-content p.ql-align-right,
+.prose p.ql-align-right,
+.rich-content h1.ql-align-right,
+.prose h1.ql-align-right,
+.rich-content h2.ql-align-right,
+.prose h2.ql-align-right,
+.rich-content h3.ql-align-right,
+.prose h3.ql-align-right,
+.rich-content [style*="text-align: right"],
+.prose [style*="text-align: right"],
+.rich-content .text-right,
+.prose .text-right {
+    text-align: right !important;
+}
+
+.rich-content .ql-align-left,
+.prose .ql-align-left,
+.rich-content p.ql-align-left,
+.prose p.ql-align-left,
+.rich-content [style*="text-align: left"],
+.prose [style*="text-align: left"],
+.rich-content .text-left,
+.prose .text-left {
+    text-align: left !important;
+}
+
+.rich-content .ql-align-justify,
+.prose .ql-align-justify,
+.rich-content p.ql-align-justify,
+.prose p.ql-align-justify,
+.rich-content [style*="text-align: justify"],
+.prose [style*="text-align: justify"],
+.rich-content .text-justify,
+.prose .text-justify {
+    text-align: justify !important;
+}
+
+/* Image Base & Sizing */
+.rich-content img,
+.prose img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Image Alignments */
+.rich-content img.ql-align-center,
+.prose img.ql-align-center,
+.rich-content img.editor-img-center,
+.prose img.editor-img-center,
+.rich-content .ql-align-center > img,
+.prose .ql-align-center > img,
+.rich-content p.ql-align-center img,
+.prose p.ql-align-center img {
+    display: block !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    float: none !important;
+    clear: both !important;
+}
+
+.rich-content img.ql-align-left,
+.prose img.ql-align-left,
+.rich-content img.editor-img-left,
+.prose img.editor-img-left,
+.rich-content .ql-align-left > img,
+.prose .ql-align-left > img,
+.rich-content p.ql-align-left img,
+.prose p.ql-align-left img {
+    float: left !important;
+    margin-right: 1.5rem !important;
+    margin-bottom: 1rem !important;
+    margin-top: 0.5rem !important;
+    display: inline-block !important;
+    clear: left;
+}
+
+.rich-content img.ql-align-right,
+.prose img.ql-align-right,
+.rich-content img.editor-img-right,
+.prose img.editor-img-right,
+.rich-content .ql-align-right > img,
+.prose .ql-align-right > img,
+.rich-content p.ql-align-right img,
+.prose p.ql-align-right img {
+    float: right !important;
+    margin-left: 1.5rem !important;
+    margin-bottom: 1rem !important;
+    margin-top: 0.5rem !important;
+    display: inline-block !important;
+    clear: right;
+}
+
+/* Float Clearing */
+.rich-content::after,
+.prose::after,
+.rich-content p::after,
+.prose p::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+/* Mobile responsive resets for floated images */
+@media (max-width: 640px) {
+    .rich-content img.ql-align-left,
+    .prose img.ql-align-left,
+    .rich-content img.editor-img-left,
+    .prose img.editor-img-left,
+    .rich-content img.ql-align-right,
+    .prose img.ql-align-right,
+    .rich-content img.editor-img-right,
+    .prose img.editor-img-right,
+    .rich-content p.ql-align-left img,
+    .prose p.ql-align-left img,
+    .rich-content p.ql-align-right img,
+    .prose p.ql-align-right img {
+        float: none !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        display: block !important;
+        max-width: 100% !important;
+    }
+}
+
+

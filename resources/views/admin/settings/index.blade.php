@@ -1,53 +1,8 @@
 @extends('admin.layouts.app')
 @section('title', 'Store Settings')
 
-@push('styles')
-<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet" />
-<style>
-    .ql-toolbar.ql-snow {
-        border-top-left-radius: 0.75rem;
-        border-top-right-radius: 0.75rem;
-        border-color: #e5e7eb;
-        background-color: #f9fafb;
-    }
-    .dark .ql-toolbar.ql-snow {
-        border-color: #374151;
-        background-color: #1f2937;
-    }
-    .dark .ql-toolbar .ql-stroke { stroke: #9ca3af; }
-    .dark .ql-toolbar .ql-fill { fill: #9ca3af; }
-    .dark .ql-toolbar .ql-picker { color: #9ca3af; }
-    .dark .ql-toolbar .ql-picker-options {
-        background-color: #1f2937;
-        border-color: #374151;
-    }
-    .ql-container.ql-snow {
-        border-bottom-left-radius: 0.75rem;
-        border-bottom-right-radius: 0.75rem;
-        border-color: #e5e7eb;
-        font-family: inherit;
-        font-size: 0.875rem;
-    }
-    .dark .ql-container.ql-snow {
-        border-color: #374151;
-        background-color: #111827;
-        color: #f3f4f6;
-    }
-    .ql-editor {
-        min-height: 280px;
-        line-height: 1.7;
-    }
-    .ql-editor img {
-        max-width: 100%;
-        height: auto;
-        border-radius: 0.75rem;
-        margin: 1rem 0;
-    }
-</style>
-@endpush
-
 @section('content')
-<div class="max-w-4xl mx-auto space-y-6" x-data="{ tab: 'general' }">
+<div class="max-w-5xl mx-auto space-y-6" x-data="{ tab: 'general' }">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <h1 class="text-xl font-bold text-gray-900 dark:text-white">Store Settings</h1>
@@ -56,7 +11,7 @@
     </div>
 
     <!-- Tab navigation -->
-    <div class="flex items-center gap-2 border-b border-gray-200 dark:border-gray-800 pb-2 overflow-x-auto">
+    <div class="flex flex-wrap items-center gap-2 border-b border-gray-200 dark:border-gray-800 pb-2 overflow-x-auto">
         <button @click="tab = 'general'" :class="tab === 'general' ? 'bg-brand-700 text-white font-bold shadow-md ring-2 ring-brand-700/40' : 'text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">General & Store</button>
         <button @click="tab = 'timezone'" :class="tab === 'timezone' ? 'bg-brand-700 text-white font-bold shadow-md ring-2 ring-brand-700/40' : 'text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">Timezone & Clock</button>
         <button @click="tab = 'shipping'" :class="tab === 'shipping' ? 'bg-brand-700 text-white font-bold shadow-md ring-2 ring-brand-700/40' : 'text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">Shipping & Delivery</button>
@@ -393,12 +348,12 @@
             </div>
         </div>
 
-        <!-- Tab 7: Terms & Privacy Policy (Req 2) -->
+        <!-- Tab: Terms & Privacy Policy -->
         <div x-show="tab === 'legal'" class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 sm:p-8 space-y-6 shadow-sm">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-3">
                 <div>
                     <h3 class="text-base font-semibold text-gray-900 dark:text-white">Terms & Conditions & Privacy Policy</h3>
-                    <p class="text-xs text-gray-500 mt-0.5">Admin can format Terms & Conditions and Privacy Policy using the RichTextEditor with image support.</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Admin can format Terms & Conditions and Privacy Policy using the RichEditor component with image support.</p>
                 </div>
                 <div class="flex items-center gap-3">
                     <a href="{{ route('admin.terms.edit') }}" class="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1">
@@ -412,25 +367,29 @@
             </div>
 
             <div class="space-y-2">
-                <div class="flex items-center justify-between">
-                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Terms & Conditions Content</label>
-                    <a href="{{ route('terms') }}" target="_blank" class="text-xs text-brand-600 dark:text-brand-400 hover:underline font-mono">
-                        {{ url('/terms-and-conditions') }} ↗
-                    </a>
-                </div>
-                <div id="terms-quill-editor" class="bg-white dark:bg-gray-900">{!! old('terms_and_conditions', $settings['terms_and_conditions']->value ?? '') !!}</div>
-                <input type="hidden" name="terms_and_conditions" id="hidden-terms-content" value="{{ old('terms_and_conditions', $settings['terms_and_conditions']->value ?? '') }}">
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Terms & Conditions</label>
+                <p class="text-xs text-gray-500">Public URL: <a href="{{ route('terms') }}" target="_blank" class="text-brand-600 font-mono">{{ url('/terms-and-conditions') }}</a></p>
+                <x-rich-editor
+                    name="terms_and_conditions"
+                    id="terms-quill-editor"
+                    inputId="hidden-terms-content"
+                    :value="old('terms_and_conditions', $settings['terms_and_conditions']->value ?? '')"
+                    placeholder="Enter your store Terms and Conditions..."
+                    height="320px"
+                />
             </div>
 
-            <div class="pt-4 border-t border-gray-100 dark:border-gray-800 space-y-2">
-                <div class="flex items-center justify-between">
-                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Privacy Policy Content</label>
-                    <a href="{{ route('privacy') }}" target="_blank" class="text-xs text-brand-600 dark:text-brand-400 hover:underline font-mono">
-                        {{ url('/privacy-policy') }} ↗
-                    </a>
-                </div>
-                <div id="privacy-quill-editor" class="bg-white dark:bg-gray-900">{!! old('privacy_policy', $settings['privacy_policy']->value ?? '') !!}</div>
-                <input type="hidden" name="privacy_policy" id="hidden-privacy-content" value="{{ old('privacy_policy', $settings['privacy_policy']->value ?? '') }}">
+            <div class="pt-6 border-t border-gray-100 dark:border-gray-800 space-y-2">
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Privacy Policy</label>
+                <p class="text-xs text-gray-500">Public URL: <a href="{{ route('privacy') }}" target="_blank" class="text-brand-600 font-mono">{{ url('/privacy-policy') }}</a></p>
+                <x-rich-editor
+                    name="privacy_policy"
+                    id="privacy-quill-editor"
+                    inputId="hidden-privacy-content"
+                    :value="old('privacy_policy', $settings['privacy_policy']->value ?? '')"
+                    placeholder="Enter your store Privacy Policy..."
+                    height="320px"
+                />
             </div>
         </div>
 
@@ -443,106 +402,7 @@
 </div>
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
 <script>
-function attachQuillImageHandler(quillInstance) {
-    const toolbar = quillInstance.getModule('toolbar');
-    if (!toolbar) return;
-
-    toolbar.addHandler('image', function() {
-        const input = document.createElement('input');
-        input.setAttribute('type', 'file');
-        input.setAttribute('accept', 'image/*');
-        input.click();
-
-        input.onchange = async function() {
-            const file = input.files[0];
-            if (!file) return;
-
-            const formData = new FormData();
-            formData.append('image', file);
-            formData.append('_token', '{{ csrf_token() }}');
-
-            try {
-                const res = await fetch('{{ route('admin.editor.upload-image') }}', {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    },
-                    body: formData
-                });
-
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.url) {
-                        const range = quillInstance.getSelection(true) || { index: quillInstance.getLength() };
-                        quillInstance.insertEmbed(range.index, 'image', data.url);
-                        quillInstance.setSelection(range.index + 1);
-                        return;
-                    }
-                }
-                fallbackBase64(file, quillInstance);
-            } catch (err) {
-                fallbackBase64(file, quillInstance);
-            }
-        };
-    });
-
-    function fallbackBase64(file, quill) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const range = quill.getSelection(true) || { index: quill.getLength() };
-            quill.insertEmbed(range.index, 'image', e.target.result);
-            quill.setSelection(range.index + 1);
-        };
-        reader.readAsDataURL(file);
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    const toolbarOptions = [
-        [{ 'header': [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        ['blockquote', 'link', 'image'],
-        ['clean']
-    ];
-
-    const termsQuill = new Quill('#terms-quill-editor', {
-        theme: 'snow',
-        placeholder: 'Enter your store Terms and Conditions...',
-        modules: { toolbar: toolbarOptions }
-    });
-    attachQuillImageHandler(termsQuill);
-
-    const privacyQuill = new Quill('#privacy-quill-editor', {
-        theme: 'snow',
-        placeholder: 'Enter your store Privacy Policy...',
-        modules: { toolbar: toolbarOptions }
-    });
-    attachQuillImageHandler(privacyQuill);
-
-    const termsInput = document.getElementById('hidden-terms-content');
-    const privacyInput = document.getElementById('hidden-privacy-content');
-
-    termsQuill.on('text-change', function() {
-        termsInput.value = termsQuill.root.innerHTML === '<p><br></p>' ? '' : termsQuill.root.innerHTML;
-    });
-
-    privacyQuill.on('text-change', function() {
-        privacyInput.value = privacyQuill.root.innerHTML === '<p><br></p>' ? '' : privacyQuill.root.innerHTML;
-    });
-
-    const form = termsInput.closest('form');
-    if (form) {
-        form.addEventListener('submit', function() {
-            termsInput.value = termsQuill.root.innerHTML === '<p><br></p>' ? '' : termsQuill.root.innerHTML;
-            privacyInput.value = privacyQuill.root.innerHTML === '<p><br></p>' ? '' : privacyQuill.root.innerHTML;
-        });
-    }
-});
-
 function deliveryChargesManager(initialCharges) {
     return {
         charges: (initialCharges && initialCharges.length > 0) ? initialCharges : [

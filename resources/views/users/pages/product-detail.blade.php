@@ -353,7 +353,7 @@
     <div class="mt-16 grid grid-cols-1 lg:grid-cols-3 gap-10">
         <div class="lg:col-span-2">
             <h2 class="font-serif text-2xl font-bold text-gray-900 dark:text-white mb-5">Product Description</h2>
-            <div class="prose dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 leading-relaxed">
+            <div class="rich-content prose dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 leading-relaxed">
                 {!! $product->description !!}
             </div>
         </div>
