@@ -73,6 +73,15 @@ Route::middleware('admin')->group(function () {
     Route::get('/settings', [Admin\SettingController::class, 'index'])->name('settings.index');
     Route::post('/settings', [Admin\SettingController::class, 'update'])->name('settings.update');
 
+    // RichTextEditor Media Upload
+    Route::post('/editor/upload-image', [Admin\EditorImageUploadController::class, 'upload'])->name('editor.upload-image');
+
+    // Terms & Conditions and Privacy Policy Dedicated Admin Pages
+    Route::get('/terms-and-conditions', [Admin\LegalPageController::class, 'editTerms'])->name('terms.edit');
+    Route::post('/terms-and-conditions', [Admin\LegalPageController::class, 'updateTerms'])->name('terms.update');
+    Route::get('/privacy-policy', [Admin\LegalPageController::class, 'editPrivacy'])->name('privacy.edit');
+    Route::post('/privacy-policy', [Admin\LegalPageController::class, 'updatePrivacy'])->name('privacy.update');
+
     // Newsletter subscribers
     Route::get('/subscribers', [Admin\SubscriberController::class, 'index'])->name('subscribers.index');
     Route::post('/subscribers/bulk-delete', [Admin\SubscriberController::class, 'bulkDelete'])->name('subscribers.bulk-delete');

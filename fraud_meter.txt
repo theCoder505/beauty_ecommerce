@@ -1,0 +1,143 @@
+================================================================================
+                    GLOWHAUS E-COMMERCE FRAUD DETECTION & RISK METER
+================================================================================
+
+1. OVERVIEW
+--------------------------------------------------------------------------------
+The Fraud Detection & Risk Meter is an algorithmic, multi-signal heuristic engine
+designed to detect suspicious, fraudulent, or high-risk orders before fulfillment.
+It automatically calculates an objective Risk Score (0 to 100), categorizes the
+order into a Risk Level (Low, Medium, High), logs granular warning flags, and
+provides fulfillment recommendations to administrators.
+
+Primary Service: App\Services\FraudDetectionService
+Database Columns on 'orders':
+  - fraud_risk_score (INTEGER, 0 to 100)
+  - fraud_risk_level (VARCHAR: 'low', 'medium', 'high')
+  - fraud_flags (JSON array of warning strings)
+  - cancellation_reason (TEXT: store notice or customer cancellation reason)
+  - cancelled_by (VARCHAR: identifier of who cancelled the order)
+  - cancelled_at (TIMESTAMP)
+
+
+2. SCORING ENGINE & RISK TIERS
+--------------------------------------------------------------------------------
+Every order starts at a baseline of 0 points. Each detected risk factor adds
+penalty points. The cumulative score is capped at a maximum of 100 points.
+
+Risk Tiers:
+  ┌────────────────┬──────────────┬───────────────────────────────┬───────────────────────────┐
+  │ Level          │ Score Range  │ Badge Indicator               │ Action Recommendation     │
+  ├────────────────┼──────────────┼───────────────────────────────┼───────────────────────────┤
+  │ LOW RISK       │  0 to 24     │ Green (Clean)                 │ Normal standard shipping  │
+  │ MEDIUM RISK    │ 25 to 49     │ Amber (Review)                │ Verify phone or address   │
+  │ HIGH RISK      │ 50 to 100    │ Red (Pulsing Warning)         │ Hold / Manual verify /    │
+  │                │              │                               │ Cancel with notice        │
+  └────────────────┴──────────────┴───────────────────────────────┴───────────────────────────┘
+
+
+3. HEURISTIC SIGNALS & WEIGHT FACTORS
+--------------------------------------------------------------------------------
+The algorithm evaluates 9 distinct security and behavioral vectors:
+
+(1) High Order Value Check
+    - Orders >= ৳10,000 : +30 points
+      Flag: "High order value (৳X) exceeds standard transaction threshold"
+    - Orders >= ৳5,000  : +15 points
+      Flag: "Above-average order value (৳X)"
+
+(2) Bulk Quantity & Abnormal Units Check
+    - Total items ordered >= 10 units : +20 points
+      Flag: "Unusual bulk quantity: X items in a single order"
+    - Single product quantity >= 5 units : +15 points
+      Flag: "High single-item quantity (X units of one product)"
+
+(3) Rapid Order Velocity (Last 24 Hours)
+    Checks for repeat orders matching user ID, shipping email, or phone number:
+    - 2 or more other orders placed within 24h : +30 points
+      Flag: "Rapid order velocity: X other orders placed from this user/contact within 24 hours"
+    - 1 other order placed within 24h : +15 points
+      Flag: "Repeat order placed within 24 hours"
+
+(4) New Customer Registration Velocity
+    - Account registered within 2 hours of checkout : +15 points
+      Flag: "New customer account registered shortly before checkout (X minutes prior)"
+
+(5) Past Cancellation / Unpaid History
+    - Customer profile or contact has 2 or more past cancelled orders : +25 points
+      Flag: "Customer profile has X previously cancelled orders"
+
+(6) Account vs. Recipient Name Mismatch
+    - Compares user account name with the shipping recipient name.
+    - If there is zero word overlap between account and recipient : +15 points
+      Flag: "Name mismatch: Account name ('A') differs from recipient name ('B')"
+
+(7) Suspicious or Repetitive Phone Number
+    - Phone number length < 9 digits OR contains obvious repeating patterns
+      (e.g., 00000, 11111, 22222, 55555, 99999, 123456) : +25 points
+      Flag: "Suspicious or repetitive pattern in shipping phone number ('X')"
+
+(8) Incomplete or Placeholder Shipping Address
+    - Address length < 8 characters OR contains known test phrases
+      (e.g., "test", "asdf", "fake", "none", "unknown", "null", "xxx") : +25 points
+      Flag: "Shipping address appears incomplete or contains placeholder text ('X')"
+
+(9) Disposable / Temporary Email Domain
+    - Detects burner/temporary email domains (mailinator.com, tempmail.com,
+      10minutemail.com, guerrillamail.com, yopmail.com, throwawaymail.com, etc.) : +35 points
+      Flag: "Temporary / disposable email domain detected ('@domain')"
+
+
+4. ADMIN VISIBILITY & CONTROLS
+--------------------------------------------------------------------------------
+A. Admin Orders Index (/admin/orders):
+   - Added a dedicated "Fraud Risk" column displaying color-coded badges:
+     * High Risk (Score >= 50) in red with an active pulse dot.
+     * Medium Risk (25-49) in amber.
+     * Low Risk (< 25) in green.
+   - Added a "Fraud Risk" filter dropdown allowing admins to filter orders by
+     risk tier (High, Medium, Low).
+   - Automatically runs evaluateAndSave() on any order missing pre-calculated scores.
+
+B. Admin Order Details (/admin/orders/{order}):
+   - Displays the "Fraud Risk & Security Evaluation" card featuring:
+     * Threat Meter visual progress bar (0% to 100%).
+     * Breakdown of all triggered risk flags and point explanations.
+     * Algorithmic recommendation for the admin team.
+     * One-click "Cancel Order with Notice" modal.
+
+
+5. ORDER CANCELLATION WORKFLOWS & USER RULES
+--------------------------------------------------------------------------------
+A. Admin Cancellation with Customer Notice:
+   - When fraud or invalid contact details are detected, admin can cancel the order
+     via route: POST /admin/orders/{order}/cancel-notice
+   - Admin provides a specific notice (e.g. "Automated fraud flag: phone number
+     could not be verified; delivery details incomplete").
+   - The notice is stored in `orders.cancellation_reason` and logged in `order_status_histories`.
+   - Reserved product inventory is automatically restocked.
+   - The customer receives an immediate system notification.
+   - The user's order details page prominently displays:
+     "Order Cancelled by Store Administration" with "Notice from Store: [Reason]".
+
+B. Customer Self-Service Cancellation:
+   - Route: POST /orders/{order}/cancel
+   - Timeframe rule: A customer can cancel their own order ONLY while the order
+     is in "pending" or "confirmed" status.
+   - Hard cutoff: Once the order moves to "processing" (or shipped, out-for-delivery,
+     completed), customer cancellation is disabled.
+   - Cancellation UI displays reason presets ("Changed my mind", "Found better price",
+     "Ordered by mistake", etc.) and custom notes.
+   - Restocks stock automatically and alerts store admins.
+
+
+6. ARCHITECTURAL SUMMARY
+--------------------------------------------------------------------------------
+- Framework: Laravel 12 (PHP 8.2+)
+- Service Class: App\Services\FraudDetectionService
+- Controller Integrations:
+    * App\Http\Controllers\Admin\OrderController
+    * App\Http\Controllers\User\DashboardController
+- Database Model: App\Models\Order (methods: isCancelled(), canBeCancelledByUser(), getFraudAnalysisAttribute())
+- Verification: 100% automated test coverage in tests/Feature/OrderFraudAndCancellationTest.php
+================================================================================

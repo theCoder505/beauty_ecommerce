@@ -80,7 +80,16 @@ class SettingController extends Controller
         $data = $request->except(['_token', '_method', 'site_logo', 'site_icon', 'remove_site_logo', 'remove_site_icon', 'delivery_charges']);
 
         foreach ($data as $key => $value) {
-            if ($value === null || $value === '') continue;
+            if ($value === null) continue;
+
+            if (in_array($key, ['terms_and_conditions', 'privacy_policy'])) {
+                $value = ($value !== '') ? \Mews\Purifier\Facades\Purifier::clean($value, [
+                    'HTML.Allowed' => 'h1,h2,h3,h4,h5,h6,p,br,b,strong,i,em,u,s,strike,a[href|title|target|rel],ul,ol,li,blockquote,img[src|alt|title|width|height|style|class],span[style|class],div[style|class],table,thead,tbody,tr,th,td',
+                    'CSS.AllowedProperties' => 'font,font-size,font-weight,font-style,font-family,text-decoration,padding-left,color,background-color,text-align,width,height,margin,border-radius',
+                    'AutoFormat.AutoParagraph' => false,
+                    'AutoFormat.RemoveEmpty' => false,
+                ]) : '';
+            }
 
             $isEncrypted = in_array($key, $encryptedKeys);
             $group = $this->resolveGroup($key);

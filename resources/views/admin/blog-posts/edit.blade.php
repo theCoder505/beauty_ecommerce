@@ -166,11 +166,65 @@ document.addEventListener('DOMContentLoaded', function() {
                 [{ 'header': [1, 2, 3, false] }],
                 ['bold', 'italic', 'underline', 'strike'],
                 [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                ['blockquote', 'link'],
+                ['blockquote', 'link', 'image'],
                 ['clean']
             ]
         }
     });
+
+    // Custom Image Handler uploading to /admin/editor/upload-image
+    const toolbar = quill.getModule('toolbar');
+    if (toolbar) {
+        toolbar.addHandler('image', function() {
+            const input = document.createElement('input');
+            input.setAttribute('type', 'file');
+            input.setAttribute('accept', 'image/*');
+            input.click();
+
+            input.onchange = async function() {
+                const file = input.files[0];
+                if (!file) return;
+
+                const formData = new FormData();
+                formData.append('image', file);
+                formData.append('_token', '{{ csrf_token() }}');
+
+                try {
+                    const res = await fetch('{{ route('admin.editor.upload-image') }}', {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        },
+                        body: formData
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.url) {
+                            const range = quill.getSelection(true) || { index: quill.getLength() };
+                            quill.insertEmbed(range.index, 'image', data.url);
+                            quill.setSelection(range.index + 1);
+                            return;
+                        }
+                    }
+                    fallbackBase64(file);
+                } catch (err) {
+                    fallbackBase64(file);
+                }
+            };
+
+            function fallbackBase64(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const range = quill.getSelection(true) || { index: quill.getLength() };
+                    quill.insertEmbed(range.index, 'image', e.target.result);
+                    quill.setSelection(range.index + 1);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
 
     const hiddenInput = document.getElementById('hidden-content');
     
