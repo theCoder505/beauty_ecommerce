@@ -389,4 +389,235 @@ class OrderReviewLegalReturnsAndPLTest extends TestCase
         $csvRes->assertOk();
         $this->assertStringContainsString('text/csv', $csvRes->headers->get('content-type'));
     }
+
+    // REQUIREMENT 5: RETURN TIME LIMIT ENFORCEMENT & SETTINGS
+    public function test_admin_can_set_return_time_limit_days_and_review_updates_toggle(): void
+    {
+        $response = $this->actingAs($this->admin, 'admin')->post(route('admin.settings.update'), [
+            'return_time_limit_days' => 5,
+            'allow_review_updates'   => '1',
+            'site_name'              => 'Beauty Store',
+            'support_email'          => 'support@beauty.test',
+        ]);
+
+        $response->assertSessionHas('success');
+
+        $settingService = app(SettingService::class);
+        $settingService->clearCache();
+
+        $this->assertEquals(5, (int) $settingService->get('return_time_limit_days'));
+        $this->assertTrue((bool) $settingService->get('allow_review_updates'));
+    }
+
+    public function test_user_cannot_request_return_after_configured_day_limit(): void
+    {
+        // Set return limit to 3 days
+        Setting::updateOrCreate(['key' => 'return_time_limit_days'], ['value' => '3', 'group' => 'policy']);
+        app(SettingService::class)->clearCache();
+
+        // Create completed order from 4 days ago
+        $order = Order::create([
+            'order_number'     => 'ORD-EXPIRED-RETURN',
+            'user_id'          => $this->user->id,
+            'status'           => 'completed',
+            'subtotal'         => 1200.00,
+            'total'            => 1200.00,
+            'shipping_name'    => 'Alice Green',
+            'shipping_phone'   => '01711111111',
+            'shipping_email'   => 'alice@example.com',
+            'shipping_address' => '12 Gulshan Ave',
+            'shipping_city'    => 'Dhaka',
+        ]);
+
+        $order->timestamps = false;
+        $order->updated_at = now()->subDays(4);
+        $order->save();
+
+        \App\Models\OrderStatusHistory::forceCreate([
+            'order_id'   => $order->id,
+            'status'     => 'completed',
+            'created_at' => now()->subDays(4),
+            'updated_at' => now()->subDays(4),
+        ]);
+
+        $order = $order->fresh(['statusHistories']);
+
+        $this->assertFalse($order->isWithinReturnWindow());
+        $this->assertFalse($order->canRequestReturn());
+
+        // Attempting to request return via POST returns error
+        $response = $this->actingAs($this->user)->post(route('user.orders.return-request', $order), [
+            'return_request_type' => 'return',
+            'return_reason'       => 'Item broken upon arrival 4 days ago',
+        ]);
+
+        $response->assertSessionHasErrors('return_error');
+        $this->assertNull($order->fresh()->return_status);
+
+        // Order detail page shows return closed indicator
+        $detailRes = $this->actingAs($this->user)->get(route('user.orders.show', $order));
+        $detailRes->assertOk();
+        $detailRes->assertSee('Return window closed');
+    }
+
+    public function test_user_can_update_existing_review_when_allowed_by_admin(): void
+    {
+        Setting::updateOrCreate(['key' => 'allow_review_updates'], ['value' => '1', 'group' => 'policy']);
+        app(SettingService::class)->clearCache();
+
+        $order = Order::create([
+            'order_number'     => 'ORD-REV-UPDATE',
+            'user_id'          => $this->user->id,
+            'status'           => 'completed',
+            'subtotal'         => 1200.00,
+            'total'            => 1200.00,
+            'shipping_name'    => 'Alice Green',
+            'shipping_phone'   => '01711111111',
+            'shipping_email'   => 'alice@example.com',
+            'shipping_address' => '12 Gulshan Ave',
+            'shipping_city'    => 'Dhaka',
+        ]);
+
+        OrderItem::create([
+            'order_id'     => $order->id,
+            'product_id'   => $this->product->id,
+            'product_name' => $this->product->name,
+            'product_sku'  => $this->product->sku,
+            'quantity'     => 1,
+            'unit_price'   => 1200.00,
+            'total'        => 1200.00,
+        ]);
+
+        // Submit initial review
+        $this->actingAs($this->user)->post(route('reviews.store'), [
+            'product_id' => $this->product->id,
+            'order_id'   => $order->id,
+            'rating'     => 3,
+            'body'       => 'Initial ok rating',
+        ]);
+
+        $this->assertDatabaseHas('reviews', [
+            'user_id'    => $this->user->id,
+            'product_id' => $this->product->id,
+            'rating'     => 3,
+            'body'       => 'Initial ok rating',
+        ]);
+
+        // Now update review
+        $updateRes = $this->actingAs($this->user)->post(route('reviews.store'), [
+            'product_id' => $this->product->id,
+            'order_id'   => $order->id,
+            'rating'     => 5,
+            'body'       => 'Updated 5-star review after using it for a week!',
+        ]);
+
+        $updateRes->assertSessionHas('success', 'Your review has been updated successfully!');
+        $this->assertDatabaseHas('reviews', [
+            'user_id'    => $this->user->id,
+            'product_id' => $this->product->id,
+            'rating'     => 5,
+            'body'       => 'Updated 5-star review after using it for a week!',
+        ]);
+        $this->assertEquals(1, Review::where('user_id', $this->user->id)->where('product_id', $this->product->id)->count());
+    }
+
+    public function test_user_cannot_update_existing_review_when_disabled_by_admin(): void
+    {
+        Setting::updateOrCreate(['key' => 'allow_review_updates'], ['value' => '0', 'group' => 'policy']);
+        app(SettingService::class)->clearCache();
+
+        $order = Order::create([
+            'order_number'     => 'ORD-REV-NOUPDATE',
+            'user_id'          => $this->user->id,
+            'status'           => 'completed',
+            'subtotal'         => 1200.00,
+            'total'            => 1200.00,
+            'shipping_name'    => 'Alice Green',
+            'shipping_phone'   => '01711111111',
+            'shipping_email'   => 'alice@example.com',
+            'shipping_address' => '12 Gulshan Ave',
+            'shipping_city'    => 'Dhaka',
+        ]);
+
+        OrderItem::create([
+            'order_id'     => $order->id,
+            'product_id'   => $this->product->id,
+            'product_name' => $this->product->name,
+            'product_sku'  => $this->product->sku,
+            'quantity'     => 1,
+            'unit_price'   => 1200.00,
+            'total'        => 1200.00,
+        ]);
+
+        // First review created
+        Review::create([
+            'user_id'     => $this->user->id,
+            'product_id'  => $this->product->id,
+            'order_id'    => $order->id,
+            'rating'      => 4,
+            'body'        => 'First review',
+            'is_approved' => true,
+        ]);
+
+        // Attempting to post review again when allow_review_updates is false
+        $res = $this->actingAs($this->user)->post(route('reviews.store'), [
+            'product_id' => $this->product->id,
+            'order_id'   => $order->id,
+            'rating'     => 5,
+            'body'       => 'Attempting to overwrite',
+        ]);
+
+        $res->assertSessionHasErrors('product_id');
+        $this->assertDatabaseHas('reviews', [
+            'user_id'    => $this->user->id,
+            'product_id' => $this->product->id,
+            'rating'     => 4,
+            'body'       => 'First review',
+        ]);
+    }
+
+    public function test_product_detail_page_renders_review_image_slider_modal_and_zoom_triggers(): void
+    {
+        $order = Order::create([
+            'order_number'     => 'ORD-REV-MODAL',
+            'user_id'          => $this->user->id,
+            'status'           => 'completed',
+            'subtotal'         => 1200.00,
+            'total'            => 1200.00,
+            'shipping_name'    => 'Alice Green',
+            'shipping_phone'   => '01711111111',
+            'shipping_email'   => 'alice@example.com',
+            'shipping_address' => '12 Gulshan Ave',
+            'shipping_city'    => 'Dhaka',
+        ]);
+
+        $review = Review::create([
+            'user_id'     => $this->user->id,
+            'product_id'  => $this->product->id,
+            'order_id'    => $order->id,
+            'rating'      => 5,
+            'body'        => 'Loved this face oil with photo preview!',
+            'status'      => 'approved',
+        ]);
+
+        \App\Models\ReviewImage::create([
+            'review_id'  => $review->id,
+            'image'      => 'reviews/sample_oil_review.jpg',
+            'sort_order' => 0,
+        ]);
+
+        $response = $this->get(route('products.show', $this->product->slug));
+        $response->assertOk();
+
+        // Customer Reviews section and review text
+        $response->assertSee('Customer Reviews');
+        $response->assertSee('Loved this face oil with photo preview!');
+
+        // Review image slider modal markup & zoom buttons
+        $response->assertSee('reviewImageModal()', false);
+        $response->assertSee('zoomOut()', false);
+        $response->assertSee('zoomIn()', false);
+        $response->assertSee('resetZoom()', false);
+        $response->assertSee('Verified Buyer');
+    }
 }

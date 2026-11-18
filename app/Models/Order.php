@@ -52,9 +52,71 @@ class Order extends Model
         return in_array($this->status, ['pending', 'confirmed']);
     }
 
+    public function getCompletedAtAttribute(): ?\Carbon\Carbon
+    {
+        if (!$this->isCompleted()) {
+            return null;
+        }
+
+        if ($this->relationLoaded('statusHistories')) {
+            $history = $this->statusHistories->where('status', 'completed')->sortByDesc('created_at')->first();
+            if ($history) {
+                return $history->created_at;
+            }
+        } else {
+            $history = $this->statusHistories()->where('status', 'completed')->latest()->first();
+            if ($history) {
+                return $history->created_at;
+            }
+        }
+
+        return $this->updated_at;
+    }
+
+    public function getReturnLimitDaysAttribute(): int
+    {
+        $days = (int) (app(\App\Services\SettingService::class)->get('return_time_limit_days', 3));
+        return $days > 0 ? $days : 3;
+    }
+
+    public function getReturnDeadlineAttribute(): ?\Carbon\Carbon
+    {
+        $completedAt = $this->completed_at;
+        if (!$completedAt) {
+            return null;
+        }
+        return $completedAt->copy()->addDays($this->return_limit_days);
+    }
+
+    public function isWithinReturnWindow(): bool
+    {
+        if (!$this->isCompleted()) {
+            return false;
+        }
+
+        $deadline = $this->return_deadline;
+        if (!$deadline) {
+            return false;
+        }
+
+        return now()->lte($deadline);
+    }
+
     public function canRequestReturn(): bool
     {
-        return $this->isCompleted() && empty($this->return_status);
+        return $this->isCompleted() && empty($this->return_status) && $this->isWithinReturnWindow();
+    }
+
+    public function daysLeftForReturn(): int
+    {
+        if (!$this->isCompleted()) {
+            return 0;
+        }
+        $deadline = $this->return_deadline;
+        if (!$deadline || now()->gt($deadline)) {
+            return 0;
+        }
+        return max(0, (int) ceil(now()->diffInSeconds($deadline, false) / 86400));
     }
 
     public function hasReturnRequest(): bool

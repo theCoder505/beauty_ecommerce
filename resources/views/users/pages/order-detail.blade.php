@@ -8,11 +8,15 @@
         reviewProductName: '',
         reviewProductImage: '',
         reviewRating: 5,
-        openReviewModal(id, name, image) {
+        reviewBody: '',
+        isEditReview: false,
+        openReviewModal(id, name, image, rating = 5, body = '', isEdit = false) {
             this.reviewProductId = id;
             this.reviewProductName = name;
             this.reviewProductImage = image;
-            this.reviewRating = 5;
+            this.reviewRating = rating || 5;
+            this.reviewBody = body || '';
+            this.isEditReview = isEdit;
             this.reviewModalOpen = true;
         },
         returnModalOpen: false,
@@ -39,6 +43,11 @@
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H4m0 0l4-4m-4 4l4 4"/></svg>
                         <span>Request Return / Refund</span>
                     </button>
+                @elseif($order->isCompleted() && empty($order->return_status) && !$order->isWithinReturnWindow())
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700" title="Return window expired ({{ $order->return_limit_days }} days limit)">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Return window closed ({{ $order->return_limit_days }}d limit)</span>
+                    </span>
                 @endif
             </div>
         </div>
@@ -230,12 +239,20 @@
                                     @endphp
                                     <div class="mt-3 pt-2.5 border-t border-cream-100 dark:border-gray-700/60 flex items-center justify-between gap-3 flex-wrap">
                                         @if($existingReview)
-                                            <div class="flex items-center gap-2">
+                                            <div class="flex items-center gap-2 flex-wrap">
                                                 <span class="inline-flex items-center gap-1 text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1 rounded-lg border border-amber-200 dark:border-amber-900/50">
                                                     ★ {{ $existingReview->rating }}/5 Reviewed
                                                 </span>
                                                 @if($existingReview->body)
-                                                    <span class="text-xs text-gray-500 dark:text-gray-400 italic line-clamp-1">"{{ Str::limit($existingReview->body, 45) }}"</span>
+                                                    <span class="text-xs text-gray-500 dark:text-gray-400 italic line-clamp-1">"{{ Str::limit($existingReview->body, 40) }}"</span>
+                                                @endif
+                                                @if($allowReviewUpdates ?? true)
+                                                    <button type="button"
+                                                        @click="openReviewModal({{ $item->product_id }}, '{{ addslashes($item->product_name) }}', '{{ $item->product->thumbnail_url }}', {{ $existingReview->rating }}, '{{ addslashes($existingReview->body ?? '') }}', true)"
+                                                        class="inline-flex items-center gap-1 text-xs font-bold text-brand-700 dark:text-brand-400 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/40 dark:hover:bg-brand-900/50 px-2.5 py-1 rounded-lg border border-brand-200 dark:border-brand-800 transition">
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                                        <span>Edit Review</span>
+                                                    </button>
                                                 @endif
                                             </div>
                                             <a href="{{ route('products.show', $item->product->slug) }}#reviews" class="text-xs font-semibold text-brand-700 dark:text-brand-400 hover:underline">
@@ -290,7 +307,7 @@
                         <div class="relative flex items-start gap-4 pb-8 last:pb-1">
                             {{-- Connecting vertical line --}}
                             @if(!$loop->last)
-                                <div class="absolute left-3.5 top-7 -bottom-1 w-0.5 bg-gradient-to-b from-brand-600 via-brand-400 to-stone-200 dark:from-brand-500 dark:via-brand-700 dark:to-gray-700"></div>
+                                <div class="absolute left-3.5 top-7 -bottom-1 w-0.5 bg-linear-to-b from-brand-600 via-brand-400 to-stone-200 dark:from-brand-500 dark:via-brand-700 dark:to-gray-700"></div>
                             @endif
 
                             {{-- Dot / Node --}}
@@ -415,7 +432,7 @@
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
             <div x-show="reviewModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                 class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-cream-200 dark:border-gray-700">
+                 class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-cream-200 dark:border-gray-700 relative z-10">
                 <form action="{{ route('reviews.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" name="order_id" value="{{ $order->id }}">
@@ -424,7 +441,7 @@
 
                     <div class="p-6">
                         <div class="flex items-center justify-between pb-4 border-b border-cream-100 dark:border-gray-700">
-                            <h3 class="font-serif text-lg font-bold text-gray-900 dark:text-white" id="modal-title">Write a Product Review</h3>
+                            <h3 class="font-serif text-lg font-bold text-gray-900 dark:text-white" id="modal-title" x-text="isEditReview ? 'Update Your Product Review' : 'Write a Product Review'">Write a Product Review</h3>
                             <button type="button" @click="reviewModalOpen = false" class="p-1 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
@@ -434,7 +451,7 @@
                         <div class="flex items-center gap-3 my-4 p-3 rounded-xl bg-cream-50 dark:bg-gray-900/60 border border-cream-200 dark:border-gray-700">
                             <img :src="reviewProductImage" alt="Product" class="w-12 h-12 rounded-lg object-cover bg-white">
                             <div>
-                                <p class="text-xs text-gray-400">Reviewing:</p>
+                                <p class="text-xs text-gray-400" x-text="isEditReview ? 'Editing Review for:' : 'Reviewing:'">Reviewing:</p>
                                 <p class="text-sm font-semibold text-gray-900 dark:text-white line-clamp-1" x-text="reviewProductName"></p>
                             </div>
                         </div>
@@ -458,7 +475,7 @@
                         {{-- Review Body --}}
                         <div class="mb-4">
                             <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Your Review</label>
-                            <textarea name="body" rows="4" placeholder="How was the product texture, fragrance, packaging, or performance?"
+                            <textarea name="body" x-model="reviewBody" rows="4" placeholder="How was the product texture, fragrance, packaging, or performance?"
                                       class="w-full px-4 py-3 rounded-xl border border-cream-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-600"></textarea>
                         </div>
 
@@ -477,7 +494,7 @@
                         </button>
                         <button type="submit"
                                 class="px-5 py-2 rounded-xl text-xs font-bold bg-brand-700 hover:bg-brand-800 text-white shadow-md transition">
-                            Submit Review
+                            <span x-text="isEditReview ? 'Update Review' : 'Submit Review'">Submit Review</span>
                         </button>
                     </div>
                 </form>
@@ -496,7 +513,7 @@
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
             <div x-show="returnModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                 class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-cream-200 dark:border-gray-700">
+                 class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-cream-200 dark:border-gray-700 relative z-10">
                 <form action="{{ route('user.orders.return-request', $order) }}" method="POST">
                     @csrf
                     <div class="p-6">
@@ -508,6 +525,10 @@
                             <button type="button" @click="returnModalOpen = false" class="p-1 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
+                        </div>
+
+                        <div class="mt-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+                            <span class="font-bold">Policy Notice:</span> Returns and refunds are allowed within <strong>{{ $order->return_limit_days }} days</strong> of order completion (completed on {{ $order->completed_at?->format('M j, Y') }}).
                         </div>
 
                         {{-- Choice: Return vs Refund --}}

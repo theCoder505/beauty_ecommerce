@@ -360,7 +360,7 @@
     </div>
 
     {{-- Reviews --}}
-    <div class="mt-16" id="reviews">
+    <div class="mt-16" id="reviews" x-data="reviewImageModal()">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div>
                 <h2 class="font-serif text-2xl font-bold text-gray-900 dark:text-white">Customer Reviews ({{ $count }})</h2>
@@ -397,9 +397,25 @@
                 <p class="text-sm text-gray-600 dark:text-gray-300 mt-3 leading-relaxed">{{ $review->body }}</p>
                 @endif
                 @if($review->images->isNotEmpty())
-                <div class="flex gap-2 mt-3">
+                <div class="flex flex-wrap gap-2.5 mt-3">
                     @foreach($review->images as $img)
-                    <img src="{{ $img->image_url }}" class="w-16 h-16 rounded-lg object-cover cursor-pointer">
+                    <button type="button" 
+                        @click="open({
+                            id: {{ $review->id }},
+                            userName: {{ json_encode($review->user->name ?? 'Verified Customer') }},
+                            userAvatar: {{ json_encode($review->user->avatar_url) }},
+                            rating: {{ (int)$review->rating }},
+                            date: {{ json_encode($review->created_at->format('M j, Y')) }},
+                            body: {{ json_encode($review->body ?? '') }},
+                            images: {{ json_encode($review->images->map(fn($i) => ['id' => $i->id, 'url' => $i->image_url])->values()) }}
+                        }, {{ $loop->index }})"
+                        class="group relative rounded-xl overflow-hidden border border-cream-200 dark:border-gray-700 hover:ring-2 hover:ring-brand-500 transition-all focus:outline-none"
+                        title="Click to view image and review">
+                        <img src="{{ $img->image_url }}" alt="Customer review photo" class="w-16 h-16 rounded-xl object-cover group-hover:scale-105 transition-transform duration-200">
+                        <span class="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
+                        </span>
+                    </button>
                     @endforeach
                 </div>
                 @endif
@@ -407,6 +423,140 @@
             @endforeach
         </div>
         @endif
+
+        {{-- Review Image Slider & Details Modal --}}
+        <div x-cloak x-show="isOpen" 
+             @keydown.escape.window="close()"
+             class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0">
+            
+            {{-- Click backdrop to close --}}
+            <div class="absolute inset-0" @click="close()"></div>
+
+            {{-- Modal Content Window --}}
+            <div class="relative w-full max-w-4xl bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] border border-gray-200 dark:border-gray-800 z-10"
+                 @click.stop>
+                
+                {{-- Top: Image Viewer Stage with Controls --}}
+                <div class="relative bg-neutral-950 flex items-center justify-center overflow-hidden select-none min-h-[300px] sm:min-h-[440px] max-h-[58vh]">
+                    
+                    {{-- Floating Top-Left Controls: Zoom buttons & Reset --}}
+                    <div class="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-black/60 backdrop-blur-md text-white px-2.5 py-1.5 rounded-xl border border-white/10 text-xs">
+                        <button type="button" @click="zoomOut()" title="Zoom Out" class="p-1 rounded-lg hover:bg-white/20 transition disabled:opacity-30" :disabled="zoom <= minZoom">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+                        </button>
+                        <span class="font-mono text-xs px-1 text-gray-200" x-text="Math.round(zoom * 100) + '%'"></span>
+                        <button type="button" @click="zoomIn()" title="Zoom In" class="p-1 rounded-lg hover:bg-white/20 transition disabled:opacity-30" :disabled="zoom >= maxZoom">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        </button>
+                        <button type="button" @click="resetZoom()" title="Reset Zoom" class="p-1 rounded-lg hover:bg-white/20 transition ml-1 text-gray-300 hover:text-white" :disabled="zoom === 1 && panX === 0 && panY === 0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        </button>
+                        <template x-if="activeReview?.images && activeReview.images.length > 1">
+                            <span class="border-l border-white/20 pl-2 ml-1 text-xs text-gray-300 font-mono" x-text="(activeIndex + 1) + '/' + activeReview.images.length"></span>
+                        </template>
+                    </div>
+
+                    {{-- Floating Top-Right: Close Button --}}
+                    <div class="absolute top-3 right-3 z-20">
+                        <button type="button" @click="close()" class="p-2 rounded-full bg-black/60 hover:bg-black/80 text-white border border-white/10 backdrop-blur-md transition" title="Close">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+
+                    {{-- Image Stage with Zoom and Drag Pan --}}
+                    <div class="w-full h-full flex items-center justify-center p-4 overflow-hidden"
+                         @wheel.prevent="onWheel($event)"
+                         @mousedown="startPan($event)"
+                         @mousemove="doPan($event)"
+                         @mouseup="endPan()"
+                         @mouseleave="endPan()"
+                         @dblclick="toggleZoom()"
+                         :class="zoom > 1 ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-zoom-in'">
+                        <template x-if="activeReview && activeReview.images && activeReview.images[activeIndex]">
+                            <img :src="activeReview.images[activeIndex].url"
+                                 :alt="'Review photo ' + (activeIndex + 1)"
+                                 class="max-w-full max-h-[52vh] object-contain select-none pointer-events-auto rounded-lg shadow-lg"
+                                 :style="'transform: scale(' + zoom + ') translate(' + (panX / zoom) + 'px, ' + (panY / zoom) + 'px); transition: ' + (isDragging ? 'none' : 'transform 0.15s ease-out') + ';'"
+                                 draggable="false">
+                        </template>
+                    </div>
+
+                    {{-- Slider Nav: Previous Button --}}
+                    <template x-if="activeReview?.images && activeReview.images.length > 1">
+                        <button type="button" 
+                                @click="prev()" 
+                                class="absolute left-3 top-1/2 -translate-y-1/2 z-20 p-2.5 rounded-full bg-black/60 hover:bg-black/80 text-white border border-white/10 backdrop-blur-md transition"
+                                title="Previous Image">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                        </button>
+                    </template>
+
+                    {{-- Slider Nav: Next Button --}}
+                    <template x-if="activeReview?.images && activeReview.images.length > 1">
+                        <button type="button" 
+                                @click="next()" 
+                                class="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2.5 rounded-full bg-black/60 hover:bg-black/80 text-white border border-white/10 backdrop-blur-md transition"
+                                title="Next Image">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </button>
+                    </template>
+                </div>
+
+                {{-- Bottom: Review Info Stage --}}
+                <div class="p-5 sm:p-6 bg-white dark:bg-gray-800 border-t border-cream-200 dark:border-gray-700 overflow-y-auto">
+                    <div class="flex items-start justify-between gap-4 flex-wrap">
+                        <div class="flex items-center gap-3">
+                            <img :src="activeReview?.userAvatar" class="w-11 h-11 rounded-full object-cover border border-cream-200 dark:border-gray-700 shadow-sm">
+                            <div>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <p class="font-semibold text-sm sm:text-base text-gray-900 dark:text-white" x-text="activeReview?.userName"></p>
+                                    <span class="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/40">
+                                        <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        Verified Buyer
+                                    </span>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-0.5" x-text="activeReview?.date"></p>
+                            </div>
+                        </div>
+
+                        {{-- Rating Stars --}}
+                        <div class="flex items-center gap-0.5">
+                            <template x-for="star in 5" :key="star">
+                                <svg class="w-4 h-4 fill-current" :class="star <= (activeReview?.rating || 0) ? 'text-amber-400' : 'text-gray-200 dark:text-gray-600'" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                </svg>
+                            </template>
+                        </div>
+                    </div>
+
+                    {{-- Review Text --}}
+                    <div class="mt-3.5">
+                        <p x-show="activeReview?.body" x-text="activeReview?.body" class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed break-words"></p>
+                        <p x-show="!activeReview?.body" class="text-xs italic text-gray-400">No additional comment provided with this rating.</p>
+                    </div>
+
+                    {{-- Thumbnail Strip if Multiple Images --}}
+                    <template x-if="activeReview?.images && activeReview.images.length > 1">
+                        <div class="mt-4 pt-3.5 border-t border-cream-200 dark:border-gray-700 flex items-center gap-2 overflow-x-auto pb-1">
+                            <template x-for="(imgItem, imgIdx) in activeReview.images" :key="imgIdx">
+                                <button type="button" 
+                                        @click="selectImage(imgIdx)"
+                                        class="relative rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 w-14 h-14"
+                                        :class="activeIndex === imgIdx ? 'border-brand-600 ring-2 ring-brand-500/30' : 'border-transparent opacity-60 hover:opacity-100'">
+                                    <img :src="imgItem.url" class="w-full h-full object-cover">
+                                </button>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
     </div>
 
     {{-- Related Products --}}
@@ -608,6 +758,96 @@ window.productCart = function(config) {
             if (this.selectedShade) params.set('shade', this.selectedShade);
 
             window.location.href = `${config.checkoutUrl}?${params.toString()}`;
+        }
+    };
+};
+
+window.reviewImageModal = function() {
+    return {
+        isOpen: false,
+        activeReview: null,
+        activeIndex: 0,
+        zoom: 1,
+        minZoom: 1,
+        maxZoom: 3.5,
+        panX: 0,
+        panY: 0,
+        isDragging: false,
+        startX: 0,
+        startY: 0,
+        open(reviewData, index = 0) {
+            this.activeReview = reviewData;
+            this.activeIndex = (index >= 0 && reviewData.images && index < reviewData.images.length) ? index : 0;
+            this.resetZoom();
+            this.isOpen = true;
+            document.body.style.overflow = 'hidden';
+        },
+        close() {
+            this.isOpen = false;
+            this.resetZoom();
+            document.body.style.overflow = '';
+        },
+        prev() {
+            if (!this.activeReview || !this.activeReview.images || this.activeReview.images.length <= 1) return;
+            this.activeIndex = (this.activeIndex - 1 + this.activeReview.images.length) % this.activeReview.images.length;
+            this.resetZoom();
+        },
+        next() {
+            if (!this.activeReview || !this.activeReview.images || this.activeReview.images.length <= 1) return;
+            this.activeIndex = (this.activeIndex + 1) % this.activeReview.images.length;
+            this.resetZoom();
+        },
+        selectImage(idx) {
+            this.activeIndex = idx;
+            this.resetZoom();
+        },
+        zoomIn() {
+            this.zoom = Math.min(this.maxZoom, Math.round((this.zoom + 0.3) * 10) / 10);
+        },
+        zoomOut() {
+            this.zoom = Math.max(this.minZoom, Math.round((this.zoom - 0.3) * 10) / 10);
+            if (this.zoom <= 1) {
+                this.resetPan();
+            }
+        },
+        toggleZoom() {
+            if (this.zoom > 1) {
+                this.resetZoom();
+            } else {
+                this.zoom = 2;
+                this.resetPan();
+            }
+        },
+        resetZoom() {
+            this.zoom = 1;
+            this.resetPan();
+        },
+        resetPan() {
+            this.panX = 0;
+            this.panY = 0;
+            this.isDragging = false;
+        },
+        onWheel(e) {
+            const delta = e.deltaY < 0 ? 0.25 : -0.25;
+            const newZoom = Math.max(this.minZoom, Math.min(this.maxZoom, Math.round((this.zoom + delta) * 100) / 100));
+            this.zoom = newZoom;
+            if (this.zoom <= 1) {
+                this.resetPan();
+            }
+        },
+        startPan(e) {
+            if (this.zoom <= 1) return;
+            this.isDragging = true;
+            this.startX = e.clientX - this.panX;
+            this.startY = e.clientY - this.panY;
+        },
+        doPan(e) {
+            if (!this.isDragging || this.zoom <= 1) return;
+            this.panX = e.clientX - this.startX;
+            this.panY = e.clientY - this.startY;
+        },
+        endPan() {
+            this.isDragging = false;
         }
     };
 };

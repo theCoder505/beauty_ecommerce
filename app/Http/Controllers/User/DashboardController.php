@@ -205,7 +205,10 @@ class DashboardController extends Controller
             ->get()
             ->keyBy('product_id');
 
-        return view('users.pages.order-detail', compact('order', 'userReviews'));
+        $returnLimitDays = $order->return_limit_days;
+        $allowReviewUpdates = (bool) ($this->settingService->get('allow_review_updates', '1') == '1');
+
+        return view('users.pages.order-detail', compact('order', 'userReviews', 'returnLimitDays', 'allowReviewUpdates'));
     }
 
     public function requestReturn(Request $request, Order $order)
@@ -220,6 +223,14 @@ class DashboardController extends Controller
 
         if (!empty($order->return_status)) {
             return back()->with('error', 'A return or refund request has already been submitted for this order.');
+        }
+
+        if (!$order->isWithinReturnWindow()) {
+            $limitDays = $order->return_limit_days;
+            $msg = "The return or refund request window ({$limitDays} days from order completion) has expired.";
+            return $request->expectsJson()
+                ? response()->json(['success' => false, 'message' => $msg], 422)
+                : back()->withErrors(['return_error' => $msg])->with('error', $msg);
         }
 
         $data = $request->validate([

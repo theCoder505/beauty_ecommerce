@@ -132,6 +132,42 @@
                 </div>
             </div>
 
+            <h3 class="text-base font-semibold text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-800 pb-3 pt-4">Order Returns & Customer Reviews Policy</h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {{-- Return & Refund Day Limit --}}
+                <div class="p-4 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20 space-y-2">
+                    <label class="block text-sm font-semibold text-gray-900 dark:text-white">Return & Refund Window (Days)</label>
+                    <p class="text-xs text-gray-500 leading-relaxed">
+                        Customers can only request a return or refund within this number of days after their order status becomes <strong>Completed</strong> (e.g. 3, 5, 7, 14 days). Once the time passes, requests are blocked.
+                    </p>
+                    <div class="relative max-w-xs pt-1">
+                        <input type="number" name="return_time_limit_days" min="1" max="365" step="1"
+                               value="{{ $settings['return_time_limit_days']->value ?? '3' }}"
+                               required
+                               class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        <span class="absolute right-4 top-3.5 text-xs font-semibold text-gray-400">Days</span>
+                    </div>
+                </div>
+
+                {{-- Allow Customers to Update Reviews Toggle --}}
+                <div class="p-4 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20 space-y-2 flex flex-col justify-between">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-900 dark:text-white mb-1">Customer Review Updates</label>
+                        <p class="text-xs text-gray-500 leading-relaxed">
+                            Control whether customers who have already reviewed a product are allowed to change or update their review rating, text, and photos.
+                        </p>
+                    </div>
+                    <div class="pt-2">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="allow_review_updates" value="1" {{ ($settings['allow_review_updates']->value ?? '1') == '1' ? 'checked' : '' }} class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
+                            <span class="ml-3 text-xs font-bold text-gray-800 dark:text-gray-200">Allow customers to update reviews</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
             {{-- Timezone Quick Link in General Tab --}}
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl border-2 border-teal-300 dark:border-teal-700/80 bg-linear-to-r from-teal-50 via-emerald-50/70 to-teal-100/60 dark:from-[#042f2e] dark:via-[#022c22] dark:to-[#0f3d39] shadow-sm">
                 <div class="flex items-center gap-3">

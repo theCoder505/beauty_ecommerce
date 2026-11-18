@@ -2,7 +2,7 @@
     $settings = app(\App\Services\SettingService::class)->all();
     $siteName = $settings['site_name'] ?? config('app.name');
 @endphp
-<footer class="bg-warm-900 dark:bg-gray-950 text-cream-200 mt-20">
+<footer class="bg-warm-900 dark:bg-black text-cream-200">
     {{-- Main footer --}}
     <div class="max-w-7xl mx-auto px-4 py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
         {{-- Brand --}}

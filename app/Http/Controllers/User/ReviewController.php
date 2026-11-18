@@ -64,17 +64,57 @@ class ReviewController extends Controller
                 : back()->withErrors(['product_id' => $error]);
         }
 
-        // (4) User hasn't reviewed this product+order combo yet
-        $alreadyReviewed = Review::where('user_id', $userId)
+        // (4) Check if user already reviewed this product+order combo
+        $existingReview = Review::where('user_id', $userId)
             ->where('product_id', $productId)
             ->where('order_id', $orderId)
-            ->exists();
+            ->first();
 
-        if ($alreadyReviewed) {
-            $error = 'You have already reviewed this product for this order.';
+        $allowReviewUpdates = (bool) (app(\App\Services\SettingService::class)->get('allow_review_updates', '1') == '1');
+
+        if ($existingReview) {
+            if (! $allowReviewUpdates) {
+                $error = 'You have already reviewed this product for this order and review updates are disabled.';
+                return $request->expectsJson()
+                    ? response()->json(['success' => false, 'message' => $error], 422)
+                    : back()->withErrors(['product_id' => $error]);
+            }
+
+            // Update existing review
+            $existingReview->update([
+                'rating' => $data['rating'],
+                'body'   => $data['body'] ?? null,
+                'status' => 'approved',
+            ]);
+
+            // Append newly uploaded images
+            if ($request->hasFile('images')) {
+                $paths = $this->imageService->storeMany($request->file('images'), 'reviews');
+
+                foreach ($paths as $path) {
+                    ReviewImage::create([
+                        'review_id' => $existingReview->id,
+                        'image'     => $path,
+                    ]);
+                }
+            }
+
+            // Notify admin
+            $product = \App\Models\Product::find($productId);
+            $productTitle = $product ? $product->name : 'a product';
+            $userName = auth()->user()->name ?? 'A customer';
+            \App\Services\NotificationService::notifyAdmins(
+                'review_updated',
+                'Product Review Updated',
+                "{$userName} updated their {$data['rating']}★ review for \"{$productTitle}\".",
+                route('admin.reviews.index'),
+                'review'
+            );
+
+            $msg = 'Your review has been updated successfully!';
             return $request->expectsJson()
-                ? response()->json(['success' => false, 'message' => $error], 422)
-                : back()->withErrors(['product_id' => $error]);
+                ? response()->json(['success' => true, 'message' => $msg])
+                : back()->with('success', $msg);
         }
 
         // Create review (auto-approved for verified completed order purchasers)

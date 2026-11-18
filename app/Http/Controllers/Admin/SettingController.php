@@ -51,6 +51,13 @@ class SettingController extends Controller
             ]);
         }
 
+        // Validate Return Window Days
+        if ($request->has('return_time_limit_days')) {
+            $request->validate([
+                'return_time_limit_days' => ['nullable', 'integer', 'min:1', 'max:365'],
+            ]);
+        }
+
         // Handle Delivery Charges
         if ($request->has('delivery_charges')) {
             $chargesInput = $request->input('delivery_charges', []);
@@ -92,9 +99,10 @@ class SettingController extends Controller
         }
 
         // Handle booleans (checkboxes not submitted = false)
-        $boolKeys = ['cod_enabled', 'manual_payment_enabled', 'stripe_enabled'];
+        $boolKeys = ['cod_enabled', 'manual_payment_enabled', 'stripe_enabled', 'allow_review_updates'];
         foreach ($boolKeys as $bKey) {
-            $this->settingService->set($bKey, $request->has($bKey) ? '1' : '0', false, 'payment');
+            $group = in_array($bKey, ['allow_review_updates']) ? 'policy' : 'payment';
+            $this->settingService->set($bKey, $request->has($bKey) ? '1' : '0', false, $group);
         }
 
         // Reconfigure runtime timezone
@@ -106,6 +114,7 @@ class SettingController extends Controller
     protected function resolveGroup(string $key): string
     {
         if (in_array($key, ['terms_and_conditions', 'privacy_policy'])) return 'legal';
+        if (in_array($key, ['return_time_limit_days', 'allow_review_updates'])) return 'policy';
         if (str_starts_with($key, 'stripe_')) return 'stripe';
         if (str_starts_with($key, 'google_')) return 'google';
         if (in_array($key, ['cod_enabled', 'manual_payment_enabled', 'stripe_enabled', 'manual_payment_instructions'])) return 'payment';
