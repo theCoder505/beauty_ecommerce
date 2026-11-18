@@ -125,5 +125,27 @@ class Order extends Model
     {
         return 'ORD-' . strtoupper(uniqid());
     }
+
+    public function getRouteKeyName(): string
+    {
+        return 'order_number';
+    }
+
+    public function resolveRouteBinding($value, $field = null)
+    {
+        $field = $field ?? $this->getRouteKeyName();
+
+        $order = $this->where($field, $value)->first();
+
+        if (!$order && is_numeric($value)) {
+            $order = $this->where('id', $value)->first();
+        }
+
+        if (!$order) {
+            abort(404);
+        }
+
+        return $order;
+    }
 }
 

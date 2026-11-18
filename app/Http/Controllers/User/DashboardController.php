@@ -191,7 +191,13 @@ class DashboardController extends Controller
 
     public function orderDetail(Order $order)
     {
-        abort_unless($order->user_id === auth()->id(), 403);
+        if ($order->user_id) {
+            if (!auth()->check()) {
+                return redirect()->guest(route('login'))->with('info', 'Please sign in to view your order details.');
+            }
+            abort_unless($order->user_id === auth()->id(), 403);
+        }
+
         $order->load(['items.product.options', 'payment', 'statusHistories', 'user.addresses']);
         return view('users.pages.order-detail', compact('order'));
     }

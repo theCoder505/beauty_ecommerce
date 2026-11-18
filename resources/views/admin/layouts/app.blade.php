@@ -244,6 +244,8 @@
                             if (res.ok) {
                                 this.unreadCount = 0;
                                 this.notifications.forEach(n => n.read = true);
+                                window.dispatchEvent(new CustomEvent('notifications-marked-all-read'));
+                                window.dispatchEvent(new CustomEvent('admin-notifications-marked-all-read'));
                             }
                         } catch (e) {
                             console.error(e);
@@ -261,6 +263,8 @@
                             });
                             notif.read = true;
                             if (this.unreadCount > 0) this.unreadCount--;
+                            window.dispatchEvent(new CustomEvent('notification-marked-read', { detail: { id: notif.id } }));
+                            window.dispatchEvent(new CustomEvent('admin-notification-marked-read', { detail: { id: notif.id } }));
                         }
                         if (notif.url) {
                             window.location.href = notif.url;
@@ -295,8 +299,8 @@
                                 </div>
                             </template>
                             <template x-for="notif in notifications" :key="notif.id">
-                                <div @click="clickNotification(notif)" class="p-3.5 hover:bg-gray-50 dark:hover:bg-gray-800/60 cursor-pointer transition flex items-start gap-3" :class="!notif.read ? 'bg-brand-50/40 dark:bg-brand-950/20' : ''">
-                                    <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs" :class="!notif.read ? 'bg-brand-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'">
+                                <div @click="clickNotification(notif)" class="p-3.5 hover:bg-gray-50 dark:hover:bg-slate-800/60 cursor-pointer transition flex items-start gap-3" :class="!notif.read ? 'bg-brand-50/40 dark:bg-slate-800/90' : ''">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs" :class="!notif.read ? 'bg-brand-600 dark:bg-slate-700 text-white dark:text-slate-100' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'">
                                         <template x-if="notif.type.includes('order')">
                                             <span>📦</span>
                                         </template>

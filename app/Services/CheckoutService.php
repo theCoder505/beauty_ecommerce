@@ -130,7 +130,7 @@ class CheckoutService
                 'order_placed',
                 'New Order Received',
                 "Order #{$order->order_number} placed by {$order->shipping_name} (" . number_format($order->total, 2) . ").",
-                route('admin.orders.show', $order->id),
+                route('admin.orders.show', $order),
                 'order'
             );
 
@@ -140,7 +140,7 @@ class CheckoutService
                     'order_placed',
                     'Order Confirmation',
                     "Your order #{$order->order_number} has been placed successfully.",
-                    route('user.orders.show', $order->id),
+                    route('user.orders.show', $order),
                     'order'
                 );
             }

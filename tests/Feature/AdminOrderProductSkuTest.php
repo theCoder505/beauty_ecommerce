@@ -81,6 +81,8 @@ class AdminOrderProductSkuTest extends TestCase
 
     public function test_admin_order_details_displays_sku_in_bracket_next_to_product_name(): void
     {
+        $this->assertStringContainsString('/admin/orders/' . $this->order->order_number, route('admin.orders.show', $this->order));
+
         $response = $this->actingAs($this->admin, 'admin')
             ->get(route('admin.orders.show', $this->order));
 

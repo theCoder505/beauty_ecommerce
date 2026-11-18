@@ -25,7 +25,11 @@
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $link['icon'] }}"/></svg>{{ $link['label'] }}
                 </span>
                 @if(!empty($link['badge']) && $link['badge'] > 0)
-                    <span class="px-2 py-0.5 text-[10px] font-bold rounded-full {{ request()->routeIs($link['route'].'*') ? 'bg-white text-brand-700' : 'bg-brand-100 text-brand-800 dark:bg-brand-900/50 dark:text-brand-300' }}">
+                    <span x-data="{ badgeCount: {{ $link['badge'] }} }"
+                          @notifications-marked-all-read.window="badgeCount = 0"
+                          x-show="badgeCount > 0"
+                          x-text="badgeCount"
+                          class="sidebar-unread-badge px-2 py-0.5 text-[10px] font-bold rounded-full {{ request()->routeIs($link['route'].'*') ? 'bg-white text-brand-700' : 'bg-brand-100 text-brand-800 dark:bg-brand-900/50 dark:text-brand-300' }}">
                         {{ $link['badge'] }}
                     </span>
                 @endif

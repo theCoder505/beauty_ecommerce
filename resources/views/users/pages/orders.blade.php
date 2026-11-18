@@ -35,7 +35,7 @@
                 <div class="flex items-center gap-4">
                     <span class="font-bold text-gray-900 dark:text-white">{{ $currency }}{{ number_format($order->total) }}</span>
                     <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-{{ $order->status_color }}-100 dark:bg-{{ $order->status_color }}-900/30 text-{{ $order->status_color }}-700">{{ $order->status_label }}</span>
-                    <a href="{{ route('user.orders.show', $order->id) }}" class="text-sm text-brand-700 hover:underline font-semibold">View →</a>
+                    <a href="{{ route('user.orders.show', $order) }}" class="text-sm text-brand-700 hover:underline font-semibold">View →</a>
                 </div>
             </div>
             @endforeach

@@ -28,7 +28,7 @@
             <tbody class="divide-y divide-cream-100 dark:divide-gray-700">
                 @foreach($recentOrders as $order)
                 <tr class="hover:bg-cream-50 dark:hover:bg-gray-800/50">
-                    <td class="px-5 py-3"><a href="{{ route('user.orders.show', $order->id) }}" class="text-brand-700 font-mono text-xs hover:underline">{{ $order->order_number }}</a></td>
+                    <td class="px-5 py-3"><a href="{{ route('user.orders.show', $order) }}" class="text-brand-700 font-mono text-xs hover:underline">{{ $order->order_number }}</a></td>
                     <td class="px-5 py-3 font-semibold">{{ $currency }}{{ number_format($order->total) }}</td>
                     <td class="px-5 py-3"><span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-{{ $order->status_color }}-100 dark:bg-{{ $order->status_color }}-900/30 text-{{ $order->status_color }}-700">{{ $order->status_label }}</span></td>
                     <td class="px-5 py-3 text-gray-400 text-xs">{{ $order->created_at->format('M j, Y') }}</td>

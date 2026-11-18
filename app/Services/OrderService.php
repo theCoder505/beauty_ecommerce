@@ -49,7 +49,7 @@ class OrderService
                     'order_status',
                     'Order Status Updated',
                     "Your order #{$order->order_number} status has been updated to {$statusLabel}.",
-                    route('user.orders.show', $order->id),
+                    route('user.orders.show', $order),
                     'status'
                 );
             }

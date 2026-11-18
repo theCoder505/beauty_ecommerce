@@ -166,7 +166,7 @@
                             </span>
                         </td>
                         <td class="px-6 py-3 text-right">
-                            <a href="{{ route('admin.orders.show', $order->id) }}" class="text-brand-600 hover:text-brand-700 font-semibold">
+                            <a href="{{ route('admin.orders.show', $order) }}" class="text-brand-600 hover:text-brand-700 font-semibold">
                                 View Order →
                             </a>
                         </td>

@@ -40,7 +40,7 @@
     </div>
 
     <div class="flex flex-col sm:flex-row gap-3 justify-center items-center">
-        <a href="{{ route('user.orders.show', $order->id) }}" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-brand-700 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-brand-800 transition shadow-lg shadow-brand-700/25">
+        <a href="{{ route('user.orders.show', $order) }}" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-brand-700 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-brand-800 transition shadow-lg shadow-brand-700/25">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
             <span>Track Order</span>
         </a>

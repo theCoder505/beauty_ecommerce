@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\User;
+use App\Models\Order;
 use Illuminate\Support\Facades\Route;
 
 // Auth (Guest only)
@@ -49,6 +50,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout/stripe/success', [User\CheckoutController::class, 'stripeSuccess'])->name('checkout.stripe.success');
     Route::get('/checkout/stripe/cancel', [User\CheckoutController::class, 'stripeCancel'])->name('checkout.stripe.cancel');
 
+    // Public / SEO Friendly Orders URL: /orders/{order_number}
+    Route::get('/orders/{order}', [User\DashboardController::class, 'orderDetail'])->name('user.orders.show');
+    Route::get('/orders', fn () => redirect()->route('user.orders'));
+
     // Reviews
     Route::post('/reviews', [User\ReviewController::class, 'store'])->name('reviews.store');
 
@@ -69,7 +74,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/addresses/{address}', [User\DashboardController::class, 'deleteAddress'])->name('addresses.delete');
         Route::post('/addresses/{address}/primary', [User\DashboardController::class, 'setPrimaryAddress'])->name('addresses.primary');
         Route::get('/orders', [User\DashboardController::class, 'orders'])->name('orders');
-        Route::get('/orders/{order}', [User\DashboardController::class, 'orderDetail'])->name('orders.show');
+        Route::get('/orders/{order}', fn (Order $order) => redirect()->route('user.orders.show', $order));
         Route::get('/wishlist', [User\DashboardController::class, 'wishlist'])->name('wishlist');
         Route::get('/notifications', [User\NotificationController::class, 'index'])->name('notifications');
 
@@ -83,11 +88,13 @@ Route::middleware('auth')->group(function () {
         Route::post('/security/resend-otp', [User\DashboardController::class, 'resendOtp'])->name('security.resend-otp');
     });
 
-    // User Notifications
+    // User Notifications (SEO & Main User Endpoint: /notifications)
     Route::get('/notifications/feed', [User\NotificationController::class, 'feed'])->name('notifications.feed');
     Route::get('/notifications', [User\NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/mark-all-read', [User\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::post('/notifications/mark-all-unread', [User\NotificationController::class, 'markAllAsUnread'])->name('notifications.mark-all-unread');
     Route::post('/notifications/{id}/read', [User\NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/{id}/unread', [User\NotificationController::class, 'markAsUnread'])->name('notifications.unread');
     Route::delete('/notifications/clear', [User\NotificationController::class, 'clear'])->name('notifications.clear');
     Route::delete('/notifications/{id}', [User\NotificationController::class, 'destroy'])->name('notifications.destroy');
 });

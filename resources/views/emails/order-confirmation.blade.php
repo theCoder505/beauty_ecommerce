@@ -117,7 +117,7 @@ Order #{{ $order->order_number }} confirmed! Thank you for choosing {{ $siteName
     <!-- View Order CTA -->
     <tr>
         <td align="center" style="padding-bottom: 10px;">
-            <a href="{{ !empty($order->id) ? route('user.orders.show', $order->id) : route('user.orders') }}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #15803D 0%, #166534 100%); color: #FFFFFF; font-size: 13px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; text-decoration: none; padding: 14px 32px; border-radius: 50px; box-shadow: 0 4px 14px rgba(21, 128, 61, 0.28);">
+            <a href="{{ !empty($order->order_number ?? $order->id) ? route('user.orders.show', $order) : route('user.orders') }}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #15803D 0%, #166534 100%); color: #FFFFFF; font-size: 13px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; text-decoration: none; padding: 14px 32px; border-radius: 50px; box-shadow: 0 4px 14px rgba(21, 128, 61, 0.28);">
                 View Order Details &rarr;
             </a>
         </td>

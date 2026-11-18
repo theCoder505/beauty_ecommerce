@@ -573,7 +573,7 @@
                 @forelse($recentOrders as $order)
                 <tr class="hover:bg-gray-50/60 dark:hover:bg-gray-800/40 transition">
                     <td class="px-5 py-3.5 font-mono text-xs">
-                        <a href="{{ route('admin.orders.show', $order->id) }}" class="text-brand-600 dark:text-brand-400 hover:underline font-semibold">{{ $order->order_number }}</a>
+                        <a href="{{ route('admin.orders.show', $order) }}" class="text-brand-600 dark:text-brand-400 hover:underline font-semibold">{{ $order->order_number }}</a>
                     </td>
                     <td class="px-5 py-3.5 text-gray-800 dark:text-gray-200 text-xs">{{ $order->shipping_name ?? $order->user?->name ?? 'Customer' }}</td>
                     <td class="px-5 py-3.5 font-semibold text-xs text-gray-900 dark:text-white">{{ $currency }}{{ number_format($order->total, 2) }}</td>
@@ -584,7 +584,7 @@
                     </td>
                     <td class="px-5 py-3.5 text-gray-400 text-xs">{{ $order->created_at->format('M j, Y H:i') }}</td>
                     <td class="px-5 py-3.5 text-right">
-                        <a href="{{ route('admin.orders.show', $order->id) }}" class="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline">Inspect</a>
+                        <a href="{{ route('admin.orders.show', $order) }}" class="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline">Inspect</a>
                     </td>
                 </tr>
                 @empty

@@ -183,6 +183,7 @@
                             if (res.ok) {
                                 this.unreadCount = 0;
                                 this.notifications.forEach(n => n.read = true);
+                                window.dispatchEvent(new CustomEvent('notifications-marked-all-read'));
                             }
                         } catch (e) {
                             console.error(e);
@@ -200,6 +201,7 @@
                             });
                             notif.read = true;
                             if (this.unreadCount > 0) this.unreadCount--;
+                            window.dispatchEvent(new CustomEvent('notification-marked-read', { detail: { id: notif.id } }));
                         }
                         if (notif.url) {
                             window.location.href = notif.url;
@@ -224,7 +226,7 @@
                             <div class="flex items-center gap-2">
                                 <span class="font-semibold text-sm text-gray-900 dark:text-gray-100">Notifications</span>
                                 <span x-show="unreadCount > 0" x-text="unreadCount + ' new'"
-                                    class="text-[10px] font-semibold bg-brand-100 text-brand-800 dark:bg-brand-900/40 dark:text-brand-300 px-2 py-0.5 rounded-full"></span>
+                                    class="text-[10px] font-semibold bg-brand-100 text-brand-800 dark:bg-slate-800 dark:text-slate-200 dark:border dark:border-slate-700 px-2 py-0.5 rounded-full"></span>
                             </div>
                             <button x-show="unreadCount > 0" @click="markAllRead()" type="button"
                                 class="text-xs text-brand-700 hover:text-brand-800 dark:text-brand-400 font-medium transition">
@@ -241,9 +243,9 @@
                             <template x-for="notif in notifications" :key="notif.id">
                                 <div @click="clickNotification(notif)"
                                     class="p-3.5 hover:bg-cream-50 dark:hover:bg-gray-800/60 cursor-pointer transition flex items-start gap-3"
-                                    :class="!notif.read ? 'bg-brand-50/40 dark:bg-brand-950/20' : ''">
+                                    :class="!notif.read ? 'bg-brand-50/40 dark:bg-slate-800/90' : ''">
                                     <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs"
-                                        :class="!notif.read ? 'bg-brand-700 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'">
+                                        :class="!notif.read ? 'bg-brand-700 dark:bg-slate-700 text-white dark:text-slate-100' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'">
                                         <template x-if="notif.type.includes('order')">
                                             <span>📦</span>
                                         </template>
@@ -264,13 +266,13 @@
                                         </div>
                                         <p class="text-xs text-gray-600 dark:text-gray-300 mt-0.5 line-clamp-2" x-text="notif.message"></p>
                                     </div>
-                                    <span x-show="!notif.read" class="w-2 h-2 rounded-full bg-brand-600 shrink-0 mt-1.5"></span>
+                                    <span x-show="!notif.read" class="w-2 h-2 rounded-full bg-brand-600 dark:bg-slate-300 shrink-0 mt-1.5"></span>
                                 </div>
                             </template>
                         </div>
 
                         <div class="p-2.5 border-t border-gray-100 dark:border-gray-800 text-center bg-cream-50/50 dark:bg-gray-950/50">
-                            <a href="{{ route('user.notifications') }}" class="text-xs font-semibold text-brand-700 hover:text-brand-800 dark:text-brand-400 block transition">
+                            <a href="{{ route('notifications.index') }}" class="text-xs font-semibold text-brand-700 hover:text-brand-800 dark:text-brand-400 block transition">
                                 View All Notifications →
                             </a>
                         </div>
@@ -293,24 +295,6 @@
                             class="block px-4 py-2 text-sm transition {{ request()->routeIs('user.dashboard') ? 'text-brand-700 dark:text-brand-400 font-semibold bg-cream-50 dark:bg-gray-800' : 'text-gray-700 dark:text-gray-200 hover:bg-cream-100 dark:hover:bg-gray-800' }}">
                             Dashboard
                         </a>
-                        <a href="{{ route('user.orders') }}"
-                            class="block px-4 py-2 text-sm transition {{ request()->routeIs('user.orders*') ? 'text-brand-700 dark:text-brand-400 font-semibold bg-cream-50 dark:bg-gray-800' : 'text-gray-700 dark:text-gray-200 hover:bg-cream-100 dark:hover:bg-gray-800' }}">
-                            My Orders
-                        </a>
-                        <a href="{{ route('user.notifications') }}"
-                            class="block px-4 py-2 text-sm transition flex items-center justify-between {{ request()->routeIs('user.notifications*') ? 'text-brand-700 dark:text-brand-400 font-semibold bg-cream-50 dark:bg-gray-800' : 'text-gray-700 dark:text-gray-200 hover:bg-cream-100 dark:hover:bg-gray-800' }}">
-                            <span>Notifications</span>
-                            @if(auth()->user()->unreadNotifications()->count() > 0)
-                                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-brand-700 text-white">
-                                    {{ auth()->user()->unreadNotifications()->count() }}
-                                </span>
-                            @endif
-                        </a>
-                        <a href="{{ route('user.profile') }}"
-                            class="block px-4 py-2 text-sm transition {{ request()->routeIs('user.profile') ? 'text-brand-700 dark:text-brand-400 font-semibold bg-cream-50 dark:bg-gray-800' : 'text-gray-700 dark:text-gray-200 hover:bg-cream-100 dark:hover:bg-gray-800' }}">
-                            Profile
-                        </a>
-                        <hr class="my-1 border-gray-200 dark:border-gray-700">
                         <form method="POST" action="{{ route('logout') }}">@csrf
                             <button type="submit"
                                 class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">Sign

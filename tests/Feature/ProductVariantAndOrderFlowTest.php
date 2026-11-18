@@ -360,19 +360,24 @@ class ProductVariantAndOrderFlowTest extends TestCase
                    $mail->hasTo($order->shipping_email);
         });
 
+        // Verify SEO Order URLs use order_number instead of id
+        $this->assertStringContainsString('/orders/' . $order->order_number, route('user.orders.show', $order));
+        $this->assertStringNotContainsString('/orders/' . $order->id, route('user.orders.show', $order));
+        $this->assertStringContainsString('/checkout/success/' . $order->order_number, route('checkout.success', $order));
+
         // Test Order Success Page renders Track Order button and variants
         $successResponse = $this->actingAs($this->user)
-            ->get(route('checkout.success', $order->id));
+            ->get(route('checkout.success', $order));
 
         $successResponse->assertStatus(200);
         $successResponse->assertSee('Track Order');
-        $successResponse->assertSee(route('user.orders.show', $order->id));
+        $successResponse->assertSee(route('user.orders.show', $order));
         $successResponse->assertSee('Size: Standard');
         $successResponse->assertSee('Color: Peach Blossom');
 
         // Test Admin Order Details Page displays variant badges
         $adminOrderResponse = $this->actingAs($this->admin, 'admin')
-            ->get(route('admin.orders.show', $order->id));
+            ->get(route('admin.orders.show', $order));
 
         $adminOrderResponse->assertStatus(200);
         $adminOrderResponse->assertSee('Size: Standard');
@@ -380,7 +385,7 @@ class ProductVariantAndOrderFlowTest extends TestCase
 
         // Test User Order Details Page displays variant summary
         $userOrderDetailResponse = $this->actingAs($this->user)
-            ->get(route('user.orders.show', $order->id));
+            ->get(route('user.orders.show', $order));
 
         $userOrderDetailResponse->assertStatus(200);
         $userOrderDetailResponse->assertSee('Size:');
@@ -461,7 +466,7 @@ class ProductVariantAndOrderFlowTest extends TestCase
 
         // Test User Order Details Page displays Shade badge and name
         $userOrderDetailResponse = $this->actingAs($this->user)
-            ->get(route('user.orders.show', $order->id));
+            ->get(route('user.orders.show', $order));
         $userOrderDetailResponse->assertStatus(200);
         $userOrderDetailResponse->assertSee('Shade:');
         $userOrderDetailResponse->assertSee('Cherry Pop');

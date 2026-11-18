@@ -380,13 +380,14 @@ class CheckoutController extends Controller
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
                 'success'      => true,
-                'redirect_url' => route('checkout.success', $order->id),
+                'redirect_url' => route('checkout.success', $order),
                 'order_id'     => $order->id,
+                'order_number' => $order->order_number,
                 'message'      => 'Order placed successfully!',
             ]);
         }
 
-        return redirect()->route('checkout.success', $order->id)
+        return redirect()->route('checkout.success', $order)
             ->with('success', 'Order placed successfully!');
     }
 
@@ -438,7 +439,7 @@ class CheckoutController extends Controller
 
             session()->forget('checkout_idempotency_key');
 
-            return redirect()->route('checkout.success', $order->id)
+            return redirect()->route('checkout.success', $order)
                 ->with('success', 'Payment confirmed! Your order has been placed.');
         } catch (\Exception $e) {
             return redirect()->route('checkout.index')
