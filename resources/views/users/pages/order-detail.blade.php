@@ -17,21 +17,63 @@
         },
         returnModalOpen: false,
         returnType: 'refund',
+        cancelModalOpen: false,
      }">
     @include('users.partials.dashboard-sidebar')
     <main class="flex-1 min-w-0">
-        <div class="flex items-center justify-between gap-3 mb-6">
+        <div class="flex items-center justify-between gap-3 mb-6 flex-wrap">
             <a href="{{ route('user.orders') }}" class="text-brand-700 hover:underline text-sm font-semibold flex items-center gap-1">
                 <span>←</span> <span>My Orders</span>
             </a>
-            @if($order->canRequestReturn())
-                <button type="button" @click="returnModalOpen = true"
-                    class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 hover:bg-amber-100 transition shadow-xs">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H4m0 0l4-4m-4 4l4 4"/></svg>
-                    <span>Request Return / Refund</span>
-                </button>
-            @endif
+            <div class="flex items-center gap-2">
+                @if($order->canBeCancelledByUser())
+                    <button type="button" @click="cancelModalOpen = true"
+                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/50 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 transition shadow-xs">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        <span>Cancel Order</span>
+                    </button>
+                @endif
+                @if($order->canRequestReturn())
+                    <button type="button" @click="returnModalOpen = true"
+                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 hover:bg-amber-100 transition shadow-xs">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H4m0 0l4-4m-4 4l4 4"/></svg>
+                        <span>Request Return / Refund</span>
+                    </button>
+                @endif
+            </div>
         </div>
+
+        {{-- Order Cancellation Notice Alert (If Cancelled) --}}
+        @if($order->status === 'cancelled')
+            <div class="mb-6 p-5 rounded-2xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/60 shadow-xs">
+                <div class="flex items-start gap-3.5">
+                    <div class="w-9 h-9 rounded-xl bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 flex items-center justify-center shrink-0 mt-0.5">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between gap-2 flex-wrap">
+                            <h3 class="text-sm font-bold text-red-900 dark:text-red-200">
+                                This Order Has Been Cancelled
+                            </h3>
+                            @if($order->cancelled_at)
+                                <span class="text-xs text-red-600 dark:text-red-400 font-mono">{{ $order->cancelled_at->format('M j, Y • g:i A') }}</span>
+                            @endif
+                        </div>
+                        <p class="text-xs text-red-700 dark:text-red-400 mt-1">
+                            Cancelled by: <strong class="font-semibold">{{ $order->cancelled_by === 'user' ? 'You (Customer)' : 'Store Administration' }}</strong>
+                        </p>
+                        @if($order->cancellation_reason)
+                            <div class="mt-3 p-3.5 rounded-xl bg-white dark:bg-gray-800 border border-red-100 dark:border-red-900/40 text-xs text-red-800 dark:text-red-300 leading-relaxed">
+                                <strong class="block font-bold text-red-900 dark:text-red-200 mb-0.5">
+                                    {{ $order->cancelled_by === 'user' ? 'Reason for Cancellation:' : 'Notice from Store:' }}
+                                </strong>
+                                {{ $order->cancellation_reason }}
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @endif
 
         {{-- Return / Refund Status Alert Banners --}}
         @if($order->return_status === 'requested')
@@ -287,7 +329,19 @@
                 {{-- Status --}}
                 <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-cream-200 dark:border-gray-700">
                     <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Current Status</p>
-                    <span class="px-3 py-1 rounded-full text-sm font-bold bg-{{ $order->status_color }}-100 dark:bg-{{ $order->status_color }}-900/30 text-{{ $order->status_color }}-700">{{ $order->status_label }}</span>
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                        <span class="px-3 py-1 rounded-full text-sm font-bold bg-{{ $order->status_color }}-100 dark:bg-{{ $order->status_color }}-900/30 text-{{ $order->status_color }}-700">{{ $order->status_label }}</span>
+                        @if($order->canBeCancelledByUser())
+                            <button type="button" @click="cancelModalOpen = true" class="text-xs font-semibold text-red-600 dark:text-red-400 hover:underline">
+                                Cancel Order
+                            </button>
+                        @endif
+                    </div>
+                    @if($order->status === 'processing')
+                        <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-2">
+                            This order is currently being processed and can no longer be cancelled online.
+                        </p>
+                    @endif
                 </div>
                 {{-- Payment --}}
                 @if($order->payment)
@@ -519,6 +573,75 @@
             </div>
         </div>
     </div>
+
+    {{-- User Cancel Order Modal --}}
+    @if($order->canBeCancelledByUser())
+    <div x-show="cancelModalOpen" x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto"
+         aria-labelledby="user-cancel-modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div x-show="cancelModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                 @click="cancelModalOpen = false" class="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"></div>
+
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div x-show="cancelModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-cream-200 dark:border-gray-700">
+                <form action="{{ route('user.orders.cancel', $order) }}" method="POST">
+                    @csrf
+                    <div class="p-6">
+                        <div class="flex items-center justify-between pb-4 border-b border-cream-100 dark:border-gray-700">
+                            <div>
+                                <h3 class="font-serif text-lg font-bold text-gray-900 dark:text-white" id="user-cancel-modal-title">Cancel Order #{{ $order->order_number }}</h3>
+                                <p class="text-xs text-gray-500">Order status is currently {{ ucfirst($order->status) }}.</p>
+                            </div>
+                            <button type="button" @click="cancelModalOpen = false" class="p-1 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+
+                        <div class="my-4 space-y-4">
+                            <div class="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+                                You can cancel your order while it is <strong>Pending</strong> or <strong>Confirmed</strong>. Once an order moves to <strong>Processing</strong>, it cannot be cancelled online.
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                    Reason for Cancellation <span class="text-gray-400 font-normal">(optional)</span>
+                                </label>
+                                <select name="cancellation_preset"
+                                        @change="if($event.target.value) $refs.reasonField.value = $event.target.value"
+                                        class="w-full mb-2 px-3.5 py-2 rounded-xl border border-cream-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-600">
+                                    <option value="">-- Select a reason (or write below) --</option>
+                                    <option value="Changed my mind">Changed my mind</option>
+                                    <option value="Ordered by mistake / wrong items selected">Ordered by mistake / wrong items selected</option>
+                                    <option value="Found a better price elsewhere">Found a better price elsewhere</option>
+                                    <option value="Delivery time is too long">Delivery time is too long</option>
+                                    <option value="Need to change shipping address or phone">Need to change shipping address or phone</option>
+                                </select>
+                                <textarea name="cancellation_reason" x-ref="reasonField" rows="3" maxlength="1000"
+                                          placeholder="Tell us why you wish to cancel this order..."
+                                          class="w-full px-4 py-3 rounded-xl border border-cream-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-600"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 dark:bg-gray-900/60 px-6 py-4 flex items-center justify-end gap-3 border-t border-cream-100 dark:border-gray-700">
+                        <button type="button" @click="cancelModalOpen = false"
+                                class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                            Keep Order
+                        </button>
+                        <button type="submit"
+                                onclick="return confirm('Are you sure you want to cancel this order? This cannot be undone.');"
+                                class="px-5 py-2 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white shadow-md transition">
+                            Yes, Cancel Order
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>
 
 @if($order->has_coordinates)

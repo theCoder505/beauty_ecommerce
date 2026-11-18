@@ -15,6 +15,8 @@ class Order extends Model
         'shipping_name', 'shipping_phone', 'shipping_email',
         'shipping_address', 'shipping_city', 'shipping_state',
         'shipping_zip', 'shipping_country', 'shipping_latitude', 'shipping_longitude', 'notes', 'idempotency_key',
+        'cancellation_reason', 'cancelled_by', 'cancelled_at',
+        'fraud_risk_score', 'fraud_risk_level', 'fraud_flags',
     ];
 
     protected function casts(): array
@@ -27,6 +29,9 @@ class Order extends Model
             'refund_amount'       => 'decimal:2',
             'return_requested_at' => 'datetime',
             'return_actioned_at'  => 'datetime',
+            'cancelled_at'        => 'datetime',
+            'fraud_risk_score'    => 'integer',
+            'fraud_flags'         => 'array',
             'shipping_latitude'   => 'float',
             'shipping_longitude'  => 'float',
         ];
@@ -37,6 +42,16 @@ class Order extends Model
         return $this->status === 'completed';
     }
 
+    public function isCancelled(): bool
+    {
+        return $this->status === 'cancelled';
+    }
+
+    public function canBeCancelledByUser(): bool
+    {
+        return in_array($this->status, ['pending', 'confirmed']);
+    }
+
     public function canRequestReturn(): bool
     {
         return $this->isCompleted() && empty($this->return_status);
@@ -45,6 +60,24 @@ class Order extends Model
     public function hasReturnRequest(): bool
     {
         return !empty($this->return_status);
+    }
+
+    public function getFraudAnalysisAttribute(): array
+    {
+        if (!is_null($this->fraud_risk_score)) {
+            return [
+                'score'          => $this->fraud_risk_score,
+                'level'          => $this->fraud_risk_level ?? 'low',
+                'flags'          => $this->fraud_flags ?? [],
+                'recommendation' => match($this->fraud_risk_level) {
+                    'high'   => 'High fraud risk detected. Verify customer identity, phone number, and payment before processing.',
+                    'medium' => 'Moderate risk indicators. Review customer delivery details or confirm via phone.',
+                    default  => 'Standard low risk order. Ready for normal fulfillment.',
+                },
+            ];
+        }
+
+        return app(\App\Services\FraudDetectionService::class)->evaluateAndSave($this);
     }
 
     public function getEffectiveLatitudeAttribute(): ?float

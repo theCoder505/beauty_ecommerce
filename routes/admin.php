@@ -37,6 +37,7 @@ Route::middleware('admin')->group(function () {
     Route::get('/orders', [Admin\OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [Admin\OrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{order}/status', [Admin\OrderController::class, 'changeStatus'])->name('orders.change-status');
+    Route::post('/orders/{order}/cancel-notice', [Admin\OrderController::class, 'cancelWithNotice'])->name('orders.cancel-notice');
     Route::post('/orders/{order}/payment/verify', [Admin\OrderController::class, 'verifyPayment'])->name('orders.verify-payment');
     Route::post('/orders/{order}/payment/reject', [Admin\OrderController::class, 'rejectPayment'])->name('orders.reject-payment');
 

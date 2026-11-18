@@ -5,7 +5,7 @@
 @endphp
 
 @section('content')
-<div class="space-y-6">
+<div class="space-y-6" x-data="{ cancelModalOpen: false }">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <div class="flex items-center gap-2 text-xs text-gray-500 mb-1">
@@ -35,9 +35,18 @@
             </h1>
             <p class="text-xs text-gray-500 mt-1">Placed on {{ $order->created_at->format('F j, Y \a\t g:i A') }}</p>
         </div>
-        <a href="{{ route('admin.orders.index') }}" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-1">
-            &larr; Back to Orders
-        </a>
+        <div class="flex items-center gap-3">
+            @if($order->status !== 'cancelled')
+                <button type="button" @click="cancelModalOpen = true"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-red-50 hover:bg-red-100 text-red-700 dark:bg-red-950/40 dark:hover:bg-red-900/50 dark:text-red-300 border border-red-200 dark:border-red-800/60 shadow-xs transition">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <span>Cancel with Notice</span>
+                </button>
+            @endif
+            <a href="{{ route('admin.orders.index') }}" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-1">
+                &larr; Back to Orders
+            </a>
+        </div>
     </div>
 
     @if(isset($errors) && $errors->any())
@@ -47,6 +56,152 @@
         @endforeach
     </div>
     @endif
+
+    {{-- Cancellation Notice Alert (If Cancelled) --}}
+    @if($order->status === 'cancelled')
+    <div class="p-5 rounded-2xl bg-red-50/80 dark:bg-red-950/30 border border-red-200 dark:border-red-900/60 shadow-sm">
+        <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <h3 class="text-base font-bold text-red-900 dark:text-red-200">
+                        Order Cancelled
+                    </h3>
+                    @if($order->cancelled_at)
+                        <span class="text-xs text-red-600 dark:text-red-400 font-mono">{{ $order->cancelled_at->format('M j, Y • g:i A') }}</span>
+                    @endif
+                </div>
+                <p class="text-xs text-red-700 dark:text-red-400 mt-1">
+                    Cancelled by: <strong class="font-semibold uppercase tracking-wide">{{ $order->cancelled_by ?? 'Admin' }}</strong>
+                </p>
+                @if($order->cancellation_reason)
+                    <div class="mt-2.5 p-3.5 rounded-xl bg-white dark:bg-gray-800 border border-red-100 dark:border-red-900/40 text-sm text-red-900 dark:text-red-200 leading-relaxed">
+                        <span class="block text-xs font-bold uppercase tracking-wider text-red-600 dark:text-red-400 mb-1">Notice to Customer / Cancellation Reason:</span>
+                        {{ $order->cancellation_reason }}
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Fraud Detection & Risk Analysis Card --}}
+    @php
+        $fraud = $fraudAnalysis ?? $order->fraud_analysis;
+        $score = $fraud['risk_score'] ?? 0;
+        $level = $fraud['risk_level'] ?? 'low';
+        $flags = $fraud['flags'] ?? [];
+        $recommendation = $fraud['recommendation'] ?? '';
+
+        $levelStyles = [
+            'high' => [
+                'bg' => 'bg-red-50/80 dark:bg-red-950/25 border-red-200 dark:border-red-900/50',
+                'badge' => 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/60 dark:text-red-200 dark:border-red-800',
+                'bar' => 'bg-red-500',
+                'dot' => 'bg-red-500 animate-pulse',
+                'icon_bg' => 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300',
+            ],
+            'medium' => [
+                'bg' => 'bg-amber-50/80 dark:bg-amber-950/25 border-amber-200 dark:border-amber-900/50',
+                'badge' => 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/60 dark:text-amber-200 dark:border-amber-800',
+                'bar' => 'bg-amber-500',
+                'dot' => 'bg-amber-500',
+                'icon_bg' => 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300',
+            ],
+            'low' => [
+                'bg' => 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/40',
+                'badge' => 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/60 dark:text-emerald-200 dark:border-emerald-800',
+                'bar' => 'bg-emerald-500',
+                'dot' => 'bg-emerald-500',
+                'icon_bg' => 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300',
+            ],
+        ];
+        $st = $levelStyles[$level] ?? $levelStyles['low'];
+    @endphp
+    <div class="p-6 rounded-2xl border {{ $st['bg'] }} shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-200/80 dark:border-gray-800">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl {{ $st['icon_bg'] }} flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h3 class="text-base font-bold text-gray-900 dark:text-white">Fraud Risk & Security Evaluation</h3>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold border {{ $st['badge'] }}">
+                            <span class="w-2 h-2 rounded-full {{ $st['dot'] }}"></span>
+                            {{ ucfirst($level) }} Risk Level
+                        </span>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Automated algorithmic analysis of customer patterns, velocity, contact details, and order size.</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4 self-end sm:self-center">
+                <div class="text-right">
+                    <span class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider block">Risk Score</span>
+                    <span class="text-2xl font-black {{ $level === 'high' ? 'text-red-600 dark:text-red-400' : ($level === 'medium' ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400') }}">
+                        {{ $score }}<span class="text-xs font-normal text-gray-400">/100</span>
+                    </span>
+                </div>
+                @if($order->status !== 'cancelled')
+                    <button type="button" @click="cancelModalOpen = true"
+                            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white shadow-xs transition">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        <span>Cancel with Notice</span>
+                    </button>
+                @endif
+            </div>
+        </div>
+
+        <div class="mt-4 space-y-4">
+            {{-- Progress Meter --}}
+            <div>
+                <div class="flex items-center justify-between text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
+                    <span>Threat Meter</span>
+                    <span>{{ $score }}% Calculated Risk</span>
+                </div>
+                <div class="w-full h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div class="h-full {{ $st['bar'] }} transition-all duration-500 rounded-full" style="width: {{ max(4, $score) }}%"></div>
+                </div>
+            </div>
+
+            {{-- Flags / Reasons --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                <div class="space-y-2">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                        <span>Triggered Risk Indicators ({{ count($flags) }})</span>
+                    </h4>
+                    @if(count($flags) > 0)
+                        <ul class="space-y-1.5">
+                            @foreach($flags as $flag)
+                                <li class="flex items-start gap-2 text-xs text-gray-800 dark:text-gray-200 bg-white/70 dark:bg-gray-800/60 p-2.5 rounded-xl border border-gray-200/80 dark:border-gray-700/60">
+                                    <span class="text-amber-500 dark:text-amber-400 mt-0.5 font-bold">⚠️</span>
+                                    <span>{{ $flag }}</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @else
+                        <div class="p-3 rounded-xl bg-white/60 dark:bg-gray-800/60 border border-emerald-200/60 dark:border-emerald-900/40 text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
+                            <span>✓</span>
+                            <span>No elevated risk signals triggered. Standard processing is safe.</span>
+                        </div>
+                    @endif
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>System Recommendation</span>
+                    </h4>
+                    <div class="p-3.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xs text-gray-700 dark:text-gray-300 leading-relaxed">
+                        {{ $recommendation }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     {{-- Return / Refund Management Card (Req 3) --}}
     @if($order->hasReturnRequest() || in_array($order->status, ['returned', 'refunded']))
@@ -539,6 +694,64 @@
                     </div>
                 </div>
                 @endif
+            </div>
+        </div>
+    </div>
+
+    {{-- Admin Cancel Order with Notice Modal --}}
+    <div x-show="cancelModalOpen" x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto"
+         aria-labelledby="cancel-modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div x-show="cancelModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                 @click="cancelModalOpen = false" class="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"></div>
+
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div x-show="cancelModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-200 dark:border-gray-700">
+                <form action="{{ route('admin.orders.cancel-notice', $order) }}" method="POST">
+                    @csrf
+                    <div class="p-6">
+                        <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-700">
+                            <div>
+                                <h3 class="text-base font-bold text-gray-900 dark:text-white" id="cancel-modal-title">Cancel Order #{{ $order->order_number }}</h3>
+                                <p class="text-xs text-gray-500">Provide a cancellation notice that the customer will see.</p>
+                            </div>
+                            <button type="button" @click="cancelModalOpen = false" class="p-1 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+
+                        <div class="my-4 space-y-3">
+                            <div class="p-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 text-xs text-red-800 dark:text-red-300">
+                                <strong>⚠️ Warning:</strong> Cancelling will mark the order as <em>Cancelled</em>, restock any reserved inventory, and display the notice below to the customer.
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                    Notice / Reason for Customer <span class="text-red-500">*</span>
+                                </label>
+                                <textarea name="cancellation_reason" rows="4" required minlength="5" maxlength="2000"
+                                          placeholder="e.g. Flagged by automated fraud detection; phone or address verification failed. Or items could not be fulfilled."
+                                          class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"></textarea>
+                                <p class="text-[11px] text-gray-400 mt-1">This notice is saved to the order and shown on the customer's order tracking page.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 dark:bg-gray-900/60 px-6 py-3.5 flex items-center justify-end gap-3 border-t border-gray-100 dark:border-gray-700">
+                        <button type="button" @click="cancelModalOpen = false"
+                                class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                            Close
+                        </button>
+                        <button type="submit"
+                                onclick="return confirm('Are you sure you want to cancel this order with this notice?');"
+                                class="px-5 py-2 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white shadow-xs transition">
+                            Confirm & Cancel Order
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

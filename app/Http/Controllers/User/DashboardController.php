@@ -264,6 +264,59 @@ class DashboardController extends Controller
         return back()->with('success', "Your {$data['request_type']} request has been submitted successfully. Our team will review it shortly.");
     }
 
+    public function cancelOrder(Request $request, Order $order)
+    {
+        if ($order->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        if (!$order->canBeCancelledByUser()) {
+            $msg = 'Orders cannot be cancelled once they have entered processing or shipped status.';
+            return $request->expectsJson()
+                ? response()->json(['success' => false, 'message' => $msg], 422)
+                : back()->with('error', $msg);
+        }
+
+        $data = $request->validate([
+            'cancellation_reason' => ['required', 'string', 'min:3', 'max:1000'],
+            'reason_category'     => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $fullReason = (!empty($data['reason_category']) ? "[{$data['reason_category']}] " : '') . trim($data['cancellation_reason']);
+        $userIdentifier = 'user:' . auth()->id() . ':' . auth()->user()->name;
+
+        $order->update([
+            'cancellation_reason' => $fullReason,
+            'cancelled_by'        => $userIdentifier,
+            'cancelled_at'        => now(),
+        ]);
+
+        app(\App\Services\OrderService::class)->changeStatus(
+            $order,
+            'cancelled',
+            $userIdentifier,
+            'Customer cancelled order: ' . $fullReason
+        );
+
+        // Notify admins
+        \App\Services\NotificationService::notifyAdmins(
+            'order_cancelled',
+            'Order Cancelled by Customer',
+            auth()->user()->name . " cancelled Order #{$order->order_number}. Reason: {$fullReason}",
+            route('admin.orders.show', $order),
+            'order'
+        );
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Your order has been cancelled successfully.',
+            ]);
+        }
+
+        return redirect()->route('user.orders.show', $order)->with('success', 'Your order has been cancelled successfully.');
+    }
+
     public function wishlist()
     {
         $items = $this->wishlistService->getUserWishlist();

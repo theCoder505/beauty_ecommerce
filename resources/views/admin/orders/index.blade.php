@@ -58,7 +58,7 @@
 
     <!-- Filters & Search -->
     <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
-        <form method="GET" action="{{ route('admin.orders.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <form method="GET" action="{{ route('admin.orders.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
             <div>
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Order #, name, or email..." class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none">
             </div>
@@ -68,6 +68,14 @@
                     @foreach($statuses as $st)
                         <option value="{{ $st }}" {{ request('status') === $st ? 'selected' : '' }}>{{ ucfirst(str_replace('-', ' ', $st)) }}</option>
                     @endforeach
+                </select>
+            </div>
+            <div>
+                <select name="fraud_risk" class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    <option value="">All Risk Levels</option>
+                    <option value="high" {{ request('fraud_risk') === 'high' ? 'selected' : '' }}>High Risk (Score ≥ 60)</option>
+                    <option value="medium" {{ request('fraud_risk') === 'medium' ? 'selected' : '' }}>Medium Risk (Score 30-59)</option>
+                    <option value="low" {{ request('fraud_risk') === 'low' ? 'selected' : '' }}>Low Risk (Score &lt; 30)</option>
                 </select>
             </div>
             <div>
@@ -83,7 +91,7 @@
             </div>
             <div class="flex gap-2">
                 <button type="submit" class="flex-1 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold px-4 py-2 rounded-xl transition">Filter</button>
-                @if(request()->anyFilled(['search', 'status', 'payment_method', 'date_from', 'date_to']))
+                @if(request()->anyFilled(['search', 'status', 'fraud_risk', 'payment_method', 'date_from', 'date_to']))
                     <a href="{{ route('admin.orders.index') }}" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-xl text-sm transition flex items-center justify-center">Reset</a>
                 @endif
             </div>
@@ -101,6 +109,7 @@
                         <th class="px-6 py-4">Date</th>
                         <th class="px-6 py-4">Total</th>
                         <th class="px-6 py-4">Payment</th>
+                        <th class="px-6 py-4">Fraud Risk</th>
                         <th class="px-6 py-4">Order Status</th>
                         <th class="px-6 py-4 text-right">Actions</th>
                     </tr>
@@ -162,6 +171,28 @@
                         </td>
                         <td class="px-6 py-4">
                             @php
+                                $riskLevel = $o->fraud_risk_level ?? 'low';
+                                $riskScore = $o->fraud_risk_score ?? 0;
+                                $riskBadgeClasses = [
+                                    'high'   => 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800/60',
+                                    'medium' => 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60',
+                                    'low'    => 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60',
+                                ];
+                            @endphp
+                            <div class="inline-flex flex-col gap-1">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border {{ $riskBadgeClasses[$riskLevel] ?? $riskBadgeClasses['low'] }}" title="Risk Score: {{ $riskScore }}/100">
+                                    <span class="w-1.5 h-1.5 rounded-full {{ $riskLevel === 'high' ? 'bg-red-500 animate-pulse' : ($riskLevel === 'medium' ? 'bg-amber-500' : 'bg-emerald-500') }}"></span>
+                                    {{ ucfirst($riskLevel) }} ({{ $riskScore }})
+                                </span>
+                                @if(!empty($o->fraud_flags) && count($o->fraud_flags) > 0)
+                                    <span class="text-[10px] text-gray-500 dark:text-gray-400 font-mono truncate max-w-[140px]" title="{{ implode(', ', $o->fraud_flags) }}">
+                                        {{ count($o->fraud_flags) }} flag{{ count($o->fraud_flags) > 1 ? 's' : '' }}
+                                    </span>
+                                @endif
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            @php
                                 $statusClasses = [
                                     'pending'          => 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300',
                                     'confirmed'        => 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300',
@@ -203,7 +234,7 @@
             responsive: true,
             order: [[2, 'desc']],
             columnDefs: [
-                { orderable: false, targets: [6] }
+                { orderable: false, targets: [7] }
             ],
             language: {
                 emptyTable: "No orders found matching your filters.",

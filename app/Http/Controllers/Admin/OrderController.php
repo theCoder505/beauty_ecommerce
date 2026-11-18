@@ -43,7 +43,18 @@ class OrderController extends Controller
             $query->whereHas('payment', fn ($q) => $q->where('method', $request->payment_method));
         }
 
+        if ($request->filled('fraud_risk')) {
+            $query->where('fraud_risk_level', $request->fraud_risk);
+        }
+
         $orders = $query->orderByDesc('created_at')->get();
+
+        // Evaluate fraud analysis on loaded orders if missing
+        foreach ($orders as $ord) {
+            if (is_null($ord->fraud_risk_score)) {
+                app(\App\Services\FraudDetectionService::class)->evaluateAndSave($ord);
+            }
+        }
 
         $statuses = array_keys(OrderService::allStatuses());
 
@@ -68,8 +79,9 @@ class OrderController extends Controller
         $allowedTransitions = $this->orderService->allowedTransitions($order->status);
         $allStatuses = OrderService::allStatuses();
         $deliveryCharges = app(\App\Services\SettingService::class)->getDeliveryCharges();
+        $fraudAnalysis = $order->fraud_analysis;
 
-        return view('admin.orders.show', compact('order', 'allowedTransitions', 'allStatuses', 'deliveryCharges'));
+        return view('admin.orders.show', compact('order', 'allowedTransitions', 'allStatuses', 'deliveryCharges', 'fraudAnalysis'));
     }
 
     public function changeStatus(Request $request, Order $order): RedirectResponse
@@ -77,8 +89,9 @@ class OrderController extends Controller
         $validStatuses = array_keys(OrderService::allStatuses());
 
         $request->validate([
-            'status'          => ['required', 'string', 'in:' . implode(',', $validStatuses)],
-            'delivery_option' => ['nullable', 'string', 'max:255'],
+            'status'              => ['required', 'string', 'in:' . implode(',', $validStatuses)],
+            'delivery_option'     => ['nullable', 'string', 'max:255'],
+            'cancellation_reason' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $changedBy = 'admin:' . auth('admin')->id() . ':' . auth('admin')->user()->name;
@@ -89,9 +102,55 @@ class OrderController extends Controller
             $order->update(['shipping_title' => $request->delivery_option]);
         }
 
+        if ($request->status === 'cancelled') {
+            $reason = $request->input('cancellation_reason') ?? 'Order cancelled by store administrator.';
+            $order->update([
+                'cancellation_reason' => $reason,
+                'cancelled_by'        => $changedBy,
+                'cancelled_at'        => now(),
+            ]);
+            $note = ($note ? $note . '. ' : '') . 'Notice: ' . $reason;
+        }
+
         $this->orderService->changeStatus($order, $request->status, $changedBy, $note);
 
         return back()->with('success', 'Order status updated to ' . ucfirst(str_replace('-', ' ', $request->status)) . '.');
+    }
+
+    public function cancelWithNotice(Request $request, Order $order): RedirectResponse
+    {
+        $data = $request->validate([
+            'cancellation_reason' => ['required', 'string', 'min:3', 'max:1000'],
+        ]);
+
+        $changedBy = 'admin:' . auth('admin')->id() . ':' . auth('admin')->user()->name;
+
+        $order->update([
+            'cancellation_reason' => $data['cancellation_reason'],
+            'cancelled_by'        => $changedBy,
+            'cancelled_at'        => now(),
+        ]);
+
+        $this->orderService->changeStatus(
+            $order,
+            'cancelled',
+            $changedBy,
+            'Cancelled by Admin with customer notice: ' . $data['cancellation_reason']
+        );
+
+        if ($order->user_id) {
+            \App\Services\NotificationService::notifyUser(
+                $order->user_id,
+                'order_status',
+                'Order Cancelled by Store',
+                "Your order #{$order->order_number} has been cancelled by store administration. Notice: {$data['cancellation_reason']}",
+                route('user.orders.show', $order),
+                'status'
+            );
+        }
+
+        return redirect()->route('admin.orders.show', $order)
+            ->with('success', "Order #{$order->order_number} has been cancelled and customer notified with notice.");
     }
 
     public function verifyPayment(Request $request, Order $order): RedirectResponse
