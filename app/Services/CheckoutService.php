@@ -88,13 +88,17 @@ class CheckoutService
             foreach ($orderItems as $item) {
                 $product = $products->get($item->product_id);
                 OrderItem::create([
-                    'order_id'     => $order->id,
-                    'product_id'   => $product->id,
-                    'product_name' => $product->name,
-                    'product_sku'  => $product->sku,
-                    'quantity'     => $item->quantity,
-                    'unit_price'   => $product->current_price,
-                    'total'        => $item->quantity * $product->current_price,
+                    'order_id'       => $order->id,
+                    'product_id'     => $product->id,
+                    'product_name'   => $product->name,
+                    'product_sku'    => $product->sku,
+                    'selected_size'  => $item->selected_size ?? null,
+                    'selected_color' => $item->selected_color ?? null,
+                    'selected_shade' => $item->selected_shade ?? null,
+                    'options_data'   => $item->options_data ?? null,
+                    'quantity'       => $item->quantity,
+                    'unit_price'     => $product->current_price,
+                    'total'          => $item->quantity * $product->current_price,
                 ]);
                 $product->decrement('stock', $item->quantity);
             }

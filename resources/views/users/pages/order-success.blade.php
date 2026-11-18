@@ -13,9 +13,14 @@
         <h2 class="font-semibold text-gray-900 dark:text-white mb-4">Order Items</h2>
         <div class="space-y-3">
             @foreach($order->items as $item)
-            <div class="flex justify-between text-sm">
-                <span class="text-gray-600 dark:text-gray-400">{{ $item->product_name }} × {{ $item->quantity }}</span>
-                <span class="font-semibold text-gray-900 dark:text-white">{{ $currency }}{{ number_format($item->total) }}</span>
+            <div class="flex justify-between items-start text-sm py-1 border-b border-gray-100 dark:border-gray-700/50 last:border-0">
+                <div class="flex-1 min-w-0 pr-2">
+                    <p class="font-medium text-gray-900 dark:text-white">{{ $item->product_name }} × {{ $item->quantity }}</p>
+                    @if(!empty($item->options_summary))
+                        <p class="text-xs font-semibold text-brand-700 dark:text-brand-400 mt-0.5">{{ $item->options_summary }}</p>
+                    @endif
+                </div>
+                <span class="font-semibold text-gray-900 dark:text-white shrink-0">{{ $currency }}{{ number_format($item->total) }}</span>
             </div>
             @endforeach
         </div>
@@ -34,9 +39,14 @@
         @endif
     </div>
 
-    <div class="flex gap-4 justify-center">
-        <a href="{{ route('user.orders.show', $order->id) }}" class="bg-brand-700 text-white font-semibold px-6 py-3 rounded-xl hover:bg-brand-800 transition">View Order Details</a>
-        <a href="{{ route('shop.index') }}" class="border border-brand-700 text-brand-700 dark:text-brand-400 font-semibold px-6 py-3 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-900/20 transition">Continue Shopping</a>
+    <div class="flex flex-col sm:flex-row gap-3 justify-center items-center">
+        <a href="{{ route('user.orders.show', $order->id) }}" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-brand-700 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-brand-800 transition shadow-lg shadow-brand-700/25">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+            <span>Track Order</span>
+        </a>
+        <a href="{{ route('shop.index') }}" class="w-full sm:w-auto inline-flex items-center justify-center border border-brand-700 text-brand-700 dark:text-brand-400 font-semibold px-7 py-3.5 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-900/20 transition">
+            Continue Shopping
+        </a>
     </div>
 </div>
 @endsection

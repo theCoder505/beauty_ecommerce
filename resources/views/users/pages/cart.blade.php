@@ -17,6 +17,9 @@
                 <img src="{{ $item->product->thumbnail_url }}" class="w-20 h-20 rounded-xl object-cover shrink-0">
                 <div class="flex-1 min-w-0">
                     <p class="font-semibold text-sm text-gray-900 dark:text-white truncate">{{ $item->product->name }}</p>
+                    @if(!empty($item->options_summary))
+                        <p class="text-xs font-semibold text-brand-700 dark:text-brand-400 mt-0.5">{{ $item->options_summary }}</p>
+                    @endif
                     <p class="text-xs text-gray-400 mt-0.5">{{ $item->product->category->name ?? '' }}</p>
                     <p class="text-brand-700 dark:text-brand-400 font-bold text-sm mt-1">{{ $currency }}{{ number_format($item->product->current_price) }}</p>
                 </div>

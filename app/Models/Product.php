@@ -60,6 +60,46 @@ class Product extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function options()
+    {
+        return $this->hasMany(ProductOption::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function sizes()
+    {
+        return $this->hasMany(ProductOption::class)->where('type', 'size')->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function colors()
+    {
+        return $this->hasMany(ProductOption::class)->where('type', 'color')->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function shades()
+    {
+        return $this->hasMany(ProductOption::class)->where('type', 'shade')->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function hasSizes(): bool
+    {
+        return $this->sizes()->exists();
+    }
+
+    public function hasColors(): bool
+    {
+        return $this->colors()->exists();
+    }
+
+    public function hasShades(): bool
+    {
+        return $this->shades()->exists();
+    }
+
+    public function hasOptions(): bool
+    {
+        return $this->options()->exists();
+    }
+
     public function getThumbnailUrlAttribute(): string
     {
         if ($this->thumbnail) {

@@ -75,6 +75,11 @@ class ProductController extends Controller
             'meta_title'        => ['nullable', 'string', 'max:255'],
             'meta_description'  => ['nullable', 'string', 'max:500'],
             'meta_keywords'     => ['nullable', 'string', 'max:255'],
+            'sizes.*.name'      => ['nullable', 'string', 'max:100'],
+            'colors.*.name'     => ['nullable', 'string', 'max:100'],
+            'colors.*.code'     => ['nullable', 'string', 'max:50'],
+            'shades.*.name'     => ['nullable', 'string', 'max:100'],
+            'shades.*.code'     => ['nullable', 'string', 'max:50'],
         ]);
 
         $data['slug']        = Str::slug($data['name']);
@@ -92,6 +97,8 @@ class ProductController extends Controller
         }
 
         $product = Product::create($data);
+
+        $this->syncProductOptions($product, $request);
 
         if ($request->hasFile('gallery')) {
             foreach ($request->file('gallery') as $index => $file) {
@@ -117,7 +124,7 @@ class ProductController extends Controller
 
     public function edit(Product $product): View
     {
-        $product->load('productImages');
+        $product->load(['productImages', 'options']);
         $categories = Category::where('is_active', true)->orderBy('name')->get();
 
         return view('admin.products.edit', compact('product', 'categories'));
@@ -140,6 +147,11 @@ class ProductController extends Controller
             'meta_title'        => ['nullable', 'string', 'max:255'],
             'meta_description'  => ['nullable', 'string', 'max:500'],
             'meta_keywords'     => ['nullable', 'string', 'max:255'],
+            'sizes.*.name'      => ['nullable', 'string', 'max:100'],
+            'colors.*.name'     => ['nullable', 'string', 'max:100'],
+            'colors.*.code'     => ['nullable', 'string', 'max:50'],
+            'shades.*.name'     => ['nullable', 'string', 'max:100'],
+            'shades.*.code'     => ['nullable', 'string', 'max:50'],
         ]);
 
         $data['slug']        = Str::slug($data['name']);
@@ -155,6 +167,8 @@ class ProductController extends Controller
         }
 
         $product->update($data);
+
+        $this->syncProductOptions($product, $request);
 
         if ($request->hasFile('gallery')) {
             $existingCount = $product->productImages()->count();
@@ -236,5 +250,57 @@ class ProductController extends Controller
         }
 
         return back()->with('success', "Stock updated to {$product->stock} units for '{$product->name}'.");
+    }
+
+    /**
+     * Synchronize product options (sizes, colors, shades) and their availability.
+     */
+    protected function syncProductOptions(Product $product, Request $request): void
+    {
+        $types = ['size', 'color', 'shade'];
+        $keepIds = [];
+
+        foreach ($types as $type) {
+            $inputKey = $type . 's'; // sizes, colors, shades
+            $items = $request->input($inputKey, []);
+
+            if (is_array($items)) {
+                $sort = 0;
+                foreach ($items as $item) {
+                    $name = trim($item['name'] ?? '');
+                    if ($name === '') {
+                        continue;
+                    }
+
+                    $code = !empty($item['code']) ? trim($item['code']) : null;
+                    $priceModifier = isset($item['price_modifier']) ? (float) $item['price_modifier'] : 0.00;
+                    $isAvailable = isset($item['is_available']) ? filter_var($item['is_available'], FILTER_VALIDATE_BOOLEAN) : false;
+
+                    $optionData = [
+                        'type'           => $type,
+                        'name'           => $name,
+                        'code'           => $code,
+                        'price_modifier' => $priceModifier,
+                        'is_available'   => $isAvailable,
+                        'sort_order'     => $sort++,
+                    ];
+
+                    if (!empty($item['id'])) {
+                        $existing = $product->options()->where('id', $item['id'])->first();
+                        if ($existing) {
+                            $existing->update($optionData);
+                            $keepIds[] = $existing->id;
+                            continue;
+                        }
+                    }
+
+                    $created = $product->options()->create($optionData);
+                    $keepIds[] = $created->id;
+                }
+            }
+        }
+
+        // Delete any options not in the submitted list
+        $product->options()->whereNotIn('id', $keepIds)->delete();
     }
 }

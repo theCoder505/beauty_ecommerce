@@ -13,6 +13,21 @@
                 <div>
                     <p class="font-mono text-xs text-brand-700 font-bold">{{ $order->order_number }}</p>
                     <p class="text-sm text-gray-600 dark:text-gray-400 mt-0.5">{{ $order->created_at->format('M j, Y H:i') }}</p>
+                    @if($order->items && $order->items->isNotEmpty())
+                        <div class="mt-2 text-xs text-gray-600 dark:text-gray-300 space-y-1">
+                            @foreach($order->items as $item)
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="font-medium text-gray-800 dark:text-gray-200">{{ $item->product_name }}</span>
+                                    <span class="text-gray-400">&times;{{ $item->quantity }}</span>
+                                    @if(!empty($item->options_summary))
+                                        <span class="inline-flex items-center text-[10px] font-semibold bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 px-1.5 py-0.2 rounded border border-brand-200 dark:border-brand-900/50">
+                                            {{ $item->options_summary }}
+                                        </span>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
                     @if(!empty($order->notes) || !empty($order->order_notes))
                         <p class="text-[11px] text-amber-700 dark:text-amber-300 italic mt-1 line-clamp-1">📝 Note: "{{ $order->notes ?? $order->order_notes }}"</p>
                     @endif

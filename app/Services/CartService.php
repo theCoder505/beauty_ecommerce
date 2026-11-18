@@ -46,11 +46,30 @@ class CartService
         return $this->items()->sum(fn($item) => $item->line_total);
     }
 
-    public function add(int $productId, int $quantity = 1): CartItem
+    public function add(int $productId, int $quantity = 1, ?string $size = null, ?string $color = null, ?string $shade = null): CartItem
     {
         $product = Product::findOrFail($productId);
 
-        $existing = $this->query()->where('product_id', $productId)->first();
+        $query = $this->query()->where('product_id', $productId);
+        if ($size) {
+            $query->where('selected_size', $size);
+        } else {
+            $query->whereNull('selected_size');
+        }
+
+        if ($color) {
+            $query->where('selected_color', $color);
+        } else {
+            $query->whereNull('selected_color');
+        }
+
+        if ($shade) {
+            $query->where('selected_shade', $shade);
+        } else {
+            $query->whereNull('selected_shade');
+        }
+
+        $existing = $query->first();
 
         if ($existing) {
             $newQty = min($existing->quantity + $quantity, $product->stock);
@@ -59,8 +78,11 @@ class CartService
         }
 
         $data = [
-            'product_id' => $productId,
-            'quantity'   => min($quantity, $product->stock),
+            'product_id'     => $productId,
+            'quantity'       => min($quantity, $product->stock),
+            'selected_size'  => $size,
+            'selected_color' => $color,
+            'selected_shade' => $shade,
         ];
 
         if (Auth::check()) {
@@ -99,6 +121,9 @@ class CartService
         foreach ($guestItems as $guestItem) {
             $existing = CartItem::where('user_id', $userId)
                 ->where('product_id', $guestItem->product_id)
+                ->where('selected_size', $guestItem->selected_size)
+                ->where('selected_color', $guestItem->selected_color)
+                ->where('selected_shade', $guestItem->selected_shade)
                 ->first();
             if ($existing) {
                 $product = $guestItem->product;

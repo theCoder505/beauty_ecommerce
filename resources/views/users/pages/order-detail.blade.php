@@ -13,10 +13,79 @@
                     <h2 class="font-semibold text-gray-900 dark:text-white mb-4">Order Items</h2>
                     <div class="divide-y divide-cream-100 dark:divide-gray-700">
                         @foreach($order->items as $item)
-                        <div class="py-3 flex items-center gap-4">
-                            @if($item->product)<img src="{{ $item->product->thumbnail_url }}" class="w-14 h-14 rounded-xl object-cover shrink-0">@endif
-                            <div class="flex-1 min-w-0"><p class="font-semibold text-sm text-gray-900 dark:text-white truncate">{{ $item->product_name }}</p><p class="text-xs text-gray-400">SKU: {{ $item->product_sku }} × {{ $item->quantity }}</p></div>
-                            <p class="font-bold text-sm text-gray-900 dark:text-white shrink-0">{{ $currency }}{{ number_format($item->total) }}</p>
+                        @php
+                            $colorCode = $item->options_data['color_code'] ?? $item->product?->colors?->firstWhere('name', $item->selected_color)?->code ?? null;
+                            $shadeCode = $item->options_data['shade_code'] ?? $item->product?->shades?->firstWhere('name', $item->selected_shade)?->code ?? null;
+                        @endphp
+                        <div class="py-3.5 flex items-start gap-4">
+                            @if($item->product)
+                                <a href="{{ route('products.show', $item->product->slug) }}" class="shrink-0">
+                                    <img src="{{ $item->product->thumbnail_url }}" alt="{{ $item->product_name }}" class="w-16 h-16 rounded-xl object-cover border border-cream-200 dark:border-gray-700 bg-cream-50">
+                                </a>
+                            @else
+                                <div class="w-16 h-16 rounded-xl bg-cream-100 dark:bg-gray-700 flex items-center justify-center shrink-0 text-gray-400 text-xs">No image</div>
+                            @endif
+                            <div class="flex-1 min-w-0">
+                                <p class="font-semibold text-sm text-gray-900 dark:text-white">
+                                    @if($item->product)
+                                        <a href="{{ route('products.show', $item->product->slug) }}" class="hover:text-brand-700 dark:hover:text-brand-400 transition">
+                                            {{ $item->product_name }}
+                                        </a>
+                                    @else
+                                        {{ $item->product_name }}
+                                    @endif
+                                </p>
+
+                                {{-- Selected Variants (Size / Color / Shade) --}}
+                                @if(!empty($item->selected_size) || !empty($item->selected_color) || !empty($item->selected_shade) || !empty($item->options_summary))
+                                    <div class="flex items-center gap-2 mt-1.5 flex-wrap">
+                                        @if(!empty($item->selected_size))
+                                            <span class="inline-flex items-center gap-1 text-xs font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900/60 px-2.5 py-0.5 rounded-lg shadow-2xs">
+                                                <span class="text-blue-400 dark:text-blue-400 font-normal text-[10px] uppercase tracking-wider">Size:</span>
+                                                <span>{{ $item->selected_size }}</span>
+                                            </span>
+                                        @endif
+
+                                        @if(!empty($item->selected_color))
+                                            <span class="inline-flex items-center gap-1.5 text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60 px-2.5 py-0.5 rounded-lg shadow-2xs">
+                                                @if($colorCode)
+                                                    <span class="w-3 h-3 rounded-full border border-black/15 shadow-xs shrink-0" style="background-color: {{ $colorCode }};"></span>
+                                                @endif
+                                                <span class="text-rose-400 dark:text-rose-400 font-normal text-[10px] uppercase tracking-wider">Color:</span>
+                                                <span>{{ $item->selected_color }}</span>
+                                            </span>
+                                        @endif
+
+                                        @if(!empty($item->selected_shade))
+                                            <span class="inline-flex items-center gap-1.5 text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-900/60 px-2.5 py-0.5 rounded-lg shadow-2xs">
+                                                @if($shadeCode)
+                                                    <span class="w-3 h-3 rounded-full border border-black/15 shadow-xs shrink-0" style="background-color: {{ $shadeCode }};"></span>
+                                                @endif
+                                                <span class="text-amber-600 dark:text-amber-400 font-normal text-[10px] uppercase tracking-wider">Shade:</span>
+                                                <span>{{ $item->selected_shade }}</span>
+                                            </span>
+                                        @endif
+
+                                        @if(empty($item->selected_size) && empty($item->selected_color) && empty($item->selected_shade) && !empty($item->options_summary))
+                                            <span class="inline-flex items-center text-xs font-semibold bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-900/60 px-2.5 py-0.5 rounded-lg">
+                                                {{ $item->options_summary }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                @endif
+
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1.5 flex items-center gap-2 flex-wrap">
+                                    @if(!empty($item->product_sku))
+                                        <span class="font-mono bg-stone-100 dark:bg-gray-700/60 px-1.5 py-0.5 rounded text-[11px] text-gray-600 dark:text-gray-300">SKU: {{ $item->product_sku }}</span>
+                                    @endif
+                                    <span>Qty: <strong class="text-gray-800 dark:text-gray-200">{{ $item->quantity }}</strong></span>
+                                    <span>&bull;</span>
+                                    <span>Unit Price: <strong class="text-gray-800 dark:text-gray-200">{{ $currency }}{{ number_format($item->unit_price ?? ($item->total / max(1, $item->quantity)), 2) }}</strong></span>
+                                </p>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <p class="font-bold text-sm text-gray-900 dark:text-white">{{ $currency }}{{ number_format($item->total) }}</p>
+                            </div>
                         </div>
                         @endforeach
                     </div>

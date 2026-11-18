@@ -143,6 +143,9 @@
             </div>
         </div>
 
+        <!-- Product Options (Sizes, Colors, Shades) -->
+        @include('admin.products.partials.options-form')
+
         <!-- Imagery -->
         <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 sm:p-8 space-y-6 shadow-sm">
             <h3 class="text-base font-semibold text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-800 pb-3">Product Images</h3>

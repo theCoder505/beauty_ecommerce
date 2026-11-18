@@ -33,7 +33,7 @@ class CheckoutController extends Controller
         $isBuyNow = $request->boolean('buy_now') && $request->filled('product_id');
 
         if ($isBuyNow) {
-            $product = Product::with('images')->findOrFail($request->integer('product_id'));
+            $product = Product::with(['images', 'options'])->findOrFail($request->integer('product_id'));
             $quantity = max(1, min((int) $request->integer('quantity', 1), max(1, (int)$product->stock)));
 
             if ($product->stock < 1) {
@@ -41,13 +41,27 @@ class CheckoutController extends Controller
                     ->with('error', 'This product is currently out of stock.');
             }
 
+            $selectedSize  = $request->query('size');
+            $selectedColor = $request->query('color');
+            $selectedShade = $request->query('shade');
+
+            $parts = [];
+            if (!empty($selectedSize)) $parts[] = 'Size: ' . $selectedSize;
+            if (!empty($selectedColor)) $parts[] = 'Color: ' . $selectedColor;
+            if (!empty($selectedShade)) $parts[] = 'Shade: ' . $selectedShade;
+            $optionsSummary = implode(' · ', $parts);
+
             $lineTotal = $product->current_price * $quantity;
             $buyNowItem = (object) [
-                'id'         => null,
-                'product_id' => $product->id,
-                'product'    => $product,
-                'quantity'   => $quantity,
-                'line_total' => $lineTotal,
+                'id'              => null,
+                'product_id'      => $product->id,
+                'product'         => $product,
+                'quantity'        => $quantity,
+                'selected_size'   => $selectedSize,
+                'selected_color'  => $selectedColor,
+                'selected_shade'  => $selectedShade,
+                'options_summary' => $optionsSummary,
+                'line_total'      => $lineTotal,
             ];
 
             $items = collect([$buyNowItem]);
@@ -158,6 +172,9 @@ class CheckoutController extends Controller
             'product_id'         => ['nullable', 'integer', 'exists:products,id'],
             'quantity'           => ['nullable', 'integer', 'min:1'],
             'coupon_code'        => ['nullable', 'string', 'max:50'],
+            'size'               => ['nullable', 'string', 'max:100'],
+            'color'              => ['nullable', 'string', 'max:100'],
+            'shade'              => ['nullable', 'string', 'max:100'],
         ]);
 
         // Securely retrieve the user's saved address
@@ -229,16 +246,79 @@ class CheckoutController extends Controller
         $customItems = null;
 
         if ($isBuyNow) {
-            $product = Product::findOrFail($data['product_id']);
+            $product = Product::with('options')->findOrFail($data['product_id']);
             $quantity = max(1, (int) ($data['quantity'] ?? 1));
+
+            // Enforce required option selections if product has them
+            if ($product->hasSizes() && empty($data['size'])) {
+                $msg = 'Please select a size.';
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'message' => $msg, 'errors' => ['size' => [$msg]]], 422);
+                }
+                return back()->withErrors(['size' => $msg]);
+            }
+
+            if ($product->hasColors() && empty($data['color'])) {
+                $msg = 'Please select a color.';
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'message' => $msg, 'errors' => ['color' => [$msg]]], 422);
+                }
+                return back()->withErrors(['color' => $msg]);
+            }
+
+            if ($product->hasShades() && empty($data['shade'])) {
+                $msg = 'Please select a shade.';
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'message' => $msg, 'errors' => ['shade' => [$msg]]], 422);
+                }
+                return back()->withErrors(['shade' => $msg]);
+            }
+
+            // Validate availability of selected options
+            if (!empty($data['size'])) {
+                $opt = $product->sizes()->where('name', $data['size'])->first();
+                if ($opt && !$opt->is_available) {
+                    $msg = "Size '{$data['size']}' is currently unavailable.";
+                    if ($request->expectsJson() || $request->ajax()) {
+                        return response()->json(['success' => false, 'message' => $msg, 'errors' => ['size' => [$msg]]], 422);
+                    }
+                    return back()->withErrors(['size' => $msg]);
+                }
+            }
+
+            if (!empty($data['color'])) {
+                $opt = $product->colors()->where('name', $data['color'])->first();
+                if ($opt && !$opt->is_available) {
+                    $msg = "Color '{$data['color']}' is currently unavailable.";
+                    if ($request->expectsJson() || $request->ajax()) {
+                        return response()->json(['success' => false, 'message' => $msg, 'errors' => ['color' => [$msg]]], 422);
+                    }
+                    return back()->withErrors(['color' => $msg]);
+                }
+            }
+
+            if (!empty($data['shade'])) {
+                $opt = $product->shades()->where('name', $data['shade'])->first();
+                if ($opt && !$opt->is_available) {
+                    $msg = "Shade '{$data['shade']}' is currently unavailable.";
+                    if ($request->expectsJson() || $request->ajax()) {
+                        return response()->json(['success' => false, 'message' => $msg, 'errors' => ['shade' => [$msg]]], 422);
+                    }
+                    return back()->withErrors(['shade' => $msg]);
+                }
+            }
+
             $customItems = collect([
                 (object) [
-                    'id'            => null,
-                    'product_id'    => $product->id,
-                    'product'       => $product,
-                    'quantity'      => $quantity,
-                    'line_total'    => $product->current_price * $quantity,
-                    'current_price' => $product->current_price,
+                    'id'             => null,
+                    'product_id'     => $product->id,
+                    'product'        => $product,
+                    'quantity'       => $quantity,
+                    'selected_size'  => $data['size'] ?? null,
+                    'selected_color' => $data['color'] ?? null,
+                    'selected_shade' => $data['shade'] ?? null,
+                    'line_total'     => $product->current_price * $quantity,
+                    'current_price'  => $product->current_price,
                 ]
             ]);
         }
@@ -300,23 +380,23 @@ class CheckoutController extends Controller
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
                 'success'      => true,
-                'redirect_url' => route('user.orders'),
+                'redirect_url' => route('checkout.success', $order->id),
                 'order_id'     => $order->id,
                 'message'      => 'Order placed successfully!',
             ]);
         }
 
-        return redirect()->route('user.orders')
+        return redirect()->route('checkout.success', $order->id)
             ->with('success', 'Order placed successfully!');
     }
 
     public function success(Order $order): View|RedirectResponse
     {
-        if ($order->user_id !== Auth::id()) {
+        if ($order->user_id && Auth::check() && $order->user_id !== Auth::id()) {
             abort(403);
         }
 
-        $order->load(['items.product', 'payment']);
+        $order->load(['items.product', 'payment', 'statusHistories']);
 
         return view('users.pages.order-success', compact('order'));
     }

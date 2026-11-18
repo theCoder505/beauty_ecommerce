@@ -72,7 +72,26 @@
                                     {{ $item->product_name }}@if(!empty($itemSku)) <span class="text-xs font-mono font-normal text-gray-500 dark:text-gray-400">({{ $itemSku }})</span>@endif
                                 @endif
                             </h4>
-                            <p class="text-xs text-gray-500 mt-0.5">Price: {{ $currency }}{{ number_format($item->unit_price ?? $item->price, 2) }} &times; {{ $item->quantity }}</p>
+                            @if(!empty($item->options_summary))
+                                <div class="flex items-center gap-1.5 mt-1 flex-wrap">
+                                    @if(!empty($item->selected_size))
+                                        <span class="inline-flex items-center text-[11px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900 px-2 py-0.5 rounded-md">
+                                            Size: {{ $item->selected_size }}
+                                        </span>
+                                    @endif
+                                    @if(!empty($item->selected_color))
+                                        <span class="inline-flex items-center text-[11px] font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900 px-2 py-0.5 rounded-md">
+                                            Color: {{ $item->selected_color }}
+                                        </span>
+                                    @endif
+                                    @if(!empty($item->selected_shade))
+                                        <span class="inline-flex items-center text-[11px] font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-900 px-2 py-0.5 rounded-md">
+                                            Shade: {{ $item->selected_shade }}
+                                        </span>
+                                    @endif
+                                </div>
+                            @endif
+                            <p class="text-xs text-gray-500 mt-1">Price: {{ $currency }}{{ number_format($item->unit_price ?? $item->price, 2) }} &times; {{ $item->quantity }}</p>
                         </div>
                         <div class="text-right">
                             <span class="font-bold text-sm text-gray-900 dark:text-white">{{ $currency }}{{ number_format($item->total ?? $item->subtotal, 2) }}</span>

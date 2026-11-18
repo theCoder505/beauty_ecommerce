@@ -43,7 +43,10 @@
         csrfToken: @js(csrf_token()),
         isBuyNow: {{ !empty($isBuyNow) ? 'true' : 'false' }},
         buyNowProductId: {{ !empty($isBuyNow) && $items->isNotEmpty() ? $items->first()->product_id : 'null' }},
-        buyNowQuantity: {{ !empty($isBuyNow) && $items->isNotEmpty() ? $items->first()->quantity : 'null' }}
+        buyNowQuantity: {{ !empty($isBuyNow) && $items->isNotEmpty() ? $items->first()->quantity : 'null' }},
+        buyNowSize: @js(!empty($isBuyNow) && $items->isNotEmpty() ? ($items->first()->selected_size ?? null) : null),
+        buyNowColor: @js(!empty($isBuyNow) && $items->isNotEmpty() ? ($items->first()->selected_color ?? null) : null),
+        buyNowShade: @js(!empty($isBuyNow) && $items->isNotEmpty() ? ($items->first()->selected_shade ?? null) : null)
     })">
         {{-- Header --}}
         <div class="mb-8">
@@ -388,6 +391,11 @@
                                         <p class="text-xs font-bold text-gray-900 dark:text-gray-100 truncate">
                                             {{ $item->product->name }}
                                         </p>
+                                        @if(!empty($item->options_summary))
+                                            <p class="text-[10px] font-semibold text-brand-700 dark:text-brand-400">
+                                                {{ $item->options_summary }}
+                                            </p>
+                                        @endif
                                         <p class="text-[11px] text-gray-400 mt-0.5">
                                             Qty: {{ $item->quantity }} × {{ $currency }}{{ number_format($item->product->current_price) }}
                                         </p>
@@ -620,6 +628,9 @@
                             payload.buy_now = 1;
                             payload.product_id = config.buyNowProductId;
                             payload.quantity = config.buyNowQuantity || 1;
+                            if (config.buyNowSize) payload.size = config.buyNowSize;
+                            if (config.buyNowColor) payload.color = config.buyNowColor;
+                            if (config.buyNowShade) payload.shade = config.buyNowShade;
                         }
 
                         fetch(config.applyCouponUrl, {
@@ -692,6 +703,9 @@
                             payload.buy_now = 1;
                             payload.product_id = config.buyNowProductId;
                             payload.quantity = config.buyNowQuantity || 1;
+                            if (config.buyNowSize) payload.size = config.buyNowSize;
+                            if (config.buyNowColor) payload.color = config.buyNowColor;
+                            if (config.buyNowShade) payload.shade = config.buyNowShade;
                         }
 
                         try {

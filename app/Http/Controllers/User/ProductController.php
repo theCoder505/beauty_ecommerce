@@ -27,6 +27,7 @@ class ProductController extends Controller
 
         $product->load([
             'images',
+            'options',
             'approvedReviews.user',
             'approvedReviews.images',
             'category',

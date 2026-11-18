@@ -183,7 +183,7 @@ class DashboardController extends Controller
     public function orders(Request $request)
     {
         $orders = Order::where('user_id', auth()->id())
-            ->with('payment')
+            ->with(['payment', 'items'])
             ->latest()
             ->paginate(10);
         return view('users.pages.orders', compact('orders'));
@@ -192,7 +192,7 @@ class DashboardController extends Controller
     public function orderDetail(Order $order)
     {
         abort_unless($order->user_id === auth()->id(), 403);
-        $order->load(['items.product', 'payment', 'statusHistories', 'user.addresses']);
+        $order->load(['items.product.options', 'payment', 'statusHistories', 'user.addresses']);
         return view('users.pages.order-detail', compact('order'));
     }
 

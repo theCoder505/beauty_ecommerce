@@ -30,11 +30,81 @@ class CartController extends Controller
         $data = $request->validate([
             'product_id' => ['required', 'integer', 'exists:products,id'],
             'quantity'   => ['required', 'integer', 'min:1', 'max:100'],
+            'size'       => ['nullable', 'string', 'max:100'],
+            'color'      => ['nullable', 'string', 'max:100'],
+            'shade'      => ['nullable', 'string', 'max:100'],
         ]);
 
-        $this->cartService->add($data['product_id'], $data['quantity']);
+        $product = \App\Models\Product::with('options')->findOrFail($data['product_id']);
 
-        if ($request->expectsJson()) {
+        // Enforce required option selections if product has them
+        if ($product->hasSizes() && empty($data['size'])) {
+            $msg = 'Please select a size.';
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => $msg, 'errors' => ['size' => [$msg]]], 422);
+            }
+            return back()->withErrors(['size' => $msg]);
+        }
+
+        if ($product->hasColors() && empty($data['color'])) {
+            $msg = 'Please select a color.';
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => $msg, 'errors' => ['color' => [$msg]]], 422);
+            }
+            return back()->withErrors(['color' => $msg]);
+        }
+
+        if ($product->hasShades() && empty($data['shade'])) {
+            $msg = 'Please select a shade.';
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => $msg, 'errors' => ['shade' => [$msg]]], 422);
+            }
+            return back()->withErrors(['shade' => $msg]);
+        }
+
+        // Validate availability of selected options
+        if (!empty($data['size'])) {
+            $opt = $product->sizes()->where('name', $data['size'])->first();
+            if ($opt && !$opt->is_available) {
+                $msg = "Size '{$data['size']}' is currently unavailable.";
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'message' => $msg, 'errors' => ['size' => [$msg]]], 422);
+                }
+                return back()->withErrors(['size' => $msg]);
+            }
+        }
+
+        if (!empty($data['color'])) {
+            $opt = $product->colors()->where('name', $data['color'])->first();
+            if ($opt && !$opt->is_available) {
+                $msg = "Color '{$data['color']}' is currently unavailable.";
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'message' => $msg, 'errors' => ['color' => [$msg]]], 422);
+                }
+                return back()->withErrors(['color' => $msg]);
+            }
+        }
+
+        if (!empty($data['shade'])) {
+            $opt = $product->shades()->where('name', $data['shade'])->first();
+            if ($opt && !$opt->is_available) {
+                $msg = "Shade '{$data['shade']}' is currently unavailable.";
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'message' => $msg, 'errors' => ['shade' => [$msg]]], 422);
+                }
+                return back()->withErrors(['shade' => $msg]);
+            }
+        }
+
+        $this->cartService->add(
+            $data['product_id'],
+            $data['quantity'],
+            $data['size'] ?? null,
+            $data['color'] ?? null,
+            $data['shade'] ?? null
+        );
+
+        if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
                 'count'   => $this->cartService->count(),

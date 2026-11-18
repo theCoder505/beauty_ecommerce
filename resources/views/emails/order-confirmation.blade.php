@@ -56,13 +56,16 @@ Order #{{ $order->order_number }} confirmed! Thank you for choosing {{ $siteName
                 <tr style="border-bottom: 1px solid #F3EDE4;">
                     <td style="padding: 14px 16px;">
                         <div style="font-weight: 600; font-size: 14px; color: #1E1E1E;">{{ $item->product_name }}</div>
+                        @if(!empty($item->options_summary))
+                            <div style="font-size: 11px; font-weight: 600; color: #15803d; margin-top: 2px;">{{ $item->options_summary }}</div>
+                        @endif
                         <div style="font-size: 12px; color: #78716C; margin-top: 2px;">{{ $currencySymbol }}{{ number_format((float) ($item->unit_price ?? 0), 2) }} each</div>
                     </td>
                     <td align="center" style="padding: 14px 16px; font-size: 13px; color: #4A423A;">
                         &times; {{ $item->quantity }}
                     </td>
                     <td align="right" style="padding: 14px 16px; font-weight: 600; font-size: 14px; color: #1E1E1E;">
-                        {{ $currencySymbol }}{{ number_format((float) ($item->subtotal ?? 0), 2) }}
+                        {{ $currencySymbol }}{{ number_format((float) ($item->total ?? $item->subtotal ?? 0), 2) }}
                     </td>
                 </tr>
                 @endforeach
@@ -71,10 +74,10 @@ Order #{{ $order->order_number }} confirmed! Thank you for choosing {{ $siteName
                     <td colspan="2" align="right" style="padding: 10px 16px 4px 16px; font-size: 12px; color: #78716C;">Subtotal:</td>
                     <td align="right" style="padding: 10px 16px 4px 16px; font-size: 13px; color: #1E1E1E; font-weight: 600;">{{ $currencySymbol }}{{ number_format((float) ($order->subtotal ?? 0), 2) }}</td>
                 </tr>
-                @if(($order->discount_amount ?? 0) > 0)
+                @if(($order->discount ?? $order->discount_amount ?? 0) > 0)
                 <tr style="background-color: #FAF7F2;">
                     <td colspan="2" align="right" style="padding: 4px 16px; font-size: 12px; color: #15803D;">Discount:</td>
-                    <td align="right" style="padding: 4px 16px; font-size: 13px; color: #15803D; font-weight: 600;">-{{ $currencySymbol }}{{ number_format((float) $order->discount_amount, 2) }}</td>
+                    <td align="right" style="padding: 4px 16px; font-size: 13px; color: #15803D; font-weight: 600;">-{{ $currencySymbol }}{{ number_format((float) ($order->discount ?? $order->discount_amount), 2) }}</td>
                 </tr>
                 @endif
                 <tr style="background-color: #FAF7F2;">
@@ -85,7 +88,7 @@ Order #{{ $order->order_number }} confirmed! Thank you for choosing {{ $siteName
                 </tr>
                 <tr style="background-color: #FAF7F2; border-top: 1px solid #ECE4D8;">
                     <td colspan="2" align="right" style="padding: 14px 16px; font-size: 14px; font-weight: 700; color: #1E1E1E;">Grand Total:</td>
-                    <td align="right" style="padding: 14px 16px; font-size: 16px; font-weight: 700; color: #15803D;">{{ $currencySymbol }}{{ number_format((float) ($order->total_amount ?? 0), 2) }}</td>
+                    <td align="right" style="padding: 14px 16px; font-size: 16px; font-weight: 700; color: #15803D;">{{ $currencySymbol }}{{ number_format((float) ($order->total ?? $order->total_amount ?? 0), 2) }}</td>
                 </tr>
             </table>
         </td>

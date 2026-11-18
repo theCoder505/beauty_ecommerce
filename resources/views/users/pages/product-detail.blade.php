@@ -131,6 +131,14 @@
 
             {{-- Add to Cart & Buy Now (JS Ajax with + - quantity div and Swal alert) --}}
             @if($product->stock > 0)
+            @php
+                $productSizes  = $product->sizes;
+                $productColors = $product->colors;
+                $productShades = $product->shades;
+                $hasSizes  = $productSizes->isNotEmpty();
+                $hasColors = $productColors->isNotEmpty();
+                $hasShades = $productShades->isNotEmpty();
+            @endphp
             <div x-data="productCart({
                 productId: {{ $product->id }},
                 maxStock: {{ (int) $product->stock }},
@@ -138,8 +146,123 @@
                 addUrl: @js(route('cart.add')),
                 cartUrl: @js(route('cart.index')),
                 checkoutUrl: @js(route('checkout.index')),
-                csrfToken: @js(csrf_token())
-            })" class="space-y-4">
+                csrfToken: @js(csrf_token()),
+                hasSizes: @js($hasSizes),
+                hasColors: @js($hasColors),
+                hasShades: @js($hasShades)
+            })" class="space-y-5">
+
+                {{-- VARIANT SELECTORS --}}
+                @if($hasSizes || $hasColors || $hasShades)
+                <div class="space-y-4 pt-1 border-t border-cream-200 dark:border-gray-800">
+                    {{-- SIZES SELECTOR --}}
+                    @if($hasSizes)
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
+                                Size:
+                                <span class="text-brand-700 dark:text-brand-400 normal-case font-semibold ml-1"
+                                      x-text="selectedSize ? selectedSize : 'Select a size'"></span>
+                            </label>
+                            <span class="text-[11px] text-red-500 font-medium">* Required</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach($productSizes as $size)
+                                @if($size->is_available)
+                                    <button type="button"
+                                            @click="selectedSize = '{{ $size->name }}'; sizeError = false"
+                                            :class="selectedSize === '{{ $size->name }}' ? 'bg-brand-700 text-white border-brand-700 shadow-sm ring-2 ring-brand-500/30' : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-cream-300 dark:border-gray-700 hover:border-brand-500'"
+                                            class="px-3.5 py-2 rounded-xl text-xs font-semibold border transition active:scale-95">
+                                        {{ $size->name }}
+                                    </button>
+                                @else
+                                    <button type="button"
+                                            disabled
+                                            class="px-3.5 py-2 rounded-xl text-xs font-semibold border border-dashed border-gray-300 dark:border-gray-700 text-gray-400 dark:text-gray-500 bg-gray-100/70 dark:bg-gray-800/50 cursor-not-allowed line-through relative"
+                                            title="Currently unavailable">
+                                        {{ $size->name }} <span class="no-underline text-[10px] text-rose-500 ml-1 font-normal">(Unavailable)</span>
+                                    </button>
+                                @endif
+                            @endforeach
+                        </div>
+                        <p x-show="sizeError" x-cloak class="text-xs text-rose-600 font-semibold mt-1">Please select an available size to proceed.</p>
+                    </div>
+                    @endif
+
+                    {{-- COLORS SELECTOR --}}
+                    @if($hasColors)
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
+                                Color:
+                                <span class="text-brand-700 dark:text-brand-400 normal-case font-semibold ml-1"
+                                      x-text="selectedColor ? selectedColor : 'Select a color'"></span>
+                            </label>
+                            <span class="text-[11px] text-red-500 font-medium">* Required</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2.5">
+                            @foreach($productColors as $color)
+                                @if($color->is_available)
+                                    <button type="button"
+                                            @click="selectedColor = '{{ $color->name }}'; colorError = false"
+                                            :class="selectedColor === '{{ $color->name }}' ? 'ring-2 ring-brand-700 dark:ring-brand-400 border-brand-700 bg-brand-50/50 dark:bg-brand-950/40 shadow-xs scale-105' : 'border-cream-300 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-brand-500'"
+                                            class="flex items-center gap-2 px-3 py-1.5 rounded-xl border transition active:scale-95 text-xs font-medium text-gray-900 dark:text-gray-100">
+                                        <span class="w-4 h-4 rounded-full border border-black/10 shrink-0 shadow-xs" style="background-color: {{ $color->code ?? '#e11d48' }};"></span>
+                                        <span>{{ $color->name }}</span>
+                                    </button>
+                                @else
+                                    <button type="button"
+                                            disabled
+                                            class="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-dashed border-gray-300 dark:border-gray-700 bg-gray-100/70 dark:bg-gray-800/50 text-gray-400 dark:text-gray-500 cursor-not-allowed text-xs line-through"
+                                            title="Currently unavailable">
+                                        <span class="w-4 h-4 rounded-full border border-black/10 shrink-0 opacity-40" style="background-color: {{ $color->code ?? '#e11d48' }};"></span>
+                                        <span>{{ $color->name }} <span class="no-underline text-[10px] text-rose-500 font-normal">(Unavailable)</span></span>
+                                    </button>
+                                @endif
+                            @endforeach
+                        </div>
+                        <p x-show="colorError" x-cloak class="text-xs text-rose-600 font-semibold mt-1">Please select an available color to proceed.</p>
+                    </div>
+                    @endif
+
+                    {{-- SHADES SELECTOR --}}
+                    @if($hasShades)
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
+                                Shade:
+                                <span class="text-brand-700 dark:text-brand-400 normal-case font-semibold ml-1"
+                                      x-text="selectedShade ? selectedShade : 'Select a shade'"></span>
+                            </label>
+                            <span class="text-[11px] text-red-500 font-medium">* Required</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2.5">
+                            @foreach($productShades as $shade)
+                                @if($shade->is_available)
+                                    <button type="button"
+                                            @click="selectedShade = '{{ $shade->name }}'; shadeError = false"
+                                            :class="selectedShade === '{{ $shade->name }}' ? 'ring-2 ring-brand-700 dark:ring-brand-400 border-brand-700 bg-brand-50/50 dark:bg-brand-950/40 shadow-xs scale-105' : 'border-cream-300 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-brand-500'"
+                                            class="flex items-center gap-2 px-3 py-1.5 rounded-xl border transition active:scale-95 text-xs font-medium text-gray-900 dark:text-gray-100">
+                                        <span class="w-4 h-4 rounded-full border border-black/10 shrink-0 shadow-xs" style="background-color: {{ $shade->code ?? '#d4a373' }};"></span>
+                                        <span>{{ $shade->name }}</span>
+                                    </button>
+                                @else
+                                    <button type="button"
+                                            disabled
+                                            class="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-dashed border-gray-300 dark:border-gray-700 bg-gray-100/70 dark:bg-gray-800/50 text-gray-400 dark:text-gray-500 cursor-not-allowed text-xs line-through"
+                                            title="Currently unavailable">
+                                        <span class="w-4 h-4 rounded-full border border-black/10 shrink-0 opacity-40" style="background-color: {{ $shade->code ?? '#d4a373' }};"></span>
+                                        <span>{{ $shade->name }} <span class="no-underline text-[10px] text-rose-500 font-normal">(Unavailable)</span></span>
+                                    </button>
+                                @endif
+                            @endforeach
+                        </div>
+                        <p x-show="shadeError" x-cloak class="text-xs text-rose-600 font-semibold mt-1">Please select an available shade to proceed.</p>
+                    </div>
+                    @endif
+                </div>
+                @endif
+
                 <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
                     {{-- Quantity Stepper Div with + - --}}
                     <div class="inline-flex items-center justify-between sm:justify-start bg-cream-100 dark:bg-gray-800 border border-cream-300 dark:border-gray-700 rounded-2xl p-1 shadow-sm select-none shrink-0">
@@ -366,6 +489,12 @@ window.productCart = function(config) {
         maxStock: config.maxStock,
         loading: false,
         buyLoading: false,
+        selectedSize: null,
+        selectedColor: null,
+        selectedShade: null,
+        sizeError: false,
+        colorError: false,
+        shadeError: false,
         decrease() {
             if (this.qty > 1) {
                 this.qty--;
@@ -376,7 +505,41 @@ window.productCart = function(config) {
                 this.qty++;
             }
         },
+        validateSelections() {
+            let valid = true;
+            if (config.hasSizes && !this.selectedSize) {
+                this.sizeError = true;
+                valid = false;
+            }
+            if (config.hasColors && !this.selectedColor) {
+                this.colorError = true;
+                valid = false;
+            }
+            if (config.hasShades && !this.selectedShade) {
+                this.shadeError = true;
+                valid = false;
+            }
+
+            if (!valid) {
+                const missing = [];
+                if (config.hasSizes && !this.selectedSize) missing.push('Size');
+                if (config.hasColors && !this.selectedColor) missing.push('Color');
+                if (config.hasShades && !this.selectedShade) missing.push('Shade');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Please Select Options',
+                    text: 'Please select ' + missing.join(', ') + ' before proceeding.',
+                    confirmButtonColor: '#15803d',
+                    customClass: {
+                        popup: 'rounded-2xl border border-cream-200 dark:border-gray-700 shadow-2xl',
+                        confirmButton: 'px-5 py-2.5 rounded-xl font-semibold text-sm'
+                    }
+                });
+            }
+            return valid;
+        },
         async addToCart() {
+            if (!this.validateSelections()) return;
             if (this.loading || this.buyLoading || this.maxStock <= 0) return;
             this.loading = true;
 
@@ -391,7 +554,10 @@ window.productCart = function(config) {
                     },
                     body: JSON.stringify({
                         product_id: config.productId,
-                        quantity: this.qty
+                        quantity: this.qty,
+                        size: this.selectedSize,
+                        color: this.selectedColor,
+                        shade: this.selectedShade
                     })
                 });
 
@@ -404,10 +570,12 @@ window.productCart = function(config) {
                         badge.classList.remove('hidden');
                     }
 
+                    const optSummary = [this.selectedSize, this.selectedColor, this.selectedShade].filter(Boolean).join(' · ');
+
                     Swal.fire({
                         icon: 'success',
                         title: 'Added to Cart!',
-                        html: '<p class="text-sm text-gray-600 dark:text-gray-300"><strong>' + this.qty + 'x</strong> &ldquo;' + config.productName + '&rdquo; has been added to your shopping bag.</p>',
+                        html: '<p class="text-sm text-gray-600 dark:text-gray-300"><strong>' + this.qty + 'x</strong> &ldquo;' + config.productName + '&rdquo;' + (optSummary ? ' <br><span class="text-xs text-brand-700 font-medium">(' + optSummary + ')</span>' : '') + ' has been added to your shopping bag.</p>',
                         showCancelButton: true,
                         confirmButtonText: 'View Cart',
                         cancelButtonText: 'Continue Shopping',
@@ -447,9 +615,19 @@ window.productCart = function(config) {
             }
         },
         buyNow() {
+            if (!this.validateSelections()) return;
             if (this.buyLoading || this.loading || this.maxStock <= 0) return;
             this.buyLoading = true;
-            window.location.href = `${config.checkoutUrl}?buy_now=1&product_id=${config.productId}&quantity=${this.qty}`;
+            const params = new URLSearchParams({
+                buy_now: 1,
+                product_id: config.productId,
+                quantity: this.qty
+            });
+            if (this.selectedSize) params.set('size', this.selectedSize);
+            if (this.selectedColor) params.set('color', this.selectedColor);
+            if (this.selectedShade) params.set('shade', this.selectedShade);
+
+            window.location.href = `${config.checkoutUrl}?${params.toString()}`;
         }
     };
 };
