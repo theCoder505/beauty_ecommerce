@@ -145,6 +145,9 @@
                 @php
                     $headerUserUnread = auth()->user()?->unreadNotifications()->count() ?? 0;
                 @endphp
+                @php
+                    $isNotificationPage = request()->routeIs('notifications.*') || request()->routeIs('user.notifications');
+                @endphp
                 <div class="relative" x-data="{
                     open: false,
                     unreadCount: {{ $headerUserUnread }},
@@ -209,7 +212,8 @@
                     }
                 }" x-init="fetchNotifications()">
                     <button @click="open = !open" type="button"
-                        class="relative p-2 rounded-full hover:bg-cream-200 dark:hover:bg-gray-800 transition text-gray-700 dark:text-gray-300"
+                        class="relative p-2 rounded-full hover:bg-cream-200 dark:hover:bg-gray-800 transition {{ $isNotificationPage ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/60 ring-1 ring-brand-500/20' : 'text-gray-700 dark:text-gray-300' }}"
+                        :class="open ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/60 ring-1 ring-brand-500/20' : ''"
                         aria-label="Notifications">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

@@ -238,6 +238,9 @@ class ProductController extends Controller
         ]);
 
         if ($request->wantsJson() || $request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            $lowStockCount = Product::where('is_active', true)->where('stock', '<=', 10)->count();
+            $outOfStockCount = Product::where('is_active', true)->where('stock', 0)->count();
+
             return response()->json([
                 'success' => true,
                 'message' => "Stock updated to {$product->stock} units for '{$product->name}'.",
@@ -246,6 +249,8 @@ class ProductController extends Controller
                     'name'  => $product->name,
                     'stock' => $product->stock,
                 ],
+                'low_stock_count'    => $lowStockCount,
+                'out_of_stock_count' => $outOfStockCount,
             ]);
         }
 

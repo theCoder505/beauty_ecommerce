@@ -186,14 +186,64 @@ test('admin can quickly update product stock from dashboard', function () {
 
     $response->assertOk();
     $response->assertJson([
-        'success' => true,
-        'product' => [
+        'success'         => true,
+        'product'         => [
             'id'    => $product->id,
             'stock' => 25,
         ],
+        'low_stock_count' => 0,
     ]);
 
     expect($product->fresh()->stock)->toBe(25);
+
+    // Visiting dashboard should render with updated healthy stock and without low stock alert
+    $dashResponse = $this->actingAs($admin, 'admin')->get(route('admin.dashboard'));
+    $dashResponse->assertOk();
+    $dashResponse->assertSee('id="top-low-stock-count"', false);
+    $dashResponse->assertDontSee('Velvet Amber Perfume</h3>');
+});
+
+test('admin dashboard displays updated values on edit to out of stock product', function () {
+    $admin = createDashboardAdmin();
+
+    $category = Category::create([
+        'name'      => 'Skincare',
+        'slug'      => 'skincare',
+        'is_active' => true,
+    ]);
+
+    $product = Product::create([
+        'category_id' => $category->id,
+        'name'        => 'Hydrating Rose Serum',
+        'slug'        => 'hydrating-rose-serum',
+        'sku'         => 'HRS-001',
+        'price'       => 45.00,
+        'stock'       => 0,
+        'is_active'   => true,
+    ]);
+
+    // Initially dashboard shows out of stock
+    $dashInit = $this->actingAs($admin, 'admin')->get(route('admin.dashboard'));
+    $dashInit->assertOk();
+    $dashInit->assertSee('OUT OF STOCK');
+
+    // Update stock to 15
+    $response = $this->actingAs($admin, 'admin')->patchJson(route('admin.products.update-stock', $product), [
+        'stock' => 15,
+    ]);
+
+    $response->assertOk();
+    $response->assertJson([
+        'success'            => true,
+        'product'            => [
+            'id'    => $product->id,
+            'stock' => 15,
+        ],
+        'low_stock_count'    => 0,
+        'out_of_stock_count' => 0,
+    ]);
+
+    expect($product->fresh()->stock)->toBe(15);
 });
 
 test('admin can delete a single visitor log via ajax json', function () {

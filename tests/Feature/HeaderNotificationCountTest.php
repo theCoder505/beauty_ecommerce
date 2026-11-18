@@ -121,4 +121,22 @@ class HeaderNotificationCountTest extends TestCase
         $pageResponse->assertSee('unreadCount: 1', false);
         $pageResponse->assertSee('px-1.5 py-0.2 rounded-full min-w-4 text-center leading-tight ">1</span>', false);
     }
+
+    public function test_user_notification_bell_is_active_when_on_notification_page(): void
+    {
+        $response = $this->actingAs($this->user)->get(route('notifications.index'));
+        $response->assertStatus(200);
+
+        // Header notification bell icon should have active classes
+        $response->assertSee('text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/60 ring-1 ring-brand-500/20', false);
+    }
+
+    public function test_admin_notification_bell_is_active_when_on_admin_notification_page(): void
+    {
+        $response = $this->actingAs($this->admin, 'admin')->get(route('admin.notifications.index'));
+        $response->assertStatus(200);
+
+        // Admin notification bell icon should have active classes
+        $response->assertSee('text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/40 ring-1 ring-brand-500/20', false);
+    }
 }

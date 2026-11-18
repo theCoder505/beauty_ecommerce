@@ -83,14 +83,12 @@
     </div>
 
     {{-- LOW STOCK ALERT CARD (CLICKABLE TO OPEN MODAL & MANAGE) --}}
-    <div onclick="openLowStockModal()" role="button" tabindex="0" title="Click to view and manage low stock inventory"
+    <div id="top-low-stock-card" onclick="openLowStockModal()" role="button" tabindex="0" title="Click to view and manage low stock inventory"
         class="bg-white dark:bg-gray-900 rounded-2xl p-5 border-2 {{ ($stats['low_stock'] ?? 0) > 0 ? 'border-red-400/80 dark:border-red-600/80 bg-red-50/20 dark:bg-red-950/10' : 'border-gray-200 dark:border-gray-800' }} shadow-sm hover:shadow-md hover:scale-[1.02] cursor-pointer transition transform duration-200 group relative overflow-hidden">
-        @if(($stats['low_stock'] ?? 0) > 0)
-        <span class="absolute top-3 right-3 flex h-3 w-3">
+        <span id="top-low-stock-ping" class="absolute top-3 right-3 flex h-3 w-3 {{ ($stats['low_stock'] ?? 0) > 0 ? '' : 'hidden' }}">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
         </span>
-        @endif
         <div class="flex items-center justify-between mb-3">
             <p class="text-xs font-bold text-red-600 dark:text-red-400 uppercase tracking-wide flex items-center gap-1.5">
                 Low Stock Alert
@@ -99,7 +97,7 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
             </div>
         </div>
-        <p class="font-bold text-2xl text-red-600 dark:text-red-400">{{ number_format($stats['low_stock'] ?? 0) }}</p>
+        <p id="top-low-stock-count" class="font-bold text-2xl text-red-600 dark:text-red-400">{{ number_format($stats['low_stock'] ?? 0) }}</p>
         <div class="flex items-center justify-between mt-1">
             <p class="text-xs text-red-500/80 font-medium">≤10 units remaining</p>
             <span class="text-xs font-semibold text-red-600 dark:text-red-400 group-hover:translate-x-0.5 transition">Manage →</span>
@@ -519,14 +517,14 @@
             </div>
             <a href="{{ route('admin.products.index', ['stock' => 'low']) }}" class="text-xs font-semibold text-red-600 dark:text-red-400 hover:underline">View All</a>
         </div>
-        <div class="divide-y divide-gray-100 dark:divide-gray-800 flex-1 max-h-96 overflow-y-auto">
+        <div id="low-stock-card-list" class="divide-y divide-gray-100 dark:divide-gray-800 flex-1 max-h-96 overflow-y-auto">
             @forelse($lowStockItems->take(6) as $p)
-            <div class="p-3.5 flex items-center justify-between gap-3 hover:bg-gray-50/80 dark:hover:bg-gray-800/40 transition">
+            <div id="low-stock-row-{{ $p->id }}" class="low-stock-card-row p-3.5 flex items-center justify-between gap-3 hover:bg-gray-50/80 dark:hover:bg-gray-800/40 transition">
                 <a href="{{ route('admin.products.edit', $p) }}" class="flex items-center gap-2.5 min-w-0 flex-1 group" title="Edit {{ $p->name }}">
                     <img src="{{ $p->thumbnail_url }}" alt="{{ $p->name }}" class="w-10 h-10 rounded-lg object-cover shrink-0 border border-gray-200 dark:border-gray-700">
                     <div class="min-w-0">
                         <p class="text-xs font-semibold text-gray-900 dark:text-white truncate group-hover:text-red-600 dark:group-hover:text-red-400 transition">{{ $p->name }}</p>
-                        <span class="product-stock-badge-{{ $p->id }} inline-block text-[11px] font-bold {{ $p->stock == 0 ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400' }}">
+                        <span class="product-stock-badge-{{ $p->id }} section-stock-badge inline-block text-[11px] font-bold {{ $p->stock == 0 ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400' }}">
                             {{ $p->stock == 0 ? 'OUT OF STOCK' : $p->stock . ' units remaining' }}
                         </span>
                     </div>
@@ -542,7 +540,7 @@
                 </div>
             </div>
             @empty
-            <p class="p-6 text-sm text-gray-400 text-center">All inventory levels are healthy!</p>
+            <p id="low-stock-card-empty" class="p-6 text-sm text-gray-400 text-center">All inventory levels are healthy!</p>
             @endforelse
         </div>
     </div>
@@ -615,9 +613,9 @@
             </button>
         </div>
 
-        <div class="p-5 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800 flex-1">
+        <div id="low-stock-modal-list" class="p-5 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800 flex-1">
             @forelse($lowStockItems as $p)
-            <div class="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div id="modal-low-stock-row-{{ $p->id }}" class="modal-low-stock-row py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div class="flex items-center gap-3 min-w-0 flex-1">
                     <img src="{{ $p->thumbnail_url }}" alt="{{ $p->name }}" class="w-12 h-12 rounded-xl object-cover border border-gray-200 dark:border-gray-700 shrink-0">
                     <div class="min-w-0">
@@ -625,7 +623,7 @@
                             {{ $p->name }}
                         </a>
                         <p class="text-xs text-gray-400 truncate">{{ $p->sku ?: 'No SKU' }} · {{ $p->category?->name ?? 'Uncategorized' }} · {{ $currency }}{{ number_format($p->price, 2) }}</p>
-                        <span class="product-stock-badge-{{ $p->id }} inline-block text-[11px] font-bold mt-0.5 {{ $p->stock == 0 ? 'text-red-600' : 'text-amber-500' }}">
+                        <span class="product-stock-badge-{{ $p->id }} modal-stock-badge inline-block text-[11px] font-bold mt-0.5 {{ $p->stock == 0 ? 'text-red-600 dark:text-red-400' : 'text-amber-500 dark:text-amber-400' }}">
                             {{ $p->stock == 0 ? 'OUT OF STOCK (0 units)' : $p->stock . ' units in stock' }}
                         </span>
                     </div>
@@ -645,7 +643,7 @@
                 </div>
             </div>
             @empty
-            <div class="py-12 text-center text-sm text-gray-400">
+            <div id="modal-low-stock-empty" class="py-12 text-center text-sm text-gray-400">
                 <svg class="w-12 h-12 text-emerald-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 All products have healthy inventory levels!
             </div>
@@ -653,7 +651,7 @@
         </div>
 
         <div class="p-4 bg-gray-50 dark:bg-gray-800/40 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
-            <span class="text-xs text-gray-500">{{ $lowStockItems->count() }} low stock items found</span>
+            <span id="modal-low-stock-count" class="text-xs text-gray-500">{{ $lowStockItems->count() }} low stock items found</span>
             <div class="flex items-center gap-2">
                 <a href="{{ route('admin.products.index', ['stock' => 'low']) }}" class="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline">
                     View in Products Table →
@@ -1207,9 +1205,12 @@
 
     // 8. QUICK STOCK UPDATE VIA AJAX
     window.quickUpdateStock = async function(productId, btnEl) {
-        const inputEl = document.getElementById(`quick-stock-input-${productId}`);
-        const modalInputEl = document.getElementById(`modal-stock-input-${productId}`);
-        const val = inputEl ? inputEl.value : (modalInputEl ? modalInputEl.value : null);
+        // Find input directly adjacent or within the same container as the button clicked
+        const rowEl = btnEl.closest('.flex') || btnEl.parentElement;
+        const inputEl = rowEl ? rowEl.querySelector('input[type="number"]') : null;
+        const fallbackInput = document.getElementById(`modal-stock-input-${productId}`) || document.getElementById(`quick-stock-input-${productId}`);
+        const targetInput = inputEl || fallbackInput;
+        const val = targetInput ? targetInput.value : null;
 
         if (val === null || val === '') return;
 
@@ -1226,27 +1227,100 @@
                     'X-CSRF-TOKEN': token,
                     'Accept': 'application/json'
                 },
-                body: JSON.stringify({ stock: parseInt(val) })
+                body: JSON.stringify({ stock: parseInt(val, 10) })
             });
 
             const data = await res.json();
             if (res.ok && data.success) {
                 if (window.toast) window.toast(data.message, 'success');
-                if (inputEl) inputEl.value = data.product.stock;
-                if (modalInputEl) modalInputEl.value = data.product.stock;
 
+                const newStock = data.product.stock;
+
+                // Sync all inputs on the dashboard for this product
+                const cardInput = document.getElementById(`quick-stock-input-${productId}`);
+                const modalInput = document.getElementById(`modal-stock-input-${productId}`);
+                if (cardInput) cardInput.value = newStock;
+                if (modalInput) modalInput.value = newStock;
+
+                // Update all badges for this product across dashboard cards & modal
                 document.querySelectorAll(`.product-stock-badge-${productId}`).forEach(badge => {
-                    if (data.product.stock === 0) {
-                        badge.textContent = 'OUT OF STOCK (0 units)';
-                        badge.className = `product-stock-badge-${productId} inline-block text-[11px] font-bold mt-0.5 text-red-600 dark:text-red-400`;
-                    } else if (data.product.stock <= 10) {
-                        badge.textContent = `${data.product.stock} units remaining`;
-                        badge.className = `product-stock-badge-${productId} inline-block text-[11px] font-bold mt-0.5 text-amber-600 dark:text-amber-400`;
+                    const isModalBadge = badge.classList.contains('modal-stock-badge');
+                    if (newStock === 0) {
+                        badge.textContent = isModalBadge ? 'OUT OF STOCK (0 units)' : 'OUT OF STOCK';
+                        badge.className = `product-stock-badge-${productId} ${isModalBadge ? 'modal-stock-badge' : 'section-stock-badge'} inline-block text-[11px] font-bold mt-0.5 text-red-600 dark:text-red-400`;
+                    } else if (newStock <= 10) {
+                        badge.textContent = isModalBadge ? `${newStock} units in stock` : `${newStock} units remaining`;
+                        badge.className = `product-stock-badge-${productId} ${isModalBadge ? 'modal-stock-badge' : 'section-stock-badge'} inline-block text-[11px] font-bold mt-0.5 text-amber-600 dark:text-amber-400`;
                     } else {
-                        badge.textContent = `${data.product.stock} units in stock`;
-                        badge.className = `product-stock-badge-${productId} inline-block text-[11px] font-bold mt-0.5 text-green-600 dark:text-green-400`;
+                        badge.textContent = `${newStock} units in stock`;
+                        badge.className = `product-stock-badge-${productId} ${isModalBadge ? 'modal-stock-badge' : 'section-stock-badge'} inline-block text-[11px] font-bold mt-0.5 text-emerald-600 dark:text-emerald-400`;
                     }
                 });
+
+                // Update low stock KPIs and badges in real-time
+                if (typeof data.low_stock_count !== 'undefined') {
+                    const topCountEl = document.getElementById('top-low-stock-count');
+                    if (topCountEl) topCountEl.textContent = Number(data.low_stock_count).toLocaleString();
+
+                    const modalCountEl = document.getElementById('modal-low-stock-count');
+                    if (modalCountEl) modalCountEl.textContent = `${data.low_stock_count} low stock items found`;
+
+                    const topCardEl = document.getElementById('top-low-stock-card');
+                    const pingEl = document.getElementById('top-low-stock-ping');
+                    if (data.low_stock_count === 0) {
+                        if (topCardEl) {
+                            topCardEl.classList.remove('border-red-400/80', 'dark:border-red-600/80', 'bg-red-50/20', 'dark:bg-red-950/10');
+                            topCardEl.classList.add('border-gray-200', 'dark:border-gray-800');
+                        }
+                        if (pingEl) pingEl.classList.add('hidden');
+                    } else {
+                        if (topCardEl) {
+                            topCardEl.classList.add('border-red-400/80', 'dark:border-red-600/80', 'bg-red-50/20', 'dark:bg-red-950/10');
+                            topCardEl.classList.remove('border-gray-200', 'dark:border-gray-800');
+                        }
+                        if (pingEl) pingEl.classList.remove('hidden');
+                    }
+                }
+
+                // If stock has passed the low stock / out of stock threshold (> 10 units), remove the row from Section 5 and Modal
+                if (newStock > 10) {
+                    const cardRow = document.getElementById(`low-stock-row-${productId}`);
+                    if (cardRow) {
+                        cardRow.style.transition = 'all 0.3s ease-out';
+                        cardRow.style.opacity = '0';
+                        cardRow.style.transform = 'translateX(20px)';
+                        setTimeout(() => {
+                            cardRow.remove();
+                            const cardList = document.getElementById('low-stock-card-list');
+                            if (cardList && cardList.querySelectorAll('.low-stock-card-row').length === 0) {
+                                cardList.innerHTML = '<p id="low-stock-card-empty" class="p-6 text-sm text-gray-400 text-center">All inventory levels are healthy!</p>';
+                                const sectionBox = document.getElementById('low-stock-section');
+                                if (sectionBox) {
+                                    sectionBox.classList.remove('border-red-300', 'dark:border-red-900/60');
+                                    sectionBox.classList.add('border-gray-200', 'dark:border-gray-800');
+                                }
+                            }
+                        }, 300);
+                    }
+
+                    const modalRow = document.getElementById(`modal-low-stock-row-${productId}`);
+                    if (modalRow) {
+                        modalRow.style.transition = 'all 0.3s ease-out';
+                        modalRow.style.opacity = '0';
+                        modalRow.style.transform = 'translateX(20px)';
+                        setTimeout(() => {
+                            modalRow.remove();
+                            const modalList = document.getElementById('low-stock-modal-list');
+                            if (modalList && modalList.querySelectorAll('.modal-low-stock-row').length === 0) {
+                                modalList.innerHTML = `
+                                    <div id="modal-low-stock-empty" class="py-12 text-center text-sm text-gray-400">
+                                        <svg class="w-12 h-12 text-emerald-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        All products have healthy inventory levels!
+                                    </div>`;
+                            }
+                        }, 300);
+                    }
+                }
             } else {
                 if (window.toast) window.toast(data.message || 'Validation error updating stock', 'error');
             }
@@ -1257,6 +1331,13 @@
             btnEl.innerHTML = originalHtml;
         }
     };
+
+    // Ensure returning from product edit page displays the freshest values
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+            window.location.reload();
+        }
+    });
 </script>
 @endpush
 
