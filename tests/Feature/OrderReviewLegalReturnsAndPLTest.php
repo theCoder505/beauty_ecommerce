@@ -240,12 +240,28 @@ class OrderReviewLegalReturnsAndPLTest extends TestCase
         $this->assertEquals('refund', $order->return_request_type);
         $this->assertStringContainsString('The bottle dropper arrived shattered', $order->return_reason);
         $this->assertNotNull($order->return_requested_at);
+        $this->assertEquals('Refund/Return Requested', $order->status_label);
 
-        // User order detail page now reflects under review banner
+        // User order detail page now reflects under review banner and status
         $detailRes = $this->actingAs($this->user)->get(route('user.orders.show', $order));
         $detailRes->assertOk();
         $detailRes->assertSee('Refund Request Under Review');
         $detailRes->assertSee('The bottle dropper arrived shattered');
+        $detailRes->assertSee('Refund/Return Requested');
+
+        // User orders list shows status Refund/Return Requested
+        $userOrdersRes = $this->actingAs($this->user)->get(route('user.orders'));
+        $userOrdersRes->assertOk();
+        $userOrdersRes->assertSee('Refund/Return Requested');
+
+        // Admin orders list and details show Refund/Return Requested
+        $adminIndexRes = $this->actingAs($this->admin, 'admin')->get(route('admin.orders.index'));
+        $adminIndexRes->assertOk();
+        $adminIndexRes->assertSee('Refund/Return Requested');
+
+        $adminShowRes = $this->actingAs($this->admin, 'admin')->get(route('admin.orders.show', $order));
+        $adminShowRes->assertOk();
+        $adminShowRes->assertSee('Refund/Return Requested');
     }
 
     public function test_admin_can_approve_refund_and_sets_status_to_refunded()

@@ -323,7 +323,7 @@
                             <div class="flex-1 min-w-0 pt-0.5">
                                 <div class="flex items-center justify-between gap-2 flex-wrap">
                                     <span class="font-bold text-sm text-gray-900 dark:text-white capitalize">
-                                        {{ str_replace('-',' ',$h->status) }}
+                                        {{ $h->status_label }}
                                     </span>
                                     <span class="text-xs text-gray-400 font-mono">
                                         {{ $h->created_at->format('M j, Y • g:i A') }}

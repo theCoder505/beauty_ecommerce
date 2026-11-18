@@ -161,8 +161,8 @@
                             {{ $currency }}{{ number_format($order->total) }}
                         </td>
                         <td class="px-6 py-3">
-                            <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300 uppercase">
-                                {{ $order->status }}
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold border {{ $order->status_badge_classes }}">
+                                {{ $order->status_label }}
                             </span>
                         </td>
                         <td class="px-6 py-3 text-right">

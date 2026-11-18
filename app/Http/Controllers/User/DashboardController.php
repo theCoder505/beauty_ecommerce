@@ -5,40 +5,43 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Mail\OtpMail;
 use App\Models\Order;
+use App\Models\OrderStatusHistory;
+use App\Models\Review;
 use App\Models\UserAddress;
 use App\Models\Wishlist;
 use App\Services\ImageService;
+use App\Services\NotificationService;
+use App\Services\OrderService;
 use App\Services\OtpService;
 use App\Services\SettingService;
 use App\Services\WishlistService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 
 class DashboardController extends Controller
 {
     public function __construct(
-        protected OtpService      $otpService,
-        protected ImageService    $imageService,
+        protected OtpService $otpService,
+        protected ImageService $imageService,
         protected WishlistService $wishlistService,
-        protected SettingService  $settingService,
+        protected SettingService $settingService,
     ) {}
 
     public function index()
     {
-        $user           = auth()->user();
-        $totalOrders    = Order::where('user_id', $user->id)->count();
-        $wishlistCount  = Wishlist::where('user_id', $user->id)->count();
-        $totalSpent     = Order::where('user_id', $user->id)->whereIn('status', ['delivered', 'completed'])->sum('total');
-        $recentOrders   = Order::where('user_id', $user->id)->with('payment')->latest()->limit(5)->get();
+        $user = auth()->user();
+        $totalOrders = Order::where('user_id', $user->id)->count();
+        $wishlistCount = Wishlist::where('user_id', $user->id)->count();
+        $totalSpent = Order::where('user_id', $user->id)->whereIn('status', ['delivered', 'completed'])->sum('total');
+        $recentOrders = Order::where('user_id', $user->id)->with('payment')->latest()->limit(5)->get();
 
         return view('users.pages.dashboard', compact('user', 'totalOrders', 'wishlistCount', 'totalSpent', 'recentOrders'));
     }
 
     public function profile()
     {
-        $user          = auth()->user()->load('addresses');
-        $addresses     = $user->addresses;
+        $user = auth()->user()->load('addresses');
+        $addresses = $user->addresses;
         $googleMapsKey = config('services.google.maps_key') ?: (string) $this->settingService->get('google_maps_api_key', '');
 
         return view('users.pages.profile', compact('user', 'addresses', 'googleMapsKey'));
@@ -49,23 +52,23 @@ class DashboardController extends Controller
         $user = auth()->user();
 
         $validated = $request->validate([
-            'label'          => ['nullable', 'string', 'max:50'],
+            'label' => ['nullable', 'string', 'max:50'],
             'recipient_name' => ['nullable', 'string', 'max:150'],
-            'phone'          => ['nullable', 'string', 'max:30'],
-            'address_line'   => ['required', 'string', 'max:500'],
-            'city'           => ['required', 'string', 'max:100'],
-            'state'          => ['nullable', 'string', 'max:100'],
-            'postal_code'    => ['nullable', 'string', 'max:20'],
-            'country'        => ['nullable', 'string', 'max:100'],
-            'latitude'       => ['nullable', 'numeric', 'between:-90,90'],
-            'longitude'      => ['nullable', 'numeric', 'between:-180,180'],
-            'is_primary'     => ['nullable'],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'address_line' => ['required', 'string', 'max:500'],
+            'city' => ['required', 'string', 'max:100'],
+            'state' => ['nullable', 'string', 'max:100'],
+            'postal_code' => ['nullable', 'string', 'max:20'],
+            'country' => ['nullable', 'string', 'max:100'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            'is_primary' => ['nullable'],
         ]);
 
         $validated['country'] = $validated['country'] ?? 'BD';
-        $validated['label']   = !empty($validated['label']) ? $validated['label'] : 'Home';
-        $validated['recipient_name'] = !empty($validated['recipient_name']) ? $validated['recipient_name'] : $user->name;
-        $validated['phone'] = !empty($validated['phone']) ? $validated['phone'] : $user->phone;
+        $validated['label'] = ! empty($validated['label']) ? $validated['label'] : 'Home';
+        $validated['recipient_name'] = ! empty($validated['recipient_name']) ? $validated['recipient_name'] : $user->name;
+        $validated['phone'] = ! empty($validated['phone']) ? $validated['phone'] : $user->phone;
 
         $existingCount = $user->addresses()->count();
         $isPrimary = $existingCount === 0 || $request->boolean('is_primary');
@@ -93,17 +96,17 @@ class DashboardController extends Controller
         abort_unless($address->user_id === auth()->id(), 403);
 
         $validated = $request->validate([
-            'label'          => ['nullable', 'string', 'max:50'],
+            'label' => ['nullable', 'string', 'max:50'],
             'recipient_name' => ['nullable', 'string', 'max:150'],
-            'phone'          => ['nullable', 'string', 'max:30'],
-            'address_line'   => ['required', 'string', 'max:500'],
-            'city'           => ['required', 'string', 'max:100'],
-            'state'          => ['nullable', 'string', 'max:100'],
-            'postal_code'    => ['nullable', 'string', 'max:20'],
-            'country'        => ['nullable', 'string', 'max:100'],
-            'latitude'       => ['nullable', 'numeric', 'between:-90,90'],
-            'longitude'      => ['nullable', 'numeric', 'between:-180,180'],
-            'is_primary'     => ['nullable'],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'address_line' => ['required', 'string', 'max:500'],
+            'city' => ['required', 'string', 'max:100'],
+            'state' => ['nullable', 'string', 'max:100'],
+            'postal_code' => ['nullable', 'string', 'max:20'],
+            'country' => ['nullable', 'string', 'max:100'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            'is_primary' => ['nullable'],
         ]);
 
         $isPrimary = $request->boolean('is_primary');
@@ -166,8 +169,8 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
         $data = $request->validate([
-            'name'   => 'required|string|max:150',
-            'phone'  => 'nullable|string|max:20',
+            'name' => 'required|string|max:150',
+            'phone' => 'nullable|string|max:20',
             'avatar' => 'nullable|image|max:2048',
         ]);
 
@@ -177,6 +180,7 @@ class DashboardController extends Controller
         }
 
         $user->update($data);
+
         return back()->with('success', 'Profile updated successfully.');
     }
 
@@ -186,13 +190,14 @@ class DashboardController extends Controller
             ->with(['payment', 'items'])
             ->latest()
             ->paginate(10);
+
         return view('users.pages.orders', compact('orders'));
     }
 
     public function orderDetail(Order $order)
     {
         if ($order->user_id) {
-            if (!auth()->check()) {
+            if (! auth()->check()) {
                 return redirect()->guest(route('login'))->with('info', 'Please sign in to view your order details.');
             }
             abort_unless($order->user_id === auth()->id(), 403);
@@ -200,7 +205,7 @@ class DashboardController extends Controller
 
         $order->load(['items.product.options', 'payment', 'statusHistories', 'user.addresses']);
 
-        $userReviews = \App\Models\Review::where('user_id', auth()->id())
+        $userReviews = Review::where('user_id', auth()->id())
             ->where('order_id', $order->id)
             ->get()
             ->keyBy('product_id');
@@ -221,46 +226,47 @@ class DashboardController extends Controller
             return back()->with('error', 'Only completed orders can be returned or refunded.');
         }
 
-        if (!empty($order->return_status)) {
+        if (! empty($order->return_status)) {
             return back()->with('error', 'A return or refund request has already been submitted for this order.');
         }
 
-        if (!$order->isWithinReturnWindow()) {
+        if (! $order->isWithinReturnWindow()) {
             $limitDays = $order->return_limit_days;
             $msg = "The return or refund request window ({$limitDays} days from order completion) has expired.";
+
             return $request->expectsJson()
                 ? response()->json(['success' => false, 'message' => $msg], 422)
                 : back()->withErrors(['return_error' => $msg])->with('error', $msg);
         }
 
         $data = $request->validate([
-            'request_type'    => ['required', 'string', 'in:return,refund'],
+            'request_type' => ['required', 'string', 'in:return,refund'],
             'reason_category' => ['nullable', 'string', 'max:255'],
-            'reason'          => ['required', 'string', 'min:5', 'max:2000'],
+            'reason' => ['required', 'string', 'min:5', 'max:2000'],
         ]);
 
-        $fullReason = ($data['reason_category'] ? "[{$data['reason_category']}] " : '') . trim($data['reason']);
+        $fullReason = ($data['reason_category'] ? "[{$data['reason_category']}] " : '').trim($data['reason']);
 
         $order->update([
             'return_request_type' => $data['request_type'],
-            'return_reason'       => $fullReason,
-            'return_status'       => 'requested',
+            'return_reason' => $fullReason,
+            'return_status' => 'requested',
             'return_requested_at' => now(),
         ]);
 
-        \App\Models\OrderStatusHistory::create([
-            'order_id'   => $order->id,
-            'status'     => $order->status,
-            'changed_by' => 'user:' . auth()->id() . ':' . auth()->user()->name,
-            'note'       => 'Customer requested ' . ucfirst($data['request_type']) . '. Reason: ' . $fullReason,
+        OrderStatusHistory::create([
+            'order_id' => $order->id,
+            'status' => 'Refund/Return Requested',
+            'changed_by' => 'user:'.auth()->id().':'.auth()->user()->name,
+            'note' => 'Customer requested '.ucfirst($data['request_type']).'. Reason: '.$fullReason,
         ]);
 
         // Notify admins
         $reqTypeUpper = ucfirst($data['request_type']);
-        \App\Services\NotificationService::notifyAdmins(
+        NotificationService::notifyAdmins(
             'return_requested',
             "New {$reqTypeUpper} Request",
-            auth()->user()->name . " requested a {$data['request_type']} for Order #{$order->order_number}. Reason: {$fullReason}",
+            auth()->user()->name." requested a {$data['request_type']} for Order #{$order->order_number}. Reason: {$fullReason}",
             route('admin.returns.index'),
             'order'
         );
@@ -281,8 +287,9 @@ class DashboardController extends Controller
             abort(403);
         }
 
-        if (!$order->canBeCancelledByUser()) {
+        if (! $order->canBeCancelledByUser()) {
             $msg = 'Orders cannot be cancelled once they have entered processing or shipped status.';
+
             return $request->expectsJson()
                 ? response()->json(['success' => false, 'message' => $msg], 422)
                 : back()->with('error', $msg);
@@ -290,30 +297,30 @@ class DashboardController extends Controller
 
         $data = $request->validate([
             'cancellation_reason' => ['required', 'string', 'min:3', 'max:1000'],
-            'reason_category'     => ['nullable', 'string', 'max:255'],
+            'reason_category' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $fullReason = (!empty($data['reason_category']) ? "[{$data['reason_category']}] " : '') . trim($data['cancellation_reason']);
-        $userIdentifier = 'user:' . auth()->id() . ':' . auth()->user()->name;
+        $fullReason = (! empty($data['reason_category']) ? "[{$data['reason_category']}] " : '').trim($data['cancellation_reason']);
+        $userIdentifier = 'user:'.auth()->id().':'.auth()->user()->name;
 
         $order->update([
             'cancellation_reason' => $fullReason,
-            'cancelled_by'        => $userIdentifier,
-            'cancelled_at'        => now(),
+            'cancelled_by' => $userIdentifier,
+            'cancelled_at' => now(),
         ]);
 
-        app(\App\Services\OrderService::class)->changeStatus(
+        app(OrderService::class)->changeStatus(
             $order,
             'cancelled',
             $userIdentifier,
-            'Customer cancelled order: ' . $fullReason
+            'Customer cancelled order: '.$fullReason
         );
 
         // Notify admins
-        \App\Services\NotificationService::notifyAdmins(
+        NotificationService::notifyAdmins(
             'order_cancelled',
             'Order Cancelled by Customer',
-            auth()->user()->name . " cancelled Order #{$order->order_number}. Reason: {$fullReason}",
+            auth()->user()->name." cancelled Order #{$order->order_number}. Reason: {$fullReason}",
             route('admin.orders.show', $order),
             'order'
         );
@@ -331,6 +338,7 @@ class DashboardController extends Controller
     public function wishlist()
     {
         $items = $this->wishlistService->getUserWishlist();
+
         return view('users.pages.wishlist', compact('items'));
     }
 
@@ -342,12 +350,12 @@ class DashboardController extends Controller
     public function sendChangeOtp(Request $request)
     {
         $request->validate([
-            'new_password'              => 'required|string|min:8|confirmed',
+            'new_password' => 'required|string|min:8|confirmed',
             'new_password_confirmation' => 'required',
         ]);
 
         $user = auth()->user();
-        $otp  = $this->otpService->generate();
+        $otp = $this->otpService->generate();
 
         $this->otpService->store('user_change_password', $otp, [
             'new_password' => bcrypt($request->new_password),
@@ -383,6 +391,7 @@ class DashboardController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg], 422);
             }
+
             return back()->withErrors(['otp' => $msg]);
         }
 
@@ -408,11 +417,11 @@ class DashboardController extends Controller
     public function sendChangeEmailOtp(Request $request)
     {
         $request->validate([
-            'new_email' => 'required|email|unique:users,email,' . auth()->id(),
+            'new_email' => 'required|email|unique:users,email,'.auth()->id(),
         ]);
 
         $user = auth()->user();
-        $otp  = $this->otpService->generate();
+        $otp = $this->otpService->generate();
 
         $this->otpService->store('user_change_email', $otp, [
             'new_email' => $request->new_email,
@@ -448,6 +457,7 @@ class DashboardController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg], 422);
             }
+
             return back()->withErrors(['otp' => $msg]);
         }
 
@@ -459,7 +469,7 @@ class DashboardController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Email address updated successfully.',
-                'email'   => $data['new_email'],
+                'email' => $data['new_email'],
             ]);
         }
 
@@ -473,6 +483,7 @@ class DashboardController extends Controller
 
         if (! $this->otpService->canResend($purposeKey)) {
             $seconds = $this->otpService->secondsUntilResend($purposeKey);
+
             return response()->json([
                 'success' => false,
                 'message' => "Please wait {$seconds} seconds before requesting a new OTP.",
@@ -488,7 +499,7 @@ class DashboardController extends Controller
         }
 
         $user = auth()->user();
-        $otp  = $this->otpService->generate();
+        $otp = $this->otpService->generate();
         $this->otpService->store($purposeKey, $otp, $sessionData);
 
         Mail::to($user->email)->send(new OtpMail(
@@ -507,4 +518,3 @@ class DashboardController extends Controller
         ]);
     }
 }
-

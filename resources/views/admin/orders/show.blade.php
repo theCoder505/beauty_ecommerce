@@ -29,8 +29,8 @@
                         'refunded'         => 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300',
                     ];
                 @endphp
-                <span class="text-xs font-semibold px-3 py-1 rounded-full border {{ $statusClasses[$order->status] ?? 'bg-gray-100 text-gray-800' }}">
-                    {{ ucfirst(str_replace('-', ' ', $order->status)) }}
+                <span class="text-xs font-semibold px-3 py-1 rounded-full border {{ $order->status_badge_classes }}">
+                    {{ $order->status_label }}
                 </span>
             </h1>
             <p class="text-xs text-gray-500 mt-1">Placed on {{ $order->created_at->format('F j, Y \a\t g:i A') }}</p>
@@ -434,7 +434,7 @@
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                                 <div class="flex items-center gap-2 flex-wrap">
                                     <span class="font-bold text-sm text-gray-900 dark:text-white capitalize">
-                                        {{ str_replace('-', ' ', $history->status) }}
+                                        {{ $history->status_label }}
                                     </span>
                                     @if($isLatest)
                                         <span class="text-[10px] font-bold text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-slate-950 border border-brand-200 dark:border-brand-800 px-2 py-0.5 rounded-full">
@@ -472,8 +472,8 @@
             <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
                 <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3 mb-4">
                     <h3 class="font-semibold text-gray-900 dark:text-white text-base">Update Order Status</h3>
-                    <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border {{ $statusClasses[$order->status] ?? 'bg-gray-100 text-gray-800' }}">
-                        {{ ucfirst(str_replace('-', ' ', $order->status)) }}
+                    <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border {{ $order->status_badge_classes }}">
+                        {{ $order->status_label }}
                     </span>
                 </div>
                 
@@ -482,7 +482,7 @@
                     <div>
                         <label for="status" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 flex items-center justify-between">
                             <span>Status</span>
-                            <span class="text-[11px] font-mono text-brand-600 dark:text-brand-400">Current: {{ ucfirst(str_replace('-', ' ', $order->status)) }}</span>
+                            <span class="text-[11px] font-mono text-brand-600 dark:text-brand-400">Current: {{ $order->status_label }}</span>
                         </label>
                         <select name="status" id="status" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none">
                             <option value="">-- Choose New Status --</option>
