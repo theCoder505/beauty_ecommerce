@@ -14,7 +14,7 @@ class EditorImageUploadController extends Controller
     public function upload(Request $request): JsonResponse
     {
         $request->validate([
-            'image' => ['required', 'file', 'image', 'mimes:jpeg,png,jpg,gif,webp,svg', 'max:5120'],
+            'image' => ['required', 'file', 'mimes:jpeg,png,jpg,gif,webp,svg,avif', 'max:10240'],
         ]);
 
         $path = $request->file('image')->store('editor', 'public');

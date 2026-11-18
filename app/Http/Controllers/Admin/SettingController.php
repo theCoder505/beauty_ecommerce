@@ -85,9 +85,18 @@ class SettingController extends Controller
             if (in_array($key, ['terms_and_conditions', 'privacy_policy'])) {
                 $value = ($value !== '') ? \Mews\Purifier\Facades\Purifier::clean($value, [
                     'HTML.Allowed' => 'h1,h2,h3,h4,h5,h6,p,br,b,strong,i,em,u,s,strike,a[href|title|target|rel],ul,ol,li,blockquote,img[src|alt|title|width|height|style|class],span[style|class],div[style|class],table,thead,tbody,tr,th,td',
+                    'CSS.AllowTricky' => true,
+                    'CSS.Proprietary' => true,
                     'CSS.AllowedProperties' => 'font,font-size,font-weight,font-style,font-family,text-decoration,padding-left,color,background-color,text-align,width,height,max-width,margin,margin-left,margin-right,margin-top,margin-bottom,display,float,clear,border-radius,aspect-ratio',
                     'AutoFormat.AutoParagraph' => false,
                     'AutoFormat.RemoveEmpty' => false,
+                    'URI.AllowedSchemes' => [
+                        'http'   => true,
+                        'https'  => true,
+                        'mailto' => true,
+                        'ftp'    => true,
+                        'data'   => true,
+                    ],
                 ]) : '';
             }
 

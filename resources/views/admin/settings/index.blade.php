@@ -18,7 +18,6 @@
         <button @click="tab = 'payments'" :class="tab === 'payments' ? 'bg-brand-700 text-white font-bold shadow-md ring-2 ring-brand-700/40' : 'text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">Payment Methods</button>
         <button @click="tab = 'socialite'" :class="tab === 'socialite' ? 'bg-brand-700 text-white font-bold shadow-md ring-2 ring-brand-700/40' : 'text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">Google OAuth</button>
         <button @click="tab = 'seo'" :class="tab === 'seo' ? 'bg-brand-700 text-white font-bold shadow-md ring-2 ring-brand-700/40' : 'text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">SEO & Social</button>
-        <button @click="tab = 'legal'" :class="tab === 'legal' ? 'bg-brand-700 text-white font-bold shadow-md ring-2 ring-brand-700/40' : 'text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">Terms & Privacy</button>
     </div>
 
     @if(isset($errors) && $errors->any())
@@ -134,7 +133,7 @@
             </div>
 
             {{-- Timezone Quick Link in General Tab --}}
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl border-2 border-teal-300 dark:border-teal-700/80 bg-gradient-to-r from-teal-50 via-emerald-50/70 to-teal-100/60 dark:from-[#042f2e] dark:via-[#022c22] dark:to-[#0f3d39] shadow-sm">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl border-2 border-teal-300 dark:border-teal-700/80 bg-linear-to-r from-teal-50 via-emerald-50/70 to-teal-100/60 dark:from-[#042f2e] dark:via-[#022c22] dark:to-[#0f3d39] shadow-sm">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-2xl bg-teal-700 dark:bg-teal-600 text-white flex items-center justify-center shrink-0 shadow-md ring-4 ring-teal-700/20 dark:ring-teal-500/30">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -165,7 +164,7 @@
                 <div class="p-4 rounded-xl border border-gray-100 dark:border-gray-800 space-y-3">
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" name="cod_enabled" value="1" {{ ($settings['cod_enabled']->value ?? '1') == '1' ? 'checked' : '' }} class="sr-only peer">
-                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
                         <span class="ml-3 text-sm font-semibold text-gray-900 dark:text-white">Enable Cash On Delivery (COD)</span>
                     </label>
                     <p class="text-xs text-gray-500">Allows customers to pay in cash upon arrival of their parcel.</p>
@@ -175,7 +174,7 @@
                 <div class="p-4 rounded-xl border border-gray-100 dark:border-gray-800 space-y-3">
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" name="manual_payment_enabled" value="1" {{ ($settings['manual_payment_enabled']->value ?? '1') == '1' ? 'checked' : '' }} class="sr-only peer">
-                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
                         <span class="ml-3 text-sm font-semibold text-gray-900 dark:text-white">Enable Manual / Bank Transfer</span>
                     </label>
                     <div>
@@ -188,7 +187,7 @@
                 <div class="p-4 rounded-xl border border-gray-100 dark:border-gray-800 space-y-4">
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" name="stripe_enabled" value="1" {{ ($settings['stripe_enabled']->value ?? '0') == '1' ? 'checked' : '' }} class="sr-only peer">
-                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
                         <span class="ml-3 text-sm font-semibold text-gray-900 dark:text-white">Enable Stripe Online Gateway</span>
                     </label>
 
@@ -364,32 +363,6 @@
                         <span>Dedicated Privacy Page</span> <span>↗</span>
                     </a>
                 </div>
-            </div>
-
-            <div class="space-y-2">
-                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Terms & Conditions</label>
-                <p class="text-xs text-gray-500">Public URL: <a href="{{ route('terms') }}" target="_blank" class="text-brand-600 font-mono">{{ url('/terms-and-conditions') }}</a></p>
-                <x-rich-editor
-                    name="terms_and_conditions"
-                    id="terms-quill-editor"
-                    inputId="hidden-terms-content"
-                    :value="old('terms_and_conditions', $settings['terms_and_conditions']->value ?? '')"
-                    placeholder="Enter your store Terms and Conditions..."
-                    height="320px"
-                />
-            </div>
-
-            <div class="pt-6 border-t border-gray-100 dark:border-gray-800 space-y-2">
-                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Privacy Policy</label>
-                <p class="text-xs text-gray-500">Public URL: <a href="{{ route('privacy') }}" target="_blank" class="text-brand-600 font-mono">{{ url('/privacy-policy') }}</a></p>
-                <x-rich-editor
-                    name="privacy_policy"
-                    id="privacy-quill-editor"
-                    inputId="hidden-privacy-content"
-                    :value="old('privacy_policy', $settings['privacy_policy']->value ?? '')"
-                    placeholder="Enter your store Privacy Policy..."
-                    height="320px"
-                />
             </div>
         </div>
 

@@ -155,16 +155,75 @@ class LegalPagesRichTextEditorTest extends TestCase
     }
 
     /**
-     * Test settings index page includes rich text editors for terms and privacy under Tab 7.
+     * Test editor image upload endpoint accepts AVIF files.
+     */
+    public function test_admin_can_upload_avif_editor_image(): void
+    {
+        Storage::fake('public');
+
+        $file = UploadedFile::fake()->create('policy-illustration.avif', 200, 'image/avif');
+
+        $response = $this->actingAs($this->admin, 'admin')->postJson(route('admin.editor.upload-image'), [
+            'image' => $file,
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonStructure(['success', 'url', 'path']);
+        $this->assertTrue($response->json('success'));
+
+        $path = $response->json('path');
+        $this->assertStringEndsWith('.avif', $path);
+        Storage::disk('public')->assertExists($path);
+    }
+
+    /**
+     * Test admin can update privacy policy with display, margin, and border-radius styles without ErrorException.
+     */
+    public function test_admin_can_update_privacy_with_display_and_avif_image(): void
+    {
+        $styledHtml = '<h2>Privacy with AVIF</h2><p><img src="https://example.com/logo.avif" alt="Logo" style="display:block;margin-left:auto;margin-right:auto;width:300px;border-radius:8px" class="editor-img-center ql-align-center"></p>';
+
+        $response = $this->actingAs($this->admin, 'admin')->post(route('admin.privacy.update'), [
+            'content' => $styledHtml,
+        ]);
+
+        $response->assertRedirect(route('admin.privacy.edit'));
+        $response->assertSessionHas('success');
+
+        $saved = Setting::where('key', 'privacy_policy')->value('value');
+        $this->assertStringContainsString('logo.avif', $saved);
+        $this->assertStringContainsString('display:block', $saved);
+        $this->assertStringContainsString('border-radius:8px', $saved);
+    }
+
+    /**
+     * Test admin can update terms with data URI AVIF image without ErrorException.
+     */
+    public function test_admin_can_update_terms_with_data_uri_avif_image(): void
+    {
+        $dataUriHtml = '<p><img src="data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQ==" alt="Embedded AVIF" style="display:inline-block;float:left;margin-right:1.5rem"></p>';
+
+        $response = $this->actingAs($this->admin, 'admin')->post(route('admin.terms.update'), [
+            'content' => $dataUriHtml,
+        ]);
+
+        $response->assertRedirect(route('admin.terms.edit'));
+        $response->assertSessionHas('success');
+
+        $saved = Setting::where('key', 'terms_and_conditions')->value('value');
+        $this->assertStringContainsString('data:image/avif;base64', $saved);
+        $this->assertStringContainsString('display:inline-block', $saved);
+    }
+
+    /**
+     * Test settings index page includes links to dedicated terms and privacy editor pages.
      */
     public function test_settings_index_includes_rich_editors_for_terms_and_privacy(): void
     {
         $response = $this->actingAs($this->admin, 'admin')->get(route('admin.settings.index'));
 
         $response->assertOk();
-        $response->assertSee('id="terms-quill-editor"', false);
-        $response->assertSee('id="privacy-quill-editor"', false);
-        $response->assertSee('hidden-terms-content', false);
-        $response->assertSee('hidden-privacy-content', false);
+        $response->assertSee(route('admin.terms.edit'), false);
+        $response->assertSee(route('admin.privacy.edit'), false);
     }
 }

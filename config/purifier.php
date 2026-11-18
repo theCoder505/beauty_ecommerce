@@ -26,10 +26,19 @@ return [
         'default' => [
             'HTML.Doctype'             => 'HTML 4.01 Transitional',
             'HTML.Allowed'             => 'h1,h2,h3,h4,h5,h6,p[style|class],div[style|class],span[style|class],b,strong,i,em,u,s,strike,del,a[href|title|target|rel],ul,ol,li[style|class|data-list],blockquote,pre[class],code,br,hr,img[src|alt|title|width|height|style|class],table,thead,tbody,tr,th,td',
+            'CSS.AllowTricky'          => true,
+            'CSS.Proprietary'          => true,
             'CSS.AllowedProperties'    => 'font,font-size,font-weight,font-style,font-family,text-decoration,text-decoration-thickness,text-underline-offset,padding,padding-left,padding-right,padding-top,padding-bottom,color,background-color,text-align,width,height,max-width,min-width,margin,margin-left,margin-right,margin-top,margin-bottom,display,float,clear,border-radius,line-height,aspect-ratio',
             'Attr.AllowedClasses'      => null,
             'AutoFormat.AutoParagraph' => false,
             'AutoFormat.RemoveEmpty'   => false,
+            'URI.AllowedSchemes'       => [
+                'http'   => true,
+                'https'  => true,
+                'mailto' => true,
+                'ftp'    => true,
+                'data'   => true,
+            ],
         ],
         'test'    => [
             'Attr.EnableID' => 'true',

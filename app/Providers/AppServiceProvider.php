@@ -57,6 +57,11 @@ class AppServiceProvider extends ServiceProvider
             );
         });
 
+        // Register custom HTMLPurifier data URI scheme for safe image embedding (JPEG, PNG, GIF, WebP, AVIF)
+        if (class_exists(\HTMLPurifier_URISchemeRegistry::class)) {
+            \HTMLPurifier_URISchemeRegistry::instance()->register('data', new \App\Support\ExtendedHTMLPurifierURISchemeData());
+        }
+
         try {
             if (Schema::hasTable('settings')) {
                 $settingService = $this->app->make(SettingService::class);
