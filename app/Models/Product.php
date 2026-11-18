@@ -10,7 +10,7 @@ class Product extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'category_id', 'name', 'slug', 'sku', 'price', 'sale_price',
+        'category_id', 'name', 'slug', 'sku', 'price', 'sale_price', 'cost_price',
         'stock', 'description', 'thumbnail', 'is_active', 'is_featured',
         'views_count', 'meta_title', 'meta_description', 'meta_keywords', 'og_image',
     ];
@@ -20,6 +20,7 @@ class Product extends Model
         return [
             'price'      => 'decimal:2',
             'sale_price' => 'decimal:2',
+            'cost_price' => 'decimal:2',
             'is_active'  => 'boolean',
             'is_featured' => 'boolean',
         ];

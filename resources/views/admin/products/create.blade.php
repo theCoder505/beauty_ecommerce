@@ -111,7 +111,7 @@
         <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 sm:p-8 space-y-6 shadow-sm">
             <h3 class="text-base font-semibold text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-800 pb-3">Pricing & Stock</h3>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                     <label for="price" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Regular Price ($) <span class="text-red-500">*</span></label>
                     <input type="number" step="0.01" name="price" id="price" value="{{ old('price') }}" required placeholder="89.00" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none">
@@ -120,6 +120,12 @@
                 <div>
                     <label for="sale_price" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sale / Discount Price ($)</label>
                     <input type="number" step="0.01" name="sale_price" id="sale_price" value="{{ old('sale_price') }}" placeholder="75.00" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                </div>
+
+                <div>
+                    <label for="cost_price" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cost / Buying Price ($)</label>
+                    <input type="number" step="0.01" name="cost_price" id="cost_price" value="{{ old('cost_price', 0) }}" placeholder="45.00" title="Used for Profit & Loss calculations" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    <span class="text-[11px] text-gray-400">Used for P&L profit calculation</span>
                 </div>
 
                 <div>

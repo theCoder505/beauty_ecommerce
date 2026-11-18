@@ -9,6 +9,8 @@ class Order extends Model
 {
     protected $fillable = [
         'order_number', 'user_id', 'status',
+        'return_request_type', 'return_reason', 'return_status',
+        'return_requested_at', 'return_actioned_at', 'return_admin_note', 'refund_amount',
         'subtotal', 'shipping_cost', 'shipping_title', 'discount', 'coupon_code', 'total',
         'shipping_name', 'shipping_phone', 'shipping_email',
         'shipping_address', 'shipping_city', 'shipping_state',
@@ -18,13 +20,31 @@ class Order extends Model
     protected function casts(): array
     {
         return [
-            'subtotal'           => 'decimal:2',
-            'shipping_cost'      => 'decimal:2',
-            'discount'           => 'decimal:2',
-            'total'              => 'decimal:2',
-            'shipping_latitude'  => 'float',
-            'shipping_longitude' => 'float',
+            'subtotal'            => 'decimal:2',
+            'shipping_cost'       => 'decimal:2',
+            'discount'            => 'decimal:2',
+            'total'               => 'decimal:2',
+            'refund_amount'       => 'decimal:2',
+            'return_requested_at' => 'datetime',
+            'return_actioned_at'  => 'datetime',
+            'shipping_latitude'   => 'float',
+            'shipping_longitude'  => 'float',
         ];
+    }
+
+    public function isCompleted(): bool
+    {
+        return $this->status === 'completed';
+    }
+
+    public function canRequestReturn(): bool
+    {
+        return $this->isCompleted() && empty($this->return_status);
+    }
+
+    public function hasReturnRequest(): bool
+    {
+        return !empty($this->return_status);
     }
 
     public function getEffectiveLatitudeAttribute(): ?float

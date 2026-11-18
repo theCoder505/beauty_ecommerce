@@ -98,4 +98,24 @@ class HomeController extends Controller
 
         return back()->with('success', 'Thank you for subscribing to our newsletter!');
     }
+
+    public function terms(): View
+    {
+        $this->analyticsService->trackVisit();
+        $settings = app(\App\Services\SettingService::class)->all();
+        $content = $settings['terms_and_conditions'] ?? null;
+        $siteName = $settings['site_name'] ?? config('app.name');
+
+        return view('users.pages.terms', compact('content', 'siteName'));
+    }
+
+    public function privacy(): View
+    {
+        $this->analyticsService->trackVisit();
+        $settings = app(\App\Services\SettingService::class)->all();
+        $content = $settings['privacy_policy'] ?? null;
+        $siteName = $settings['site_name'] ?? config('app.name');
+
+        return view('users.pages.privacy', compact('content', 'siteName'));
+    }
 }

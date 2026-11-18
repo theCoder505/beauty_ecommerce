@@ -43,38 +43,9 @@ class ProductController extends Controller
             ->limit(4)
             ->get();
 
-        $canReview    = false;
-        $reviewableOrderId = null;
-
-        if (Auth::check()) {
-            $userId = Auth::id();
-
-            // Find a delivered/completed order that contains this product
-            // and for which the user has not yet written a review.
-            $deliveredOrders = Order::where('user_id', $userId)
-                ->whereIn('status', ['delivered', 'completed'])
-                ->whereHas('items', fn ($q) => $q->where('product_id', $product->id))
-                ->get();
-
-            foreach ($deliveredOrders as $order) {
-                $alreadyReviewed = Review::where('user_id', $userId)
-                    ->where('product_id', $product->id)
-                    ->where('order_id', $order->id)
-                    ->exists();
-
-                if (! $alreadyReviewed) {
-                    $canReview         = true;
-                    $reviewableOrderId = $order->id;
-                    break;
-                }
-            }
-        }
-
         return view('users.pages.product-detail', compact(
             'product',
             'relatedProducts',
-            'canReview',
-            'reviewableOrderId',
         ));
     }
 }

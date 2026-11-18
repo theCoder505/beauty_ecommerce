@@ -40,6 +40,15 @@ Route::middleware('admin')->group(function () {
     Route::post('/orders/{order}/payment/verify', [Admin\OrderController::class, 'verifyPayment'])->name('orders.verify-payment');
     Route::post('/orders/{order}/payment/reject', [Admin\OrderController::class, 'rejectPayment'])->name('orders.reject-payment');
 
+    // Returns & Refunds (Req 3)
+    Route::get('/returns-refunds', [Admin\ReturnRefundController::class, 'index'])->name('returns.index');
+    Route::post('/returns-refunds/{order}/approve', [Admin\ReturnRefundController::class, 'approve'])->name('returns.approve');
+    Route::post('/returns-refunds/{order}/reject', [Admin\ReturnRefundController::class, 'reject'])->name('returns.reject');
+
+    // Profit & Loss Report (Req 4)
+    Route::get('/reports/profit-loss', [Admin\ReportController::class, 'profitLoss'])->name('reports.profit-loss');
+    Route::get('/reports/profit-loss/export', [Admin\ReportController::class, 'exportProfitLoss'])->name('reports.profit-loss.export');
+
     // Promo Codes / Coupons
     Route::resource('promo-codes', Admin\PromoCodeController::class);
     Route::post('/promo-codes/{promo_code}/toggle', [Admin\PromoCodeController::class, 'toggle'])->name('promo-codes.toggle');

@@ -199,7 +199,69 @@ class DashboardController extends Controller
         }
 
         $order->load(['items.product.options', 'payment', 'statusHistories', 'user.addresses']);
-        return view('users.pages.order-detail', compact('order'));
+
+        $userReviews = \App\Models\Review::where('user_id', auth()->id())
+            ->where('order_id', $order->id)
+            ->get()
+            ->keyBy('product_id');
+
+        return view('users.pages.order-detail', compact('order', 'userReviews'));
+    }
+
+    public function requestReturn(Request $request, Order $order)
+    {
+        if ($order->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        if ($order->status !== 'completed') {
+            return back()->with('error', 'Only completed orders can be returned or refunded.');
+        }
+
+        if (!empty($order->return_status)) {
+            return back()->with('error', 'A return or refund request has already been submitted for this order.');
+        }
+
+        $data = $request->validate([
+            'request_type'    => ['required', 'string', 'in:return,refund'],
+            'reason_category' => ['nullable', 'string', 'max:255'],
+            'reason'          => ['required', 'string', 'min:5', 'max:2000'],
+        ]);
+
+        $fullReason = ($data['reason_category'] ? "[{$data['reason_category']}] " : '') . trim($data['reason']);
+
+        $order->update([
+            'return_request_type' => $data['request_type'],
+            'return_reason'       => $fullReason,
+            'return_status'       => 'requested',
+            'return_requested_at' => now(),
+        ]);
+
+        \App\Models\OrderStatusHistory::create([
+            'order_id'   => $order->id,
+            'status'     => $order->status,
+            'changed_by' => 'user:' . auth()->id() . ':' . auth()->user()->name,
+            'note'       => 'Customer requested ' . ucfirst($data['request_type']) . '. Reason: ' . $fullReason,
+        ]);
+
+        // Notify admins
+        $reqTypeUpper = ucfirst($data['request_type']);
+        \App\Services\NotificationService::notifyAdmins(
+            'return_requested',
+            "New {$reqTypeUpper} Request",
+            auth()->user()->name . " requested a {$data['request_type']} for Order #{$order->order_number}. Reason: {$fullReason}",
+            route('admin.returns.index'),
+            'order'
+        );
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Your {$data['request_type']} request has been submitted successfully.",
+            ]);
+        }
+
+        return back()->with('success', "Your {$data['request_type']} request has been submitted successfully. Our team will review it shortly.");
     }
 
     public function wishlist()

@@ -36,3 +36,7 @@ Route::post('/contact/send-otp', [ContactController::class, 'sendOtp'])->name('c
 Route::post('/contact/resend-otp', [ContactController::class, 'resendOtp'])->name('contact.resend-otp');
 Route::post('/contact/submit', [ContactController::class, 'submit'])->name('contact.submit');
 
+// Legal Pages (Req 2)
+Route::get('/terms-and-conditions', [HomeController::class, 'terms'])->name('terms');
+Route::get('/privacy-policy', [HomeController::class, 'privacy'])->name('privacy');
+

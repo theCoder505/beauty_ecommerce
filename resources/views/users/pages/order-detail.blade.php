@@ -1,10 +1,108 @@
 @extends('users.layouts.app')
 @php $currency = app(\App\Services\SettingService::class)->get('currency_symbol', '৳'); @endphp
 @section('content')
-<div class="max-w-7xl mx-auto px-4 py-10 flex flex-col lg:flex-row gap-8">
+<div class="max-w-7xl mx-auto px-4 py-10 flex flex-col lg:flex-row gap-8"
+     x-data="{
+        reviewModalOpen: false,
+        reviewProductId: null,
+        reviewProductName: '',
+        reviewProductImage: '',
+        reviewRating: 5,
+        openReviewModal(id, name, image) {
+            this.reviewProductId = id;
+            this.reviewProductName = name;
+            this.reviewProductImage = image;
+            this.reviewRating = 5;
+            this.reviewModalOpen = true;
+        },
+        returnModalOpen: false,
+        returnType: 'refund',
+     }">
     @include('users.partials.dashboard-sidebar')
     <main class="flex-1 min-w-0">
-        <div class="flex items-center gap-3 mb-6"><a href="{{ route('user.orders') }}" class="text-brand-700 hover:underline text-sm">← My Orders</a></div>
+        <div class="flex items-center justify-between gap-3 mb-6">
+            <a href="{{ route('user.orders') }}" class="text-brand-700 hover:underline text-sm font-semibold flex items-center gap-1">
+                <span>←</span> <span>My Orders</span>
+            </a>
+            @if($order->canRequestReturn())
+                <button type="button" @click="returnModalOpen = true"
+                    class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 hover:bg-amber-100 transition shadow-xs">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H4m0 0l4-4m-4 4l4 4"/></svg>
+                    <span>Request Return / Refund</span>
+                </button>
+            @endif
+        </div>
+
+        {{-- Return / Refund Status Alert Banners --}}
+        @if($order->return_status === 'requested')
+            <div class="mb-6 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 flex items-start gap-3 shadow-xs">
+                <div class="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                        <h3 class="text-sm font-bold text-amber-900 dark:text-amber-200">
+                            {{ ucfirst($order->return_request_type ?? 'Return/Refund') }} Request Under Review
+                        </h3>
+                        @if($order->return_requested_at)
+                            <span class="text-xs text-amber-700 dark:text-amber-400 font-mono">{{ $order->return_requested_at->format('M j, Y • g:i A') }}</span>
+                        @endif
+                    </div>
+                    <p class="text-xs text-amber-800 dark:text-amber-300 mt-1 leading-relaxed">
+                        <strong class="font-semibold">Reason provided:</strong> {{ $order->return_reason }}
+                    </p>
+                    <p class="text-[11px] text-amber-700/80 dark:text-amber-400/80 mt-1">Our support team is reviewing your request and will update the status soon.</p>
+                </div>
+            </div>
+        @elseif($order->status === 'refunded')
+            <div class="mb-6 p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 flex items-start gap-3 shadow-xs">
+                <div class="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-sm font-bold text-emerald-900 dark:text-emerald-200">Order Refunded</h3>
+                    <p class="text-xs text-emerald-800 dark:text-emerald-300 mt-0.5">
+                        This order has been refunded. Refund amount: <strong class="font-bold">{{ $currency }}{{ number_format($order->refund_amount > 0 ? $order->refund_amount : $order->total, 2) }}</strong>.
+                    </p>
+                    @if($order->return_admin_note)
+                        <p class="text-xs text-emerald-700 dark:text-emerald-400 mt-1 italic bg-white/60 dark:bg-gray-800/60 p-2 rounded-lg border border-emerald-100 dark:border-emerald-900/40">
+                            "{{ $order->return_admin_note }}"
+                        </p>
+                    @endif
+                </div>
+            </div>
+        @elseif($order->status === 'returned')
+            <div class="mb-6 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/60 flex items-start gap-3 shadow-xs">
+                <div class="w-9 h-9 rounded-xl bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 flex items-center justify-center shrink-0 mt-0.5">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H4m0 0l4-4m-4 4l4 4"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-sm font-bold text-rose-900 dark:text-rose-200">Order Returned</h3>
+                    <p class="text-xs text-rose-800 dark:text-rose-300 mt-0.5">The return for this order has been accepted and processed.</p>
+                    @if($order->return_admin_note)
+                        <p class="text-xs text-rose-700 dark:text-rose-400 mt-1 italic bg-white/60 dark:bg-gray-800/60 p-2 rounded-lg border border-rose-100 dark:border-rose-900/40">
+                            "{{ $order->return_admin_note }}"
+                        </p>
+                    @endif
+                </div>
+            </div>
+        @elseif($order->return_status === 'rejected')
+            <div class="mb-6 p-4 rounded-2xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/60 flex items-start gap-3 shadow-xs">
+                <div class="w-9 h-9 rounded-xl bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 flex items-center justify-center shrink-0 mt-0.5">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-sm font-bold text-red-900 dark:text-red-200">Return / Refund Request Declined</h3>
+                    <p class="text-xs text-red-800 dark:text-red-300 mt-0.5">Your request for {{ $order->return_request_type ?? 'return/refund' }} could not be accepted.</p>
+                    @if($order->return_admin_note)
+                        <p class="text-xs text-red-700 dark:text-red-400 mt-1 italic bg-white/60 dark:bg-gray-800/60 p-2 rounded-lg border border-red-100 dark:border-red-900/40">
+                            Reason: "{{ $order->return_admin_note }}"
+                        </p>
+                    @endif
+                </div>
+            </div>
+        @endif
+
         <h1 class="font-serif text-2xl font-bold text-gray-900 dark:text-white mb-6">Order {{ $order->order_number }}</h1>
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 space-y-5">
@@ -82,6 +180,36 @@
                                     <span>&bull;</span>
                                     <span>Unit Price: <strong class="text-gray-800 dark:text-gray-200">{{ $currency }}{{ number_format($item->unit_price ?? ($item->total / max(1, $item->quantity)), 2) }}</strong></span>
                                 </p>
+
+                                {{-- Review Action from Order Page (Req 1) --}}
+                                @if($order->status === 'completed' && $item->product)
+                                    @php
+                                        $existingReview = ($userReviews ?? collect())->get($item->product_id);
+                                    @endphp
+                                    <div class="mt-3 pt-2.5 border-t border-cream-100 dark:border-gray-700/60 flex items-center justify-between gap-3 flex-wrap">
+                                        @if($existingReview)
+                                            <div class="flex items-center gap-2">
+                                                <span class="inline-flex items-center gap-1 text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1 rounded-lg border border-amber-200 dark:border-amber-900/50">
+                                                    ★ {{ $existingReview->rating }}/5 Reviewed
+                                                </span>
+                                                @if($existingReview->body)
+                                                    <span class="text-xs text-gray-500 dark:text-gray-400 italic line-clamp-1">"{{ Str::limit($existingReview->body, 45) }}"</span>
+                                                @endif
+                                            </div>
+                                            <a href="{{ route('products.show', $item->product->slug) }}#reviews" class="text-xs font-semibold text-brand-700 dark:text-brand-400 hover:underline">
+                                                View on Product Page →
+                                            </a>
+                                        @else
+                                            <span class="text-xs text-gray-500 dark:text-gray-400">Order completed! How did you like this item?</span>
+                                            <button type="button"
+                                                @click="openReviewModal({{ $item->product_id }}, '{{ addslashes($item->product_name) }}', '{{ $item->product->thumbnail_url }}')"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-brand-700 hover:bg-brand-800 text-white shadow-xs transition">
+                                                <span class="text-amber-300">★</span>
+                                                <span>Write Review</span>
+                                            </button>
+                                        @endif
+                                    </div>
+                                @endif
                             </div>
                             <div class="text-right shrink-0">
                                 <p class="font-bold text-sm text-gray-900 dark:text-white">{{ $currency }}{{ number_format($item->total) }}</p>
@@ -221,6 +349,176 @@
             </div>
         </div>
     </main>
+
+    {{-- Review Modal (Req 1) --}}
+    <div x-show="reviewModalOpen" x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto"
+         aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div x-show="reviewModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                 @click="reviewModalOpen = false" class="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"></div>
+
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div x-show="reviewModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-cream-200 dark:border-gray-700">
+                <form action="{{ route('reviews.store') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <input type="hidden" name="order_id" value="{{ $order->id }}">
+                    <input type="hidden" name="product_id" :value="reviewProductId">
+                    <input type="hidden" name="rating" :value="reviewRating">
+
+                    <div class="p-6">
+                        <div class="flex items-center justify-between pb-4 border-b border-cream-100 dark:border-gray-700">
+                            <h3 class="font-serif text-lg font-bold text-gray-900 dark:text-white" id="modal-title">Write a Product Review</h3>
+                            <button type="button" @click="reviewModalOpen = false" class="p-1 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+
+                        {{-- Product summary --}}
+                        <div class="flex items-center gap-3 my-4 p-3 rounded-xl bg-cream-50 dark:bg-gray-900/60 border border-cream-200 dark:border-gray-700">
+                            <img :src="reviewProductImage" alt="Product" class="w-12 h-12 rounded-lg object-cover bg-white">
+                            <div>
+                                <p class="text-xs text-gray-400">Reviewing:</p>
+                                <p class="text-sm font-semibold text-gray-900 dark:text-white line-clamp-1" x-text="reviewProductName"></p>
+                            </div>
+                        </div>
+
+                        {{-- Interactive Star Rating --}}
+                        <div class="mb-5 text-center">
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Overall Rating *</label>
+                            <div class="flex items-center justify-center gap-2">
+                                <template x-for="star in [1, 2, 3, 4, 5]" :key="star">
+                                    <button type="button" @click="reviewRating = star"
+                                            class="text-3xl focus:outline-none transition transform hover:scale-125"
+                                            :class="star <= reviewRating ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600'">
+                                        ★
+                                    </button>
+                                </template>
+                            </div>
+                            <p class="text-xs text-amber-600 dark:text-amber-400 font-semibold mt-1"
+                               x-text="['Poor', 'Fair', 'Good', 'Very Good', 'Excellent'][reviewRating - 1]"></p>
+                        </div>
+
+                        {{-- Review Body --}}
+                        <div class="mb-4">
+                            <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Your Review</label>
+                            <textarea name="body" rows="4" placeholder="How was the product texture, fragrance, packaging, or performance?"
+                                      class="w-full px-4 py-3 rounded-xl border border-cream-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-600"></textarea>
+                        </div>
+
+                        {{-- Photos --}}
+                        <div class="mb-4">
+                            <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Add Photos (optional)</label>
+                            <input type="file" name="images[]" multiple accept="image/*"
+                                   class="text-xs text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/40 dark:file:text-brand-300">
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 dark:bg-gray-900/60 px-6 py-4 flex items-center justify-end gap-3 border-t border-cream-100 dark:border-gray-700">
+                        <button type="button" @click="reviewModalOpen = false"
+                                class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                                class="px-5 py-2 rounded-xl text-xs font-bold bg-brand-700 hover:bg-brand-800 text-white shadow-md transition">
+                            Submit Review
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Return / Refund Modal (Req 3) --}}
+    <div x-show="returnModalOpen" x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto"
+         aria-labelledby="return-modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div x-show="returnModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                 @click="returnModalOpen = false" class="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"></div>
+
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div x-show="returnModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-cream-200 dark:border-gray-700">
+                <form action="{{ route('user.orders.return-request', $order) }}" method="POST">
+                    @csrf
+                    <div class="p-6">
+                        <div class="flex items-center justify-between pb-4 border-b border-cream-100 dark:border-gray-700">
+                            <div>
+                                <h3 class="font-serif text-lg font-bold text-gray-900 dark:text-white" id="return-modal-title">Request Order Return or Refund</h3>
+                                <p class="text-xs text-gray-500">Order #{{ $order->order_number }} · Total: {{ $currency }}{{ number_format($order->total, 2) }}</p>
+                            </div>
+                            <button type="button" @click="returnModalOpen = false" class="p-1 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+
+                        {{-- Choice: Return vs Refund --}}
+                        <div class="my-4">
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Request Type *</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <label class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition"
+                                       :class="returnType === 'refund' ? 'border-brand-600 bg-brand-50/50 dark:bg-brand-950/30' : 'border-gray-200 dark:border-gray-700'">
+                                    <input type="radio" name="request_type" value="refund" x-model="returnType" class="text-brand-700 focus:ring-brand-600">
+                                    <div>
+                                        <p class="text-xs font-bold text-gray-900 dark:text-white">Refund Payment</p>
+                                        <p class="text-[11px] text-gray-500">Ask for money refund</p>
+                                    </div>
+                                </label>
+                                <label class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition"
+                                       :class="returnType === 'return' ? 'border-brand-600 bg-brand-50/50 dark:bg-brand-950/30' : 'border-gray-200 dark:border-gray-700'">
+                                    <input type="radio" name="request_type" value="return" x-model="returnType" class="text-brand-700 focus:ring-brand-600">
+                                    <div>
+                                        <p class="text-xs font-bold text-gray-900 dark:text-white">Product Return</p>
+                                        <p class="text-[11px] text-gray-500">Return physical products</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        {{-- Reason Category --}}
+                        <div class="mb-4">
+                            <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Reason Category</label>
+                            <select name="reason_category"
+                                    class="w-full px-4 py-2.5 rounded-xl border border-cream-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-600">
+                                <option value="Damaged or Defective Item">Damaged or Defective Item</option>
+                                <option value="Wrong Item or Shade Received">Wrong Item or Shade Received</option>
+                                <option value="Item Does Not Match Description">Item Does Not Match Description</option>
+                                <option value="Quality Not as Expected">Quality Not as Expected</option>
+                                <option value="Missing Parts or Package Broken">Missing Parts or Package Broken</option>
+                                <option value="Changed Mind / Other">Changed Mind / Other</option>
+                            </select>
+                        </div>
+
+                        {{-- Why ask for return or refund (Required) --}}
+                        <div class="mb-4">
+                            <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                Detailed Reason <span class="text-red-500">*</span>
+                            </label>
+                            <textarea name="reason" rows="4" required minlength="5" maxlength="2000"
+                                      placeholder="Please explain in detail why you want to return or refund this order (e.g. issues observed, package condition)..."
+                                      class="w-full px-4 py-3 rounded-xl border border-cream-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-600"></textarea>
+                            <p class="text-[11px] text-gray-400 mt-1">Please provide clear details to help our team process your request quickly.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 dark:bg-gray-900/60 px-6 py-4 flex items-center justify-end gap-3 border-t border-cream-100 dark:border-gray-700">
+                        <button type="button" @click="returnModalOpen = false"
+                                class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                                class="px-5 py-2 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-md transition">
+                            Submit Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 @if($order->has_coordinates)

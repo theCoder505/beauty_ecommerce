@@ -360,39 +360,19 @@
     </div>
 
     {{-- Reviews --}}
-    <div class="mt-16">
-        <h2 class="font-serif text-2xl font-bold text-gray-900 dark:text-white mb-8">Customer Reviews ({{ $count }})</h2>
-
-        {{-- Write Review Form --}}
-        @if($canReview)
-        <div class="bg-cream-50 dark:bg-gray-800 rounded-2xl p-6 border border-cream-200 dark:border-gray-700 mb-8">
-            <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Write a Review</h3>
-            <form action="{{ route('reviews.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
-                @csrf
-                <input type="hidden" name="product_id" value="{{ $product->id }}">
-                <input type="hidden" name="order_id" value="{{ $reviewableOrderId }}">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Rating *</label>
-                    <div class="flex items-center gap-1 star-rating flex-row-reverse justify-end">
-                        @for($i = 5; $i >= 1; $i--)
-                        <input type="radio" id="star{{ $i }}" name="rating" value="{{ $i }}" required>
-                        <label for="star{{ $i }}" title="{{ $i }} stars">★</label>
-                        @endfor
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Review (optional)</label>
-                    <textarea name="body" rows="4" placeholder="Share your experience…"
-                        class="w-full px-4 py-3 rounded-xl border border-cream-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600"></textarea>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Photos (optional)</label>
-                    <input type="file" name="images[]" multiple accept="image/*" class="text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-brand-700 file:text-white hover:file:bg-brand-800">
-                </div>
-                <button type="submit" class="bg-brand-700 text-white font-semibold px-6 py-2.5 rounded-xl hover:bg-brand-800 transition">Submit Review</button>
-            </form>
+    <div class="mt-16" id="reviews">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div>
+                <h2 class="font-serif text-2xl font-bold text-gray-900 dark:text-white">Customer Reviews ({{ $count }})</h2>
+                <p class="text-xs text-gray-500 mt-1">Authentic reviews submitted by verified buyers from their completed orders.</p>
+            </div>
+            @if($avg > 0)
+            <div class="flex items-center gap-2 bg-amber-50 dark:bg-amber-950/30 px-3 py-1.5 rounded-xl border border-amber-200 dark:border-amber-800/40">
+                <span class="text-amber-500 font-bold text-base">★ {{ $avg }}</span>
+                <span class="text-xs text-gray-500">out of 5.0 ({{ $count }} {{ Str::plural('review', $count) }})</span>
+            </div>
+            @endif
         </div>
-        @endif
 
         {{-- Reviews list --}}
         @if($product->approvedReviews->isEmpty())

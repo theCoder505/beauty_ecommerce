@@ -44,9 +44,9 @@ class ReviewController extends Controller
                 : back()->withErrors(['order_id' => $error]);
         }
 
-        // (2) Order status is delivered or completed
-        if (! in_array($order->status, ['delivered', 'completed'])) {
-            $error = 'You can only review products from delivered or completed orders.';
+        // (2) Order status is completed (or delivered)
+        if (! in_array($order->status, ['completed', 'delivered'])) {
+            $error = 'You can only review products from completed orders.';
             return $request->expectsJson()
                 ? response()->json(['success' => false, 'message' => $error], 422)
                 : back()->withErrors(['order_id' => $error]);
@@ -77,14 +77,14 @@ class ReviewController extends Controller
                 : back()->withErrors(['product_id' => $error]);
         }
 
-        // Create review
+        // Create review (auto-approved for verified completed order purchasers)
         $review = Review::create([
             'user_id'    => $userId,
             'product_id' => $productId,
             'order_id'   => $orderId,
             'rating'     => $data['rating'],
             'body'       => $data['body'] ?? null,
-            'status'     => 'pending',
+            'status'     => 'approved',
         ]);
 
         // Store images

@@ -115,11 +115,16 @@
 
     {{-- Bottom bar --}}
     <div class="border-t border-cream-200/10">
-        <div class="max-w-7xl mx-auto px-4 py-5 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-cream-500">
+        <div class="max-w-7xl mx-auto px-4 py-5 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-cream-500">
             <p>&copy; {{ date('Y') }} {{ $siteName }}. All rights reserved.</p>
-            <div class="flex gap-4">
+            <div class="flex items-center gap-4 flex-wrap">
+                <a href="{{ route('terms') }}" class="hover:text-brand-400 transition">Terms & Conditions</a>
+                <span>·</span>
+                <a href="{{ route('privacy') }}" class="hover:text-brand-400 transition">Privacy Policy</a>
+                <span>·</span>
                 <a href="{{ route('sitemap') }}" class="hover:text-brand-400 transition">Sitemap</a>
-                <span>Powered by GlowHaus</span>
+                <span>·</span>
+                <span>Powered by {{ $siteName }}</span>
             </div>
         </div>
     </div>

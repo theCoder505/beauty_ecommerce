@@ -305,6 +305,12 @@ class AnalyticsService
             'positive_ratings'      => Review::where('status', 'approved')->where('rating', '>=', 4)->count(),
             'low_stock'             => Product::where('is_active', true)->where('stock', '<=', 10)->count(),
             'out_of_stock'          => Product::where('is_active', true)->where('stock', 0)->count(),
+            'returned_orders'       => Order::where('status', 'returned')->count(),
+            'refunded_orders'       => Order::where('status', 'refunded')->count(),
+            'refunded_amount'       => (float) Order::where('status', 'refunded')->sum(DB::raw('COALESCE(NULLIF(refund_amount, 0), total)')),
+            'returned_refunded_total_count' => Order::whereIn('status', ['returned', 'refunded'])->count(),
+            'pending_return_requests'       => Order::where('return_status', 'requested')->count(),
+            'total_returned_refunded_items' => (int) \App\Models\OrderItem::whereHas('order', fn($q) => $q->whereIn('status', ['returned', 'refunded']))->sum('quantity'),
         ];
     }
 

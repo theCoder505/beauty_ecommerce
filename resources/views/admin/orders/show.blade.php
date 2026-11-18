@@ -48,6 +48,128 @@
     </div>
     @endif
 
+    {{-- Return / Refund Management Card (Req 3) --}}
+    @if($order->hasReturnRequest() || in_array($order->status, ['returned', 'refunded']))
+    <div class="p-6 rounded-2xl border {{ $order->return_status === 'requested' ? 'bg-amber-50/60 dark:bg-amber-950/20 border-amber-300 dark:border-amber-800' : ($order->status === 'refunded' ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800' : 'bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800') }} shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b {{ $order->return_status === 'requested' ? 'border-amber-200 dark:border-amber-900/60' : 'border-gray-200 dark:border-gray-800' }}">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl {{ $order->return_status === 'requested' ? 'bg-amber-200 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300' : ($order->status === 'refunded' ? 'bg-emerald-200 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300' : 'bg-rose-200 dark:bg-rose-900/60 text-rose-800 dark:text-rose-300') }} flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H4m0 0l4-4m-4 4l4 4"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        <span>Customer {{ ucfirst($order->return_request_type ?? 'Return/Refund') }} Request</span>
+                        @if($order->return_status === 'requested')
+                            <span class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-amber-200 dark:bg-amber-900/80 text-amber-900 dark:text-amber-200">Pending Review</span>
+                        @elseif($order->return_status === 'approved')
+                            <span class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-200 dark:bg-emerald-900/80 text-emerald-900 dark:text-emerald-200">Approved</span>
+                        @elseif($order->return_status === 'rejected')
+                            <span class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-red-200 dark:bg-red-900/80 text-red-900 dark:text-red-200">Declined</span>
+                        @endif
+                    </h3>
+                    @if($order->return_requested_at)
+                        <p class="text-xs text-gray-500 mt-0.5">Submitted on {{ $order->return_requested_at->format('M j, Y • g:i A') }}</p>
+                    @endif
+                </div>
+            </div>
+            @if($order->status === 'refunded')
+                <div class="text-right">
+                    <span class="text-xs text-gray-500 uppercase tracking-wide">Refunded Amount</span>
+                    <p class="text-lg font-bold text-emerald-700 dark:text-emerald-400">{{ $currency }}{{ number_format($order->refund_amount > 0 ? $order->refund_amount : $order->total, 2) }}</p>
+                </div>
+            @endif
+        </div>
+
+        <div class="mt-4 space-y-3">
+            @if($order->return_reason)
+            <div>
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Customer's Reason</p>
+                <div class="mt-1 p-3.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm text-gray-800 dark:text-gray-200 leading-relaxed font-sans">
+                    {{ $order->return_reason }}
+                </div>
+            </div>
+            @endif
+
+            @if($order->return_admin_note)
+            <div>
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Admin Response / Note</p>
+                <div class="mt-1 p-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xs text-gray-700 dark:text-gray-300">
+                    {{ $order->return_admin_note }}
+                </div>
+            </div>
+            @endif
+
+            {{-- Action buttons for pending request --}}
+            @if($order->return_status === 'requested')
+            <div class="pt-3 border-t border-amber-200 dark:border-amber-900/60 grid grid-cols-1 md:grid-cols-2 gap-4">
+                {{-- Accept & Refund --}}
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 space-y-3">
+                    <p class="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span>Accept & Process Refund (Sets Status to 'Refunded')</span>
+                    </p>
+                    <form action="{{ route('admin.returns.approve', $order) }}" method="POST" class="space-y-3">
+                        @csrf
+                        <input type="hidden" name="action_type" value="refund">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1">Refund Amount ({{ $currency }})</label>
+                            <input type="number" step="0.01" name="refund_amount" value="{{ $order->total }}" required max="{{ $order->total }}" min="0"
+                                   class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-xs font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1">Note to Customer (optional)</label>
+                            <input type="text" name="admin_note" placeholder="e.g. Refund approved and processed to your account."
+                                   class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-xs">
+                        </div>
+                        <button type="submit" onclick="return confirm('Accept refund and set status to Refunded? Stock will be restocked automatically.')"
+                                class="w-full px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition">
+                            ✓ Accept Refund & Set Status to Refunded
+                        </button>
+                    </form>
+                </div>
+
+                {{-- Reject Request or Accept Return --}}
+                <div class="space-y-4">
+                    {{-- Accept Return --}}
+                    @if($order->return_request_type === 'return')
+                    <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 space-y-3">
+                        <p class="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                            <span>Accept Return (Sets Status to 'Returned')</span>
+                        </p>
+                        <form action="{{ route('admin.returns.approve', $order) }}" method="POST" class="space-y-3">
+                            @csrf
+                            <input type="hidden" name="action_type" value="return">
+                            <input type="text" name="admin_note" placeholder="Optional return instructions or inspection note..."
+                                   class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-xs">
+                            <button type="submit" onclick="return confirm('Accept return and set status to Returned? Stock will be restocked automatically.')"
+                                    class="w-full px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs transition">
+                                ✓ Accept Return & Set Status to Returned
+                            </button>
+                        </form>
+                    </div>
+                    @endif
+
+                    {{-- Reject Request --}}
+                    <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 space-y-3">
+                        <p class="text-xs font-bold text-red-600 dark:text-red-400">Decline Return/Refund Request</p>
+                        <form action="{{ route('admin.returns.reject', $order) }}" method="POST" class="space-y-2">
+                            @csrf
+                            <input type="text" name="admin_note" required placeholder="Explain why request cannot be accepted..."
+                                   class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-xs">
+                            <button type="submit" onclick="return confirm('Decline this return/refund request?')"
+                                    class="w-full px-4 py-2 rounded-xl bg-red-100 hover:bg-red-200 dark:bg-red-900/40 text-red-700 dark:text-red-300 text-xs font-bold transition">
+                                ✕ Decline Request
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            @endif
+        </div>
+    </div>
+    @endif
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Order Items & Calculation -->
         <div class="lg:col-span-2 space-y-6">

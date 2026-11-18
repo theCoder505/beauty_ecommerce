@@ -101,6 +101,7 @@ class SettingController extends Controller
 
     protected function resolveGroup(string $key): string
     {
+        if (in_array($key, ['terms_and_conditions', 'privacy_policy'])) return 'legal';
         if (str_starts_with($key, 'stripe_')) return 'stripe';
         if (str_starts_with($key, 'google_')) return 'google';
         if (in_array($key, ['cod_enabled', 'manual_payment_enabled', 'stripe_enabled', 'manual_payment_instructions'])) return 'payment';

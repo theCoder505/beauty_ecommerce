@@ -52,6 +52,7 @@ Route::middleware('auth')->group(function () {
 
     // Public / SEO Friendly Orders URL: /orders/{order_number}
     Route::get('/orders/{order}', [User\DashboardController::class, 'orderDetail'])->name('user.orders.show');
+    Route::post('/orders/{order}/return-request', [User\DashboardController::class, 'requestReturn'])->name('user.orders.return-request');
     Route::get('/orders', fn () => redirect()->route('user.orders'));
 
     // Reviews

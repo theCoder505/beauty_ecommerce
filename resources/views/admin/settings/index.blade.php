@@ -18,6 +18,7 @@
         <button @click="tab = 'payments'" :class="tab === 'payments' ? 'bg-brand-700 text-white font-bold shadow-md ring-2 ring-brand-700/40' : 'text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">Payment Methods</button>
         <button @click="tab = 'socialite'" :class="tab === 'socialite' ? 'bg-brand-700 text-white font-bold shadow-md ring-2 ring-brand-700/40' : 'text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">Google OAuth</button>
         <button @click="tab = 'seo'" :class="tab === 'seo' ? 'bg-brand-700 text-white font-bold shadow-md ring-2 ring-brand-700/40' : 'text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">SEO & Social</button>
+        <button @click="tab = 'legal'" :class="tab === 'legal' ? 'bg-brand-700 text-white font-bold shadow-md ring-2 ring-brand-700/40' : 'text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800'" class="px-4 py-2 rounded-xl text-xs font-semibold transition shrink-0">Terms & Privacy</button>
     </div>
 
     @if(isset($errors) && $errors->any())
@@ -344,6 +345,43 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                     <span>+ Add Delivery Charge Option</span>
                 </button>
+            </div>
+        </div>
+
+        <!-- Tab 7: Terms & Privacy Policy (Req 2) -->
+        <div x-show="tab === 'legal'" class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 sm:p-8 space-y-6 shadow-sm">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-3">
+                <div>
+                    <h3 class="text-base font-semibold text-gray-900 dark:text-white">Terms & Conditions & Privacy Policy</h3>
+                    <p class="text-xs text-gray-500 mt-0.5">Admin can set Terms & Conditions and Privacy Policy content. Linked in the public footer.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('terms') }}" target="_blank" class="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1">
+                        <span>View Terms Page</span> <span>↗</span>
+                    </a>
+                    <span class="text-gray-300 dark:text-gray-700">|</span>
+                    <a href="{{ route('privacy') }}" target="_blank" class="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1">
+                        <span>View Privacy Page</span> <span>↗</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Terms & Conditions Content</label>
+                <p class="text-xs text-gray-500">Public URL: <a href="{{ route('terms') }}" target="_blank" class="text-brand-600 font-mono">{{ url('/terms-and-conditions') }}</a></p>
+                <textarea name="terms_and_conditions" rows="12"
+                          class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-white font-sans focus:ring-2 focus:ring-brand-600 focus:outline-none"
+                          placeholder="Enter your store Terms and Conditions...">{{ $settings['terms_and_conditions']->value ?? '' }}</textarea>
+                <p class="text-[11px] text-gray-400">Supports standard text, line breaks, and paragraph separation.</p>
+            </div>
+
+            <div class="pt-4 border-t border-gray-100 dark:border-gray-800 space-y-2">
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Privacy Policy Content</label>
+                <p class="text-xs text-gray-500">Public URL: <a href="{{ route('privacy') }}" target="_blank" class="text-brand-600 font-mono">{{ url('/privacy-policy') }}</a></p>
+                <textarea name="privacy_policy" rows="12"
+                          class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-white font-sans focus:ring-2 focus:ring-brand-600 focus:outline-none"
+                          placeholder="Enter your store Privacy Policy...">{{ $settings['privacy_policy']->value ?? '' }}</textarea>
+                <p class="text-[11px] text-gray-400">Supports standard text, line breaks, and paragraph separation.</p>
             </div>
         </div>
 

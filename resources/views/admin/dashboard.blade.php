@@ -33,7 +33,7 @@
 @endphp
 
 {{-- Top KPI Stats Cards --}}
-<div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4 mb-8">
+<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
     {{-- Total Revenue --}}
     <div class="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-200 dark:border-gray-800 shadow-xs hover:border-gray-300 dark:hover:border-gray-700 transition">
         <div class="flex items-center justify-between mb-3">
@@ -103,6 +103,30 @@
             <span class="text-xs font-semibold text-red-600 dark:text-red-400 group-hover:translate-x-0.5 transition">Manage →</span>
         </div>
     </div>
+
+    {{-- RETURNED & REFUNDED STAT CARD (Req 3) --}}
+    <a href="{{ route('admin.returns.index') }}" title="Click to view and manage returned and refunded products"
+        class="bg-white dark:bg-gray-900 rounded-2xl p-5 border-2 {{ ($stats['pending_return_requests'] ?? 0) > 0 ? 'border-amber-400/80 dark:border-amber-600/80 bg-amber-50/20 dark:bg-amber-950/10' : 'border-gray-200 dark:border-gray-800' }} shadow-xs hover:border-brand-500 hover:shadow-md hover:scale-[1.02] cursor-pointer transition transform duration-200 group relative overflow-hidden block">
+        @if(($stats['pending_return_requests'] ?? 0) > 0)
+        <span class="absolute top-3 right-3 flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+        </span>
+        @endif
+        <div class="flex items-center justify-between mb-3">
+            <p class="text-xs font-bold {{ ($stats['pending_return_requests'] ?? 0) > 0 ? 'text-amber-700 dark:text-amber-300' : 'text-gray-500' }} uppercase tracking-wide flex items-center gap-1.5">
+                Returns & Refunds
+            </p>
+            <div class="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center group-hover:bg-rose-600 group-hover:text-white transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H4m0 0l4-4m-4 4l4 4"/></svg>
+            </div>
+        </div>
+        <p class="font-bold text-2xl text-gray-900 dark:text-white">{{ number_format($stats['returned_refunded_total_count'] ?? 0) }}</p>
+        <div class="flex items-center justify-between mt-1">
+            <p class="text-xs text-rose-600 dark:text-rose-400 font-semibold truncate">{{ $currency }}{{ number_format($stats['refunded_amount'] ?? 0, 0) }} refunded</p>
+            <span class="text-xs font-semibold text-brand-700 dark:text-brand-400 group-hover:translate-x-0.5 transition shrink-0">Manage →</span>
+        </div>
+    </a>
 </div>
 
 {{-- SECTION 1: ORDERS ANALYTICS (BAR & PIE CHARTS WITH TODAY / MONTH / YEAR / ALL TIME) --}}

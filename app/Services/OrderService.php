@@ -16,7 +16,24 @@ class OrderService
         $oldStatus = $order->status;
 
         DB::transaction(function () use ($order, $newStatus, $changedBy, $note, $oldStatus) {
-            $order->update(['status' => $newStatus]);
+            $updateData = ['status' => $newStatus];
+
+            if ($newStatus === 'refunded') {
+                if ((float) $order->refund_amount <= 0) {
+                    $updateData['refund_amount'] = $order->total;
+                }
+                if ($order->return_status === 'requested') {
+                    $updateData['return_status'] = 'approved';
+                    $updateData['return_actioned_at'] = now();
+                }
+            } elseif ($newStatus === 'returned') {
+                if ($order->return_status === 'requested') {
+                    $updateData['return_status'] = 'approved';
+                    $updateData['return_actioned_at'] = now();
+                }
+            }
+
+            $order->update($updateData);
 
             OrderStatusHistory::create([
                 'order_id'   => $order->id,
