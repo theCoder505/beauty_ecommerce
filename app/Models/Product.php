@@ -66,6 +66,11 @@ class Product extends Model
         return $this->hasMany(ProductOption::class)->orderBy('sort_order')->orderBy('id');
     }
 
+    public function dailyCosts()
+    {
+        return $this->hasMany(DailyCost::class);
+    }
+
     public function sizes()
     {
         return $this->hasMany(ProductOption::class)->where('type', 'size')->orderBy('sort_order')->orderBy('id');

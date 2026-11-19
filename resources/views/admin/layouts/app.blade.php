@@ -130,6 +130,7 @@
                 ['route' => 'admin.orders.index',       'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',                             'label' => 'Orders'],
                 ['route' => 'admin.returns.index',      'icon' => 'M16 15v-1a4 4 0 00-4-4H4m0 0l4-4m-4 4l4 4',                                                                                                                     'label' => 'Returns & Refunds'],
                 ['route' => 'admin.reports.profit-loss', 'icon' => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', 'label' => 'P&L Report'],
+                ['route' => 'admin.daily-costs.index',   'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 'label' => 'Daily Costs & P&L'],
                 ['route' => 'admin.promo-codes.index',  'icon' => 'M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z',                                                      'label' => 'Promo Codes'],
                 ['route' => 'admin.reviews.index',      'icon' => 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z', 'label' => 'Reviews'],
                 ['route' => 'admin.blog-posts.index',   'icon' => 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253', 'label' => 'Blog Posts'],
@@ -278,7 +279,7 @@
                     @php
                     $isAdminNotificationPage = request()->routeIs('admin.notifications.*');
                 @endphp
-                <button @click="open = !open" type="button" class="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition {{ $isAdminNotificationPage ? 'text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/40 ring-1 ring-brand-500/20' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-200' }}" :class="open ? 'text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/40 ring-1 ring-brand-500/20' : ''" title="Notifications">
+                <button @click="open = !open" type="button" class="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition {{ $isAdminNotificationPage ? 'text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-teal-950 ring-1 ring-brand-500/20' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-200' }}" :class="open ? 'text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-teal-950 ring-1 ring-brand-500/20' : ''" title="Notifications">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                         </svg>
@@ -385,6 +386,178 @@
         });
     </script>
     @endif
+
+    {{-- SweetAlert2 Admin Refund & Return Confirmation Modals --}}
+    <script>
+        window.confirmRefundModal = function(triggerEl, orderNumber, refundAmount, currency = '') {
+            const form = triggerEl.closest('form');
+            if (!form) return;
+
+            let displayAmount = refundAmount;
+            if (!displayAmount) {
+                const input = form.querySelector('input[name="refund_amount"]');
+                if (input && input.value) {
+                    const num = parseFloat(input.value);
+                    displayAmount = (currency || '') + (isNaN(num) ? input.value : num.toFixed(2));
+                }
+            }
+
+            const swalInstance = (typeof Swal !== 'undefined') ? Swal : window.Swal;
+            if (!swalInstance) {
+                if (confirm(`Accept and approve refund for Order #${orderNumber || ''}? Stock will be restocked automatically.`)) {
+                    form.submit();
+                }
+                return;
+            }
+
+            const isDark = document.documentElement.classList.contains('dark');
+
+            swalInstance.fire({
+                title: 'Approve & Process Refund?',
+                html: `
+                    <div class="text-left space-y-3 pt-2">
+                        <p class="text-sm text-gray-600 dark:text-gray-300">
+                            Are you sure you want to approve the refund for order <strong class="text-gray-900 dark:text-white font-mono">#${orderNumber || ''}</strong>?
+                        </p>
+                        ${displayAmount ? `
+                        <div class="p-3.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-center justify-between">
+                            <div>
+                                <span class="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold block uppercase tracking-wider">Refund Amount</span>
+                                <span class="text-xl font-black text-emerald-700 dark:text-emerald-300 font-mono">${displayAmount}</span>
+                            </div>
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300">
+                                Restocks Inventory
+                            </span>
+                        </div>` : ''}
+                        <div class="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+                            <p>• Order status will be updated to <strong class="text-gray-800 dark:text-gray-200">Refunded</strong>.</p>
+                            <p>• Purchased items will be restored to product stock automatically.</p>
+                        </div>
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#059669',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, Process Refund',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true,
+                background: isDark ? '#1f2937' : '#ffffff',
+                color: isDark ? '#f3f4f6' : '#111827',
+                customClass: {
+                    popup: 'rounded-2xl border border-gray-200 dark:border-gray-700 shadow-2xl p-6',
+                    confirmButton: 'px-5 py-2.5 rounded-xl font-bold text-sm shadow-md',
+                    cancelButton: 'px-4 py-2.5 rounded-xl font-semibold text-sm'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        };
+
+        window.confirmReturnModal = function(triggerEl, orderNumber) {
+            const form = triggerEl.closest('form');
+            if (!form) return;
+
+            const swalInstance = (typeof Swal !== 'undefined') ? Swal : window.Swal;
+            if (!swalInstance) {
+                if (confirm(`Accept return for Order #${orderNumber || ''}? Stock will be restocked automatically.`)) {
+                    form.submit();
+                }
+                return;
+            }
+
+            const isDark = document.documentElement.classList.contains('dark');
+
+            swalInstance.fire({
+                title: 'Accept Customer Return?',
+                html: `
+                    <div class="text-left space-y-3 pt-2">
+                        <p class="text-sm text-gray-600 dark:text-gray-300">
+                            Are you sure you want to accept the return for order <strong class="text-gray-900 dark:text-white font-mono">#${orderNumber || ''}</strong>?
+                        </p>
+                        <div class="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+                            <p>• Order status will be updated to <strong class="text-gray-800 dark:text-gray-200">Returned</strong>.</p>
+                            <p>• Returned items will be restored to product stock automatically.</p>
+                        </div>
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, Accept Return',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true,
+                background: isDark ? '#1f2937' : '#ffffff',
+                color: isDark ? '#f3f4f6' : '#111827',
+                customClass: {
+                    popup: 'rounded-2xl border border-gray-200 dark:border-gray-700 shadow-2xl p-6',
+                    confirmButton: 'px-5 py-2.5 rounded-xl font-bold text-sm shadow-md',
+                    cancelButton: 'px-4 py-2.5 rounded-xl font-semibold text-sm'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        };
+
+        window.confirmDeclineModal = function(triggerEl, orderNumber) {
+            const form = triggerEl.closest('form');
+            if (!form) return;
+
+            const swalInstance = (typeof Swal !== 'undefined') ? Swal : window.Swal;
+            const isDark = document.documentElement.classList.contains('dark');
+
+            const reasonInput = form.querySelector('input[name="admin_note"]');
+            if (reasonInput && !reasonInput.value.trim()) {
+                if (swalInstance) {
+                    swalInstance.fire({
+                        title: 'Decline Reason Required',
+                        text: 'Please provide a note or reason explaining why the return/refund request is being declined.',
+                        icon: 'info',
+                        confirmButtonColor: '#dc2626',
+                        background: isDark ? '#1f2937' : '#ffffff',
+                        color: isDark ? '#f3f4f6' : '#111827'
+                    });
+                    reasonInput.focus();
+                    return;
+                }
+            }
+
+            if (!swalInstance) {
+                if (confirm(`Decline this return/refund request?`)) {
+                    form.submit();
+                }
+                return;
+            }
+
+            swalInstance.fire({
+                title: 'Decline Return/Refund Request?',
+                text: `Are you sure you want to decline the return/refund request for order #${orderNumber || ''}? The customer will be notified of your decision.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, Decline Request',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true,
+                background: isDark ? '#1f2937' : '#ffffff',
+                color: isDark ? '#f3f4f6' : '#111827',
+                customClass: {
+                    popup: 'rounded-2xl border border-gray-200 dark:border-gray-700 shadow-2xl p-6',
+                    confirmButton: 'px-5 py-2.5 rounded-xl font-bold text-sm shadow-md',
+                    cancelButton: 'px-4 py-2.5 rounded-xl font-semibold text-sm'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        };
+    </script>
 
     @stack('scripts')
 </body>

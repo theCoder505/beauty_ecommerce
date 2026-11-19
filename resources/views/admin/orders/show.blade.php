@@ -276,7 +276,7 @@
                             <input type="text" name="admin_note" placeholder="e.g. Refund approved and processed to your account."
                                    class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-xs">
                         </div>
-                        <button type="submit" onclick="return confirm('Accept refund and set status to Refunded? Stock will be restocked automatically.')"
+                        <button type="button" onclick="confirmRefundModal(this, '{{ $order->order_number }}', null, '{{ $currency }}')"
                                 class="w-full px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition">
                             ✓ Accept Refund & Set Status to Refunded
                         </button>
@@ -297,7 +297,7 @@
                             <input type="hidden" name="action_type" value="return">
                             <input type="text" name="admin_note" placeholder="Optional return instructions or inspection note..."
                                    class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-xs">
-                            <button type="submit" onclick="return confirm('Accept return and set status to Returned? Stock will be restocked automatically.')"
+                            <button type="button" onclick="confirmReturnModal(this, '{{ $order->order_number }}')"
                                     class="w-full px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs transition">
                                 ✓ Accept Return & Set Status to Returned
                             </button>
@@ -312,7 +312,7 @@
                             @csrf
                             <input type="text" name="admin_note" required placeholder="Explain why request cannot be accepted..."
                                    class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-xs">
-                            <button type="submit" onclick="return confirm('Decline this return/refund request?')"
+                            <button type="button" onclick="confirmDeclineModal(this, '{{ $order->order_number }}')"
                                     class="w-full px-4 py-2 rounded-xl bg-red-100 hover:bg-red-200 dark:bg-red-900/40 text-red-700 dark:text-red-300 text-xs font-bold transition">
                                 ✕ Decline Request
                             </button>
@@ -477,7 +477,7 @@
                     </span>
                 </div>
                 
-                <form action="{{ route('admin.orders.change-status', $order) }}" method="POST" class="space-y-4">
+                <form action="{{ route('admin.orders.change-status', $order) }}" method="POST" class="space-y-4" id="admin-change-status-form">
                     @csrf
                     <div>
                         <label for="status" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 flex items-center justify-between">
@@ -799,4 +799,63 @@
         </script>
     @endpush
 @endif
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const statusForm = document.getElementById('admin-change-status-form');
+        if (statusForm) {
+            statusForm.addEventListener('submit', function(e) {
+                const select = statusForm.querySelector('select[name="status"]');
+                if (select && select.value === 'refunded' && !statusForm.dataset.confirmed) {
+                    e.preventDefault();
+                    const swalInstance = (typeof Swal !== 'undefined') ? Swal : window.Swal;
+                    if (!swalInstance) {
+                        if (confirm('Setting status to Refunded will also mark order as refunded and restock items. Proceed?')) {
+                            statusForm.dataset.confirmed = 'true';
+                            statusForm.submit();
+                        }
+                        return;
+                    }
+
+                    const isDark = document.documentElement.classList.contains('dark');
+                    swalInstance.fire({
+                        title: 'Set Status to Refunded?',
+                        html: `
+                            <div class="text-left space-y-3 pt-2">
+                                <p class="text-sm text-gray-600 dark:text-gray-300">
+                                    You are about to manually change the status of order <strong class="text-gray-900 dark:text-white font-mono">#{{ $order->order_number }}</strong> to <strong class="text-emerald-600 dark:text-emerald-400">Refunded</strong>.
+                                </p>
+                                <div class="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl">
+                                    <span class="text-xs text-emerald-700 dark:text-emerald-400 font-semibold block">Order Total: <strong>{{ $currency }}{{ number_format($order->total, 2) }}</strong></span>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400 mt-1 block">Inventory will be restocked automatically.</span>
+                                </div>
+                            </div>
+                        `,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#059669',
+                        cancelButtonColor: '#6b7280',
+                        confirmButtonText: 'Yes, Set to Refunded',
+                        cancelButtonText: 'Cancel',
+                        reverseButtons: true,
+                        background: isDark ? '#1f2937' : '#ffffff',
+                        color: isDark ? '#f3f4f6' : '#111827',
+                        customClass: {
+                            popup: 'rounded-2xl border border-gray-200 dark:border-gray-700 shadow-2xl p-6',
+                            confirmButton: 'px-5 py-2.5 rounded-xl font-bold text-sm shadow-md',
+                            cancelButton: 'px-4 py-2.5 rounded-xl font-semibold text-sm'
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            statusForm.dataset.confirmed = 'true';
+                            statusForm.submit();
+                        }
+                    });
+                }
+            });
+        }
+    });
+</script>
+@endpush
 @endsection

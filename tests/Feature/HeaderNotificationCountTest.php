@@ -137,6 +137,6 @@ class HeaderNotificationCountTest extends TestCase
         $response->assertStatus(200);
 
         // Admin notification bell icon should have active classes
-        $response->assertSee('text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/40 ring-1 ring-brand-500/20', false);
+        $response->assertSee('text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-teal-950 ring-1 ring-brand-500/20', false);
     }
 }

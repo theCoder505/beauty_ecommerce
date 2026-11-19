@@ -32,6 +32,11 @@ class SettingService
         return $this->all()[$key] ?? $default;
     }
 
+    public static function currency(): string
+    {
+        return app(self::class)->get('currency_symbol', '৳');
+    }
+
     public function set(string $key, mixed $value, bool $isEncrypted = false, string $group = 'general'): void
     {
         $storeValue = $isEncrypted ? Crypt::encryptString((string) $value) : $value;

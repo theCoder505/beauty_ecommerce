@@ -12,7 +12,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-
 // Sitemap & Robots
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('robots');
@@ -39,4 +38,3 @@ Route::post('/contact/submit', [ContactController::class, 'submit'])->name('cont
 // Legal Pages (Req 2)
 Route::get('/terms-and-conditions', [HomeController::class, 'terms'])->name('terms');
 Route::get('/privacy-policy', [HomeController::class, 'privacy'])->name('privacy');
-

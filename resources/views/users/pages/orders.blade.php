@@ -20,7 +20,7 @@
                                     <span class="font-medium text-gray-800 dark:text-gray-200">{{ $item->product_name }}</span>
                                     <span class="text-gray-400">&times;{{ $item->quantity }}</span>
                                     @if(!empty($item->options_summary))
-                                        <span class="inline-flex items-center text-[10px] font-semibold bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 px-1.5 py-0.2 rounded border border-brand-200 dark:border-brand-900/50">
+                                        <span class="inline-flex items-center text-[10px] font-semibold bg-brand-50 dark:bg-teal-950 text-brand-700 dark:text-brand-300 px-1.5 py-0.2 rounded border border-brand-200 dark:border-brand-900/50">
                                             {{ $item->options_summary }}
                                         </span>
                                     @endif

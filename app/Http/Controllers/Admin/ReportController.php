@@ -254,22 +254,32 @@ class ReportController extends Controller
         // Timeline intervals for chart/table
         $timeline = $this->buildTimeline($startDate, $endDate, $fulfilledOrders, $refundedOrders);
 
+        // Daily Recorded Costs for this period
+        $dailyCostsQuery = \App\Models\DailyCost::query();
+        if ($startDate && $endDate) {
+            $dailyCostsQuery->whereBetween('cost_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]);
+        }
+        $totalDailyCosts = (float) (clone $dailyCostsQuery)->sum('amount');
+        $inventoryProcurementCosts = (float) (clone $dailyCostsQuery)->where('category', 'inventory')->sum('amount');
+
         return [
-            'gross_sales'              => $grossSales,
-            'total_discounts'          => $totalDiscounts,
-            'shipping_collected'       => $shippingCollected,
-            'total_cogs'               => $totalCogs,
-            'total_refunds'            => $totalRefunds,
-            'refunded_goods_cost_loss' => $refundedGoodsCostLoss,
-            'net_sales'                => $netSales,
-            'gross_profit'             => $grossProfit,
-            'net_profit'               => $netProfit,
-            'profit_margin'            => $profitMargin,
-            'fulfilled_orders_count'   => $fulfilledCount,
-            'refunded_orders_count'    => $refundedCount,
-            'returned_orders_count'    => $returnedCount,
-            'product_breakdown'        => $productBreakdown,
-            'timeline'                 => $timeline,
+            'gross_sales'                => $grossSales,
+            'total_discounts'            => $totalDiscounts,
+            'shipping_collected'         => $shippingCollected,
+            'total_cogs'                 => $totalCogs,
+            'total_refunds'              => $totalRefunds,
+            'refunded_goods_cost_loss'   => $refundedGoodsCostLoss,
+            'total_daily_costs'          => $totalDailyCosts,
+            'inventory_procurement_costs'=> $inventoryProcurementCosts,
+            'net_sales'                  => $netSales,
+            'gross_profit'               => $grossProfit,
+            'net_profit'                 => $netProfit,
+            'profit_margin'              => $profitMargin,
+            'fulfilled_orders_count'     => $fulfilledCount,
+            'refunded_orders_count'      => $refundedCount,
+            'returned_orders_count'      => $returnedCount,
+            'product_breakdown'          => $productBreakdown,
+            'timeline'                   => $timeline,
         ];
     }
 

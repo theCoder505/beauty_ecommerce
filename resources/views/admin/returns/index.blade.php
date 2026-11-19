@@ -20,7 +20,7 @@
             <p class="text-xs text-gray-500 mt-1">Review return requests, process customer refunds, and manage return inventory.</p>
         </div>
         <div class="flex items-center gap-2">
-            <a href="{{ route('admin.reports.profit-loss') }}" class="px-4 py-2 rounded-xl text-xs font-bold bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300 border border-brand-200 dark:border-brand-900/60 hover:bg-brand-100 transition shadow-2xs">
+            <a href="{{ route('admin.reports.profit-loss') }}" class="px-4 py-2 rounded-xl text-xs font-bold bg-brand-50 text-brand-700 dark:bg-teal-950 dark:text-brand-300 border border-brand-200 dark:border-brand-900/60 hover:bg-brand-100 transition shadow-2xs">
                 📊 View P&L Financial Report →
             </a>
         </div>
@@ -223,7 +223,7 @@
                                         @csrf
                                         <input type="hidden" name="action_type" value="refund">
                                         <input type="hidden" name="refund_amount" value="{{ $order->total }}">
-                                        <button type="submit" onclick="return confirm('Accept and mark Order #{{ $order->order_number }} as Refunded?')"
+                                        <button type="button" onclick="confirmRefundModal(this, '{{ $order->order_number }}', '{{ $currency }}{{ number_format($order->total, 2) }}')"
                                                 class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-2xs transition"
                                                 title="Approve refund and restock">
                                             ✓ Refund
@@ -234,7 +234,7 @@
                                     <form action="{{ route('admin.returns.approve', $order) }}" method="POST" class="inline">
                                         @csrf
                                         <input type="hidden" name="action_type" value="return">
-                                        <button type="submit" onclick="return confirm('Accept and mark Order #{{ $order->order_number }} as Returned?')"
+                                        <button type="button" onclick="confirmReturnModal(this, '{{ $order->order_number }}')"
                                                 class="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px] shadow-2xs transition"
                                                 title="Accept return and restock">
                                             ✓ Return

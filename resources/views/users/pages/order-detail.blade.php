@@ -216,7 +216,7 @@
                                         @endif
 
                                         @if(empty($item->selected_size) && empty($item->selected_color) && empty($item->selected_shade) && !empty($item->options_summary))
-                                            <span class="inline-flex items-center text-xs font-semibold bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-900/60 px-2.5 py-0.5 rounded-lg">
+                                            <span class="inline-flex items-center text-xs font-semibold bg-brand-50 dark:bg-teal-950 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-900/60 px-2.5 py-0.5 rounded-lg">
                                                 {{ $item->options_summary }}
                                             </span>
                                         @endif
@@ -249,7 +249,7 @@
                                                 @if($allowReviewUpdates ?? true)
                                                     <button type="button"
                                                         @click="openReviewModal({{ $item->product_id }}, '{{ addslashes($item->product_name) }}', '{{ $item->product->thumbnail_url }}', {{ $existingReview->rating }}, '{{ addslashes($existingReview->body ?? '') }}', true)"
-                                                        class="inline-flex items-center gap-1 text-xs font-bold text-brand-700 dark:text-brand-400 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/40 dark:hover:bg-brand-900/50 px-2.5 py-1 rounded-lg border border-brand-200 dark:border-brand-800 transition">
+                                                        class="inline-flex items-center gap-1 text-xs font-bold text-brand-700 dark:text-brand-400 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 dark:bg-teal-950 dark:hover:bg-brand-900/50 px-2.5 py-1 rounded-lg border border-brand-200 dark:border-brand-800 transition">
                                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                                         <span>Edit Review</span>
                                                     </button>

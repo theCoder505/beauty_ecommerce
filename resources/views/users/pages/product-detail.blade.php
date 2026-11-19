@@ -205,7 +205,7 @@
                                 @if($color->is_available)
                                     <button type="button"
                                             @click="selectedColor = '{{ $color->name }}'; colorError = false"
-                                            :class="selectedColor === '{{ $color->name }}' ? 'ring-2 ring-brand-700 dark:ring-brand-400 border-brand-700 bg-brand-50/50 dark:bg-brand-950/40 shadow-xs scale-105' : 'border-cream-300 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-brand-500'"
+                                            :class="selectedColor === '{{ $color->name }}' ? 'ring-2 ring-brand-700 dark:ring-brand-400 border-brand-700 bg-brand-50/50 dark:bg-teal-950 shadow-xs scale-105' : 'border-cream-300 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-brand-500'"
                                             class="flex items-center gap-2 px-3 py-1.5 rounded-xl border transition active:scale-95 text-xs font-medium text-gray-900 dark:text-gray-100">
                                         <span class="w-4 h-4 rounded-full border border-black/10 shrink-0 shadow-xs" style="background-color: {{ $color->code ?? '#e11d48' }};"></span>
                                         <span>{{ $color->name }}</span>
@@ -241,7 +241,7 @@
                                 @if($shade->is_available)
                                     <button type="button"
                                             @click="selectedShade = '{{ $shade->name }}'; shadeError = false"
-                                            :class="selectedShade === '{{ $shade->name }}' ? 'ring-2 ring-brand-700 dark:ring-brand-400 border-brand-700 bg-brand-50/50 dark:bg-brand-950/40 shadow-xs scale-105' : 'border-cream-300 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-brand-500'"
+                                            :class="selectedShade === '{{ $shade->name }}' ? 'ring-2 ring-brand-700 dark:ring-brand-400 border-brand-700 bg-brand-50/50 dark:bg-teal-950 shadow-xs scale-105' : 'border-cream-300 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-brand-500'"
                                             class="flex items-center gap-2 px-3 py-1.5 rounded-xl border transition active:scale-95 text-xs font-medium text-gray-900 dark:text-gray-100">
                                         <span class="w-4 h-4 rounded-full border border-black/10 shrink-0 shadow-xs" style="background-color: {{ $shade->code ?? '#d4a373' }};"></span>
                                         <span>{{ $shade->name }}</span>

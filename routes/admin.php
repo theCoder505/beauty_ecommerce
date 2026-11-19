@@ -50,6 +50,13 @@ Route::middleware('admin')->group(function () {
     Route::get('/reports/profit-loss', [Admin\ReportController::class, 'profitLoss'])->name('reports.profit-loss');
     Route::get('/reports/profit-loss/export', [Admin\ReportController::class, 'exportProfitLoss'])->name('reports.profit-loss.export');
 
+    // Daily Costs & Inventory Costs with P&L
+    Route::get('/daily-costs', [Admin\DailyCostController::class, 'index'])->name('daily-costs.index');
+    Route::post('/daily-costs', [Admin\DailyCostController::class, 'store'])->name('daily-costs.store');
+    Route::put('/daily-costs/{daily_cost}', [Admin\DailyCostController::class, 'update'])->name('daily-costs.update');
+    Route::delete('/daily-costs/{daily_cost}', [Admin\DailyCostController::class, 'destroy'])->name('daily-costs.destroy');
+    Route::get('/daily-costs/export', [Admin\DailyCostController::class, 'export'])->name('daily-costs.export');
+
     // Promo Codes / Coupons
     Route::resource('promo-codes', Admin\PromoCodeController::class);
     Route::post('/promo-codes/{promo_code}/toggle', [Admin\PromoCodeController::class, 'toggle'])->name('promo-codes.toggle');

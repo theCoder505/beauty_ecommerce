@@ -447,6 +447,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Convert any button[onclick*="confirm("] to data-confirm
+    document.querySelectorAll('button[onclick*="confirm("]').forEach(btn => {
+        const onclickAttr = btn.getAttribute('onclick');
+        const match = onclickAttr.match(/confirm\(['"](.*?)['"]\)/);
+        if (match) {
+            btn.removeAttribute('onclick');
+            btn.setAttribute('data-confirm', match[1]);
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const form = btn.closest('form');
+                const isDark = document.documentElement.classList.contains('dark');
+                Swal.fire({
+                    title: 'Confirmation',
+                    text: match[1],
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#059669',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Yes, proceed',
+                    cancelButtonText: 'Cancel',
+                    reverseButtons: true,
+                    background: isDark ? '#111827' : '#ffffff',
+                    color: isDark ? '#f3f4f6' : '#111827',
+                    customClass: {
+                        popup: 'rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xl'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed && form) {
+                        form.submit();
+                    }
+                });
+            });
+        }
+    });
+
     // Form submit listener for data-confirm
     document.addEventListener('submit', function (e) {
         const form = e.target;

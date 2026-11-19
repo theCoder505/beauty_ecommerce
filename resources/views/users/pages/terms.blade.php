@@ -13,7 +13,7 @@
 
         {{-- Header Card --}}
         <div class="bg-white dark:bg-gray-900 rounded-3xl p-8 sm:p-12 border border-cream-200 dark:border-gray-800 shadow-sm mb-8 text-center relative overflow-hidden">
-            <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-400 mb-4 shadow-xs">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-brand-50 dark:bg-teal-950 text-brand-700 dark:text-brand-400 mb-4 shadow-xs">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             </div>
             <h1 class="font-serif text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">Terms & Conditions</h1>

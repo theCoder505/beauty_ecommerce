@@ -16,7 +16,7 @@
             </div>
             <h1 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <span>Profit & Loss Report (P&L)</span>
-                <span class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
+                <span class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-brand-50 text-brand-700 dark:bg-teal-950 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
                     {{ $periodLabel }}
                 </span>
             </h1>
@@ -25,6 +25,11 @@
 
         {{-- Actions: Export & Print --}}
         <div class="flex items-center gap-2 flex-wrap">
+            <a href="{{ route('admin.daily-costs.index', ['period' => $period]) }}"
+               class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 transition shadow-2xs">
+                <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>Daily Costs & Inventory</span>
+            </a>
             <a href="{{ route('admin.reports.profit-loss.export', ['period' => $period, 'date_from' => $startDate, 'date_to' => $endDate]) }}"
                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 transition shadow-2xs">
                 <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>

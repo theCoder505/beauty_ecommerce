@@ -327,6 +327,42 @@ class OrderReviewLegalReturnsAndPLTest extends TestCase
         $returnsPage->assertSee('Refunded');
     }
 
+    public function test_admin_refund_buttons_have_swal_confirmation_triggers()
+    {
+        $order = Order::create([
+            'order_number'        => 'ORD-SWAL-REFUND-01',
+            'user_id'             => $this->user->id,
+            'status'              => 'completed',
+            'subtotal'            => 1000.00,
+            'shipping'            => 50.00,
+            'total'               => 1050.00,
+            'payment_status'      => 'paid',
+            'return_status'       => 'requested',
+            'return_request_type' => 'refund',
+            'return_requested_at' => now(),
+            'return_reason'       => 'Product was damaged in transit',
+            'shipping_name'       => 'Refund Test User',
+            'shipping_phone'      => '01700000000',
+            'shipping_email'      => 'refundtest@example.com',
+            'shipping_address'    => '10 Test St',
+            'shipping_city'       => 'Dhaka',
+        ]);
+
+        // 1. Check Returns & Refunds admin table view
+        $returnsPage = $this->actingAs($this->admin, 'admin')->get(route('admin.returns.index'));
+        $returnsPage->assertOk();
+        $returnsPage->assertSee('confirmRefundModal');
+        $returnsPage->assertDontSee("onclick=\"return confirm('Accept and mark Order #" . $order->order_number . " as Refunded?')\"", false);
+
+        // 2. Check Order details admin show view
+        $showPage = $this->actingAs($this->admin, 'admin')->get(route('admin.orders.show', $order));
+        $showPage->assertOk();
+        $showPage->assertSee('confirmRefundModal');
+        $showPage->assertSee('confirmDeclineModal');
+        $showPage->assertDontSee("onclick=\"return confirm('Accept refund and set status to Refunded? Stock will be restocked automatically.')\"", false);
+        $showPage->assertSee('Approve & Process Refund?', false);
+    }
+
     // =========================================================================
     // REQUIREMENT 4: PROFIT & LOSS (P&L) REPORT WITH REFUNDED GOODS AS LOSS
     // =========================================================================
