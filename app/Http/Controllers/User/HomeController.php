@@ -5,6 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\BlogPost;
 use App\Models\Category;
+use App\Models\HeroSlide;
 use App\Models\NewsletterSubscriber;
 use App\Models\Product;
 use App\Services\AnalyticsService;
@@ -22,6 +23,11 @@ class HomeController extends Controller
     public function index(): View
     {
         $this->analyticsService->trackVisit();
+
+        $heroSlides = HeroSlide::where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
 
         $featuredCategories = Category::where('is_active', true)
             ->withCount('products')
@@ -47,25 +53,29 @@ class HomeController extends Controller
             ->limit(8)
             ->get();
 
-        $newArrivals = Product::where('is_active', true)
+        $latestProducts = Product::where('is_active', true)
             ->with(['category', 'images'])
             ->withAvg('approvedReviews', 'rating')
             ->withCount('approvedReviews')
             ->latest()
-            ->limit(6)
+            ->limit(24)
             ->get();
+
+        $newArrivals = $latestProducts->take(6);
 
         $latestPosts = BlogPost::where('is_published', true)
             ->with(['category'])
             ->orderByDesc('published_at')
-            ->limit(3)
+            ->limit(16)
             ->get();
 
         return view('users.pages.home', compact(
+            'heroSlides',
             'featuredCategories',
             'featuredProducts',
             'bestSellers',
             'newArrivals',
+            'latestProducts',
             'latestPosts',
         ));
     }

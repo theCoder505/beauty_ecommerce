@@ -25,6 +25,10 @@ Route::middleware('admin')->group(function () {
     Route::post('/profile/change-email/verify', [Admin\ProfileController::class, 'verifyAndChangeEmail'])->name('profile.verify-email');
     Route::post('/profile/resend-otp', [Admin\ProfileController::class, 'resendOtp'])->name('profile.resend-otp');
 
+    // Hero Carousel
+    Route::resource('hero-slides', Admin\HeroSlideController::class);
+    Route::post('/hero-slides/{hero_slide}/toggle', [Admin\HeroSlideController::class, 'toggle'])->name('hero-slides.toggle');
+
     // Categories
     Route::resource('categories', Admin\CategoryController::class);
 

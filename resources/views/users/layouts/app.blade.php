@@ -37,14 +37,17 @@
     <link rel="apple-touch-icon" href="{{ asset('storage/'.$siteIcon) }}">
     @endif
 
-    {{-- Dark theme script (avoids FOUC) --}}
+    {{-- Light theme enforcement per design request (no dark theme) --}}
     <script>
-        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
+        try {
+            localStorage.removeItem('theme');
+            localStorage.setItem('theme', 'light');
+        } catch (e) {}
+        document.documentElement.classList.remove('dark');
     </script>
+    <style>
+        :root { color-scheme: light !important; }
+    </style>
 
     {{-- JSON-LD --}}
     @stack('jsonld')
@@ -52,12 +55,12 @@
     {{-- Fonts --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
 </head>
-<body class="font-sans bg-cream-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100 antialiased" x-data>
+<body class="font-sans bg-[#fcf9fa] text-gray-900 antialiased" x-data>
 
     @include('users.layouts.header')
 
