@@ -23,6 +23,11 @@ class CacheSessionService
      */
     public function createSession(Authenticatable $user, string $guard = 'web'): string
     {
+        // Admin uses standard session authentication only; cache sessions are only for web users
+        if ($guard !== 'web') {
+            return '';
+        }
+
         $cookieName = $this->cookieName($guard);
         $existingToken = request()->cookie($cookieName);
 
@@ -62,6 +67,10 @@ class CacheSessionService
      */
     public function getSession(string $token, string $guard = 'web'): ?array
     {
+        if ($guard !== 'web') {
+            return null;
+        }
+
         return Cache::get($this->cacheKey($guard, $token));
     }
 
@@ -71,6 +80,10 @@ class CacheSessionService
      */
     public function renewSession(string $token, array $sessionData, string $guard = 'web', bool $force = false): void
     {
+        if ($guard !== 'web') {
+            return;
+        }
+
         $today = Carbon::now()->toDateString();
         $needsDailyRenewal = ($sessionData['last_renewed'] ?? null) !== $today;
 

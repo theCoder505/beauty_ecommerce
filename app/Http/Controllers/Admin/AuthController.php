@@ -4,17 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AdminLogin;
-use App\Services\CacheSessionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\View\View;
 
 class AuthController extends Controller
 {
-    public function __construct(
-        private readonly CacheSessionService $cacheSessionService
-    ) {}
-
     public function showLogin(): View|RedirectResponse
     {
         if (auth('admin')->check()) {
@@ -38,7 +34,9 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
-        $this->cacheSessionService->createSession(auth('admin')->user(), 'admin');
+
+        // Expire any lingering admin cache session cookie (admin is strictly session-based)
+        Cookie::queue(Cookie::forget('admin_cache_session'));
 
         AdminLogin::create([
             'admin_id'   => auth('admin')->id(),
@@ -52,11 +50,13 @@ class AuthController extends Controller
 
     public function logout(Request $request): RedirectResponse
     {
-        $this->cacheSessionService->destroyCurrentSession('admin');
         auth('admin')->logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        // Expire any lingering admin cache session cookie
+        Cookie::queue(Cookie::forget('admin_cache_session'));
 
         return redirect()->route('admin.login')
             ->with('success', 'You have been logged out successfully.');

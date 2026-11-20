@@ -21,7 +21,12 @@ class CacheSessionKeepAliveMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $this->keepAliveGuard($request, 'web');
-        $this->keepAliveGuard($request, 'admin');
+
+        // Admin panel is strictly session-based and does not use cache sessions.
+        // Clear any lingering admin cache session cookie and cache entry if encountered.
+        if ($request->hasCookie('admin_cache_session')) {
+            $this->cacheSessionService->destroySession($request->cookie('admin_cache_session'), 'admin');
+        }
 
         return $next($request);
     }
@@ -31,6 +36,11 @@ class CacheSessionKeepAliveMiddleware
      */
     protected function keepAliveGuard(Request $request, string $guard): void
     {
+        // Only web guard uses cache session keep-alive; admin uses standard session authentication
+        if ($guard !== 'web') {
+            return;
+        }
+
         $cookieName = $this->cacheSessionService->cookieName($guard);
         $token = $request->cookie($cookieName);
 

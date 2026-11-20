@@ -40,21 +40,24 @@ class AppServiceProvider extends ServiceProvider
             );
         });
 
-        // Keep session in cache on login; keep for 6 months and renew daily on activity
+        // Keep session in cache on login for web users; keep for 6 months and renew daily on activity
+        // Admin panel uses standard session login only, not cache-based login
         Event::listen(Login::class, function (Login $event): void {
-            if ($event->user) {
+            if ($event->user && ($event->guard ?? 'web') === 'web') {
                 $this->app->make(CacheSessionService::class)->createSession(
                     $event->user,
-                    $event->guard ?? 'web'
+                    'web'
                 );
             }
         });
 
-        // Forget cache session on logout
+        // Forget cache session on logout for web users
         Event::listen(Logout::class, function (Logout $event): void {
-            $this->app->make(CacheSessionService::class)->destroyCurrentSession(
-                $event->guard ?? 'web'
-            );
+            if (($event->guard ?? 'web') === 'web') {
+                $this->app->make(CacheSessionService::class)->destroyCurrentSession(
+                    'web'
+                );
+            }
         });
 
         // Register custom HTMLPurifier data URI scheme for safe image embedding (JPEG, PNG, GIF, WebP, AVIF)
