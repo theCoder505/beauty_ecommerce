@@ -31,8 +31,9 @@ class HomeController extends Controller
 
         $featuredCategories = Category::where('is_active', true)
             ->withCount('products')
-            ->orderByDesc('sort_order')
-            ->limit(6)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->limit(10)
             ->get();
 
         $featuredProducts = Product::where('is_active', true)
@@ -45,12 +46,13 @@ class HomeController extends Controller
             ->get();
 
         $bestSellers = Product::where('is_active', true)
-            ->with(['category', 'images'])
+            ->with(['category', 'images', 'sizes', 'options'])
             ->withAvg('approvedReviews', 'rating')
             ->withCount('approvedReviews')
             ->withCount('orderItems')
             ->orderByDesc('order_items_count')
-            ->limit(8)
+            ->orderByDesc('views_count')
+            ->limit(10)
             ->get();
 
         $latestProducts = Product::where('is_active', true)

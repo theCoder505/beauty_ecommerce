@@ -27,7 +27,7 @@
     }"
     @if ($isHome)
         :class="(scrolled || mobileOpen)
-            ? 'bg-gradient-to-r from-[#fa7e8c] via-[#e1276f] to-[#7d0b48] shadow-md backdrop-blur-md'
+            ? 'bg-linear-to-r from-[#fa7e8c] via-[#e1276f] to-[#7d0b48] shadow-md backdrop-blur-md'
             : 'bg-transparent shadow-none'"
     @endif>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center h-16 sm:h-20 gap-4 lg:gap-6 justify-between">
@@ -37,7 +37,7 @@
             @if (!empty($settings['site_logo']))
                 <img src="{{ asset('storage/' . $settings['site_logo']) }}"
                     alt="{{ $siteName }}"
-                    class="h-8 sm:h-10 lg:h-11 w-auto max-w-[170px] sm:max-w-[220px] object-contain transition-transform group-hover:scale-105">
+                    class="max-h-12 w-auto max-w-42.5 sm:max-w-55 object-contain transition-transform group-hover:scale-105 brightness-0 invert-100">
             @elseif (!empty($settings['site_icon']))
                 <div class="flex items-center gap-2">
                     <img src="{{ asset('storage/' . $settings['site_icon']) }}"

@@ -9,14 +9,9 @@
         <div class="lg:col-span-1">
             <a href="{{ route('home') }}"
                 class="inline-flex items-center gap-2.5 font-sans font-bold text-2xl text-white">
-                <div
-                    class="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#ff1475] to-[#e1276f] flex items-center justify-center text-white shadow-md">
-                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                        <path
-                            d="M12 2C12 2 8 8 8 13C8 16.31 10.69 19 14 19C15.65 19 17.15 18.33 18.24 17.24C16.89 16.5 15.5 15.2 14.7 13.5C13.6 11.2 14.1 8.3 15.5 6.3C14.5 4.5 13.2 3.1 12 2ZM6.5 14C5.1 14 4 15.1 4 16.5C4 17.9 5.1 19 6.5 19C7.9 19 9 17.9 9 16.5C9 15.1 7.9 14 6.5 14Z" />
-                    </svg>
-                </div>
-                <span>{{ $siteName ?: 'GlowCare' }}</span>
+                <img src="{{ asset('storage/' . $settings['site_logo']) }}"
+                    alt="{{ $siteName }}"
+                    class="max-h-12 w-auto max-w-42.5 sm:max-w-55 object-contain transition-transform">
             </a>
             <p class="mt-4 text-sm text-pink-100/70 leading-relaxed">Discover premium health &amp; beauty products for
                 healthy skin, hair &amp; body. Radiate confidence every day.</p>

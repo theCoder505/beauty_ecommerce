@@ -250,4 +250,31 @@ class HeroCarouselAndLandingPageTest extends TestCase
         $this->actingAs($admin, 'admin')->post(route('admin.hero-slides.toggle', $slide));
         $this->assertTrue($slide->fresh()->is_active);
     }
+
+    public function test_homepage_renders_dynamic_categories_and_best_sellers(): void
+    {
+        $category = \App\Models\Category::create([
+            'name' => 'Organic Skincare',
+            'slug' => 'organic-skincare',
+            'is_active' => true,
+            'sort_order' => 1,
+        ]);
+
+        $product = \App\Models\Product::create([
+            'category_id' => $category->id,
+            'name' => 'Rosewater Hydrating Toner',
+            'slug' => 'rosewater-hydrating-toner',
+            'sku' => 'ROSE-01',
+            'price' => 24.50,
+            'stock' => 15,
+            'is_active' => true,
+        ]);
+
+        $response = $this->get(route('home'));
+        $response->assertStatus(200);
+        $response->assertSee('Organic Skincare');
+        $response->assertSee('Rosewater Hydrating Toner');
+        $response->assertSee(route('shop.category', 'organic-skincare'));
+        $response->assertSee(route('products.show', 'rosewater-hydrating-toner'));
+    }
 }
