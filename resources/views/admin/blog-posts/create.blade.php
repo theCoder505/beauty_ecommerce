@@ -58,8 +58,8 @@
                 <div class="mb-3">
                     <img id="blog-cover-preview" src="#" alt="Cover Preview" class="hidden h-44 w-full sm:w-80 object-cover rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
                 </div>
-                <input type="file" name="cover_image" accept="image/*" data-preview="#blog-cover-preview" class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300 cursor-pointer">
-                <p class="text-xs text-gray-400 mt-1">Recommended: 1200x630px JPG/WebP</p>
+                <input type="file" name="cover_image" accept=".jpeg,.jpg,.png,.webp,.gif,.avif,image/jpeg,image/png,image/webp,image/gif,image/avif" data-preview="#blog-cover-preview" class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300 cursor-pointer">
+                <p class="text-xs text-gray-400 mt-1">Recommended: 1200x630px. Supported: JPEG, JPG, PNG, WEBP, AVIF, GIF (Max 5MB).</p>
             </div>
 
             <div>

@@ -52,6 +52,80 @@ class HeroCarouselAndLandingPageTest extends TestCase
         $response->assertSee('Shop by Category');
         $response->assertSee('Best Sellers');
         $response->assertSee('Secure Payments');
+        $response->assertSee('storage/hero-slides/slide-1.jpg');
+    }
+
+    public function test_header_renders_dynamic_site_logo_from_settings(): void
+    {
+        \App\Models\Setting::updateOrCreate(
+            ['key' => 'site_logo'],
+            ['value' => 'settings/custom-brand-logo.png', 'is_encrypted' => false, 'group' => 'general']
+        );
+        \Illuminate\Support\Facades\Cache::forget('app_settings');
+
+        $response = $this->get(route('home'));
+        $response->assertStatus(200);
+        $response->assertSee('storage/settings/custom-brand-logo.png');
+        $response->assertDontSee('Health &amp; Beauty</span>', false);
+    }
+
+    public function test_admin_can_update_hero_image_in_settings(): void
+    {
+        $admin = $this->createAdmin();
+        \Illuminate\Support\Facades\Storage::fake('public');
+
+        $file = \Illuminate\Http\UploadedFile::fake()->image('custom-hero.png', 800, 800);
+
+        $response = $this->actingAs($admin, 'admin')->post(route('admin.settings.update'), [
+            'hero_image' => $file,
+        ]);
+
+        $response->assertRedirect();
+        \Illuminate\Support\Facades\Cache::forget('app_settings');
+        $setting = \App\Models\Setting::where('key', 'hero_image')->first();
+        $this->assertNotNull($setting);
+        $this->assertNotEmpty($setting->value);
+        \Illuminate\Support\Facades\Storage::disk('public')->assertExists($setting->value);
+
+        // Verify storefront displays custom hero image from settings
+        $homeResponse = $this->get(route('home'));
+        $homeResponse->assertStatus(200);
+        $homeResponse->assertSee('storage/' . $setting->value);
+    }
+
+    public function test_settings_and_hero_slides_support_avif_upload(): void
+    {
+        $admin = $this->createAdmin();
+        \Illuminate\Support\Facades\Storage::fake('public');
+
+        // Test AVIF site_logo upload in settings
+        $logoAvif = \Illuminate\Http\UploadedFile::fake()->create('logo.avif', 500, 'image/avif');
+        $heroAvif = \Illuminate\Http\UploadedFile::fake()->create('hero.avif', 1200, 'image/avif');
+
+        $resSettings = $this->actingAs($admin, 'admin')->post(route('admin.settings.update'), [
+            'site_logo' => $logoAvif,
+            'hero_image' => $heroAvif,
+        ]);
+        $resSettings->assertSessionHasNoErrors();
+
+        // Verify settings page displays supported accept types
+        $settingsPage = $this->actingAs($admin, 'admin')->get(route('admin.settings.index'));
+        $settingsPage->assertOk();
+        $settingsPage->assertSee('.avif', false);
+
+        // Test AVIF upload in hero carousel
+        $slideAvif = \Illuminate\Http\UploadedFile::fake()->create('slide.avif', 800, 'image/avif');
+        $resSlide = $this->actingAs($admin, 'admin')->post(route('admin.hero-slides.store'), [
+            'title' => 'AVIF Hero Slide',
+            'image_file' => $slideAvif,
+        ]);
+        $resSlide->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('hero_slides', ['title' => 'AVIF Hero Slide']);
+
+        // Verify hero slides create page displays supported accept types
+        $slideCreatePage = $this->actingAs($admin, 'admin')->get(route('admin.hero-slides.create'));
+        $slideCreatePage->assertOk();
+        $slideCreatePage->assertSee('.avif', false);
     }
 
     public function test_admin_can_view_hero_slides_list(): void

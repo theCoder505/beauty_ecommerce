@@ -124,7 +124,8 @@
                     <img id="product-thumb-preview" src="{{ $product->thumbnail_url }}" alt="{{ $product->name }}" class="w-20 h-20 rounded-xl object-cover border border-gray-200 dark:border-gray-700 preview-target">
                     <span class="text-xs text-gray-500">Current thumbnail. Choose a new file to replace it.</span>
                 </div>
-                <input type="file" name="thumbnail" accept="image/*" data-preview="#product-thumb-preview" class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300 cursor-pointer">
+                <input type="file" name="thumbnail" accept=".jpeg,.jpg,.png,.webp,.gif,.avif,image/jpeg,image/png,image/webp,image/gif,image/avif" data-preview="#product-thumb-preview" class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300 cursor-pointer">
+                <p class="text-xs text-gray-400 mt-1">Supported: JPEG, JPG, PNG, WEBP, AVIF, GIF (Max 2MB).</p>
             </div>
 
             <!-- Existing Gallery Images -->
@@ -152,8 +153,8 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Add More Gallery Photos</label>
-                <input type="file" name="gallery[]" accept="image/*" multiple data-preview-container="#gallery-preview-container" class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300 cursor-pointer">
-                <p class="text-xs text-gray-400 mt-1">Select one or multiple images to append to the product gallery.</p>
+                <input type="file" name="gallery[]" accept=".jpeg,.jpg,.png,.webp,.gif,.avif,image/jpeg,image/png,image/webp,image/gif,image/avif" multiple data-preview-container="#gallery-preview-container" class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300 cursor-pointer">
+                <p class="text-xs text-gray-400 mt-1">Select one or multiple images to append to the product gallery. Supported: JPEG, JPG, PNG, WEBP, AVIF, GIF (Max 2MB).</p>
                 <div id="gallery-preview-container" class="image-preview-container flex flex-wrap gap-3 mt-3"></div>
             </div>
         </div>

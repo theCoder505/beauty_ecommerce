@@ -31,7 +31,7 @@ class BlogPostController extends Controller
         $data = $request->validate([
             'title'            => 'required|string|max:255',
             'blog_category_id' => 'nullable|exists:blog_categories,id',
-            'cover_image'      => 'nullable|image|max:5120',
+            'cover_image'      => 'nullable|image|mimes:jpeg,jpg,png,webp,gif,avif|max:5120',
             'content'          => 'nullable|string',
             'excerpt'          => 'nullable|string|max:500',
             'is_published'     => 'nullable|boolean',
@@ -64,7 +64,7 @@ class BlogPostController extends Controller
         $data = $request->validate([
             'title'            => 'required|string|max:255',
             'blog_category_id' => 'nullable|exists:blog_categories,id',
-            'cover_image'      => 'nullable|image|max:5120',
+            'cover_image'      => 'nullable|image|mimes:jpeg,jpg,png,webp,gif,avif|max:5120',
             'content'          => 'nullable|string',
             'excerpt'          => 'nullable|string|max:500',
             'is_published'     => 'nullable|boolean',

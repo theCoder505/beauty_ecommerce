@@ -100,11 +100,60 @@
 
 @section('content')
 
+@php
+    $heroSlide = (isset($heroSlides) && $heroSlides->isNotEmpty()) ? $heroSlides->first() : null;
+    $heroRightImage = null;
+    if (!empty($settings['hero_image'])) {
+        $heroRightImage = asset('storage/' . $settings['hero_image']);
+    } elseif ($heroSlide && !empty($heroSlide->image)) {
+        $heroRightImage = $heroSlide->image_url;
+    } else {
+        $heroRightImage = asset('images/landing/hero-model-seamless.png');
+    }
+
+    $heroBadge = $heroSlide->badge_text ?? '✦ Radiate Confidence Every Day';
+    $heroTitle = $heroSlide->title ?? 'Beauty & Wellness for a Better You';
+    $heroSubtitle = $heroSlide->subtitle ?? 'Discover premium health & beauty products for healthy skin, hair & body.';
+    $heroBtn1Text = $heroSlide->primary_button_text ?? 'Shop Now';
+    $heroBtn1Url = $heroSlide->primary_button_url ?? route('shop.index');
+    $heroBtn2Text = $heroSlide->secondary_button_text ?? 'Explore Categories';
+    $heroBtn2Url = $heroSlide->secondary_button_url ?? '#categories';
+
+    $hasMultipleSlides = isset($heroSlides) && $heroSlides->count() > 1 && empty($settings['hero_image']);
+    $slidesJson = (isset($heroSlides) && $heroSlides->isNotEmpty()) ? $heroSlides->map(function($slide) {
+        return [
+            'badge' => $slide->badge_text ?? '✦ Radiate Confidence Every Day',
+            'title' => $slide->title,
+            'subtitle' => $slide->subtitle ?? 'Discover premium health & beauty products for healthy skin, hair & body.',
+            'primary_btn_text' => $slide->primary_button_text ?? 'Shop Now',
+            'primary_btn_url' => $slide->primary_button_url ?? route('shop.index'),
+            'secondary_btn_text' => $slide->secondary_button_text ?? 'Explore Categories',
+            'secondary_btn_url' => $slide->secondary_button_url ?? '#categories',
+            'image' => $slide->image_url,
+            'floating_badge' => $slide->floating_badge_text,
+        ];
+    })->values() : [];
+@endphp
+
 {{-- ═══════════════════════════════════════════════════════════════════
      1. HERO SECTION (100% Matching Reference Image)
      ═══════════════════════════════════════════════════════════════════ --}}
-<section class="relative overflow-hidden text-white"
-    style="background: linear-gradient(105deg, #fa7e8c 0%, #ee4680 25%, #e1276f 55%, #b3145c 80%, #7d0b48 100%);">
+<section class="relative overflow-hidden text-white -mt-16 sm:-mt-20 pt-16 sm:pt-20"
+    style="background: linear-gradient(105deg, #fa7e8c 0%, #ee4680 25%, #e1276f 55%, #b3145c 80%, #7d0b48 100%);"
+    @if($hasMultipleSlides)
+    x-data="{
+        slides: {{ json_encode($slidesJson) }},
+        active: 0,
+        timer: null,
+        init() {
+            if (this.slides.length > 1) {
+                this.timer = setInterval(() => {
+                    this.active = (this.active + 1) % this.slides.length;
+                }, 5000);
+            }
+        }
+    }"
+    @endif>
 
     {{-- Organic glowing petals and sparkles matching the mockup --}}
     <div class="absolute inset-0 pointer-events-none select-none overflow-hidden">
@@ -135,45 +184,81 @@
                 {{-- Translucent Frosted Badge --}}
                 <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white text-xs sm:text-sm font-semibold tracking-wide shadow-sm">
                     <span class="text-white text-xs">✦</span>
-                    <span>Radiate Confidence Every Day</span>
+                    <span @if($hasMultipleSlides) x-text="slides[active].badge" @endif>{{ $heroBadge }}</span>
                 </div>
 
                 {{-- Headline --}}
-                <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.14] max-w-md sm:max-w-lg mx-auto lg:mx-0">
-                    Beauty &amp; Wellness for a Better You
+                <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.14] max-w-md sm:max-w-lg mx-auto lg:mx-0"
+                    @if($hasMultipleSlides) x-text="slides[active].title" @endif>
+                    {{ $heroTitle }}
                 </h1>
 
                 {{-- Subtitle --}}
-                <p class="text-pink-50/90 text-sm sm:text-base lg:text-lg max-w-md sm:max-w-lg mx-auto lg:mx-0 leading-relaxed font-normal">
-                    Discover premium health &amp; beauty products for healthy skin, hair &amp; body.
+                <p class="text-pink-50/90 text-sm sm:text-base lg:text-lg max-w-md sm:max-w-lg mx-auto lg:mx-0 leading-relaxed font-normal"
+                    @if($hasMultipleSlides) x-text="slides[active].subtitle" @endif>
+                    {{ $heroSubtitle }}
                 </p>
 
                 {{-- Action CTA Buttons --}}
                 <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2">
                     {{-- Shop Now Button --}}
-                    <a href="{{ route('shop.index') }}"
+                    <a :href="@if($hasMultipleSlides) slides[active].primary_btn_url @else '{{ $heroBtn1Url }}' @endif"
                         class="inline-flex items-center gap-2 bg-[#ff1475] hover:bg-[#e00062] active:scale-95 text-white font-bold px-7 sm:px-8 py-3.5 rounded-full shadow-lg shadow-pink-950/20 hover:shadow-pink-950/40 hover:-translate-y-0.5 transition-all text-sm group">
-                        <span>Shop Now</span>
+                        <span @if($hasMultipleSlides) x-text="slides[active].primary_btn_text" @endif>{{ $heroBtn1Text }}</span>
                         <span class="group-hover:translate-x-1 transition-transform">&rarr;</span>
                     </a>
 
                     {{-- Explore Categories Button --}}
-                    <a href="#categories"
+                    <a :href="@if($hasMultipleSlides) slides[active].secondary_btn_url @else '{{ $heroBtn2Url }}' @endif"
                         class="inline-flex items-center gap-2.5 bg-white hover:bg-pink-50 active:scale-95 text-gray-900 font-bold px-6 sm:px-7 py-3.5 rounded-full shadow-md hover:-translate-y-0.5 transition-all text-sm group">
-                        <span>Explore Categories</span>
+                        <span @if($hasMultipleSlides) x-text="slides[active].secondary_btn_text" @endif>{{ $heroBtn2Text }}</span>
                         <svg class="w-4 h-4 text-pink-600 transition-transform group-hover:rotate-45" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                         </svg>
                     </a>
                 </div>
+
+                {{-- Carousel Indicators when multiple slides exist --}}
+                @if($hasMultipleSlides)
+                <div class="flex items-center justify-center lg:justify-start gap-2 pt-2">
+                    <template x-for="(s, idx) in slides" :key="idx">
+                        <button type="button" @click="active = idx"
+                            :class="active === idx ? 'w-8 bg-white' : 'w-2 bg-white/40 hover:bg-white/70'"
+                            class="h-2 rounded-full transition-all duration-300 cursor-pointer"
+                            :aria-label="'Go to slide ' + (idx + 1)"></button>
+                    </template>
+                </div>
+                @endif
             </div>
 
             {{-- Right Column: Beautiful Model seamlessly integrated into the hero background --}}
             <div class="lg:col-span-5 relative flex items-end justify-center lg:justify-end">
-                <div class="relative w-full max-w-[420px] sm:max-w-[480px] lg:max-w-[530px] flex items-end justify-center lg:justify-end">
-                    <img src="{{ asset('images/landing/hero-model-seamless.png') }}"
-                        alt="Beauty &amp; Wellness Model"
-                        class="w-full h-auto object-contain select-none pointer-events-none drop-shadow-xl transition-transform duration-700 hover:scale-[1.02]">
+                <div class="relative w-full max-w-[420px] sm:max-w-[480px] lg:max-w-[530px] h-[300px] sm:h-[380px] lg:h-[460px] xl:h-[500px] flex items-end justify-center lg:justify-end overflow-hidden">
+                    @if($hasMultipleSlides)
+                        @foreach($slidesJson as $idx => $s)
+                            <img x-show="active === {{ $idx }}"
+                                x-transition:enter="transition-opacity ease-out duration-500"
+                                x-transition:enter-start="opacity-0"
+                                x-transition:enter-end="opacity-100"
+                                x-transition:leave="transition-opacity ease-in duration-300 absolute"
+                                x-transition:leave-start="opacity-100"
+                                x-transition:leave-end="opacity-0"
+                                src="{{ $s['image'] }}"
+                                alt="{{ $s['title'] }}"
+                                width="530"
+                                height="500"
+                                @if($idx === 0) fetchpriority="high" @else loading="lazy" @endif
+                                class="max-w-full max-h-[300px] sm:max-h-[380px] lg:max-h-[460px] xl:max-h-[500px] w-auto h-auto object-contain object-bottom select-none drop-shadow-xl transition-transform duration-700 hover:scale-[1.02] {{ $idx > 0 ? 'hidden' : '' }}"
+                                :class="{ 'hidden': false }">
+                        @endforeach
+                    @else
+                        <img src="{{ $heroRightImage }}"
+                            alt="{{ $heroTitle }}"
+                            width="530"
+                            height="500"
+                            fetchpriority="high"
+                            class="max-w-full max-h-[300px] sm:max-h-[380px] lg:max-h-[460px] xl:max-h-[500px] w-auto h-auto object-contain object-bottom select-none drop-shadow-xl transition-transform duration-700 hover:scale-[1.02]">
+                    @endif
                 </div>
             </div>
 
@@ -259,22 +344,24 @@
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
         @foreach($landingCategories as $cat)
         <a href="{{ route('shop.category', $cat['slug']) }}"
-            class="group bg-white border border-pink-100 rounded-3xl p-4 sm:p-5 text-center shadow-sm hover:shadow-xl hover:shadow-pink-500/10 hover:-translate-y-1.5 transition-all duration-300 flex flex-col items-center">
+            class="group bg-white border border-pink-100 rounded-3xl overflow-hidden text-center shadow-sm hover:shadow-xl hover:shadow-pink-500/10 hover:-translate-y-1.5 transition-all duration-300 flex flex-col items-center">
 
             {{-- Image Box with Soft Warm Pink Background --}}
-            <div class="w-full aspect-[4/3] rounded-2xl overflow-hidden bg-[#fff5f7] mb-3 sm:mb-4 p-2 flex items-center justify-center border border-pink-50">
+            <div class="w-full rounded-t-2xl overflow-hidden bg-[#fff5f7] flex items-center justify-center border border-pink-50">
                 <img src="{{ $cat['image'] }}"
                     alt="{{ $cat['name'] }}"
                     class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500">
             </div>
 
-            {{-- Label --}}
-            <h3 class="font-bold text-sm sm:text-base text-gray-900 group-hover:text-[#e1276f] transition-colors leading-snug">
-                {{ $cat['name'] }}
-            </h3>
-            <p class="text-xs text-gray-400 mt-1 font-medium">
-                {{ $cat['count'] }}
-            </p>
+            <div class="p-4">
+                {{-- Label --}}
+                <h3 class="font-bold text-sm sm:text-base text-gray-900 group-hover:text-[#e1276f] transition-colors leading-snug">
+                    {{ $cat['name'] }}
+                </h3>
+                <p class="text-xs text-gray-400 mt-1 font-medium">
+                    {{ $cat['count'] }}
+                </p>
+            </div>
         </a>
         @endforeach
     </div>
@@ -489,10 +576,10 @@
             $reviewCount = $prod->approved_reviews_count ?: 48;
             $isWish = auth()->check() ? app(\App\Services\WishlistService::class)->isWishlisted($prod->id) : false;
         @endphp
-        <div class="bg-white rounded-3xl border border-pink-100 p-4 flex flex-col justify-between hover:shadow-xl hover:shadow-pink-500/10 hover:-translate-y-1.5 transition-all duration-300 group">
+        <div class="bg-white rounded-3xl border border-pink-100 flex flex-col justify-between hover:shadow-xl hover:shadow-pink-500/10 hover:-translate-y-1.5 transition-all duration-300 group">
             <div>
                 {{-- Product Image Box --}}
-                <div class="relative aspect-square rounded-2xl bg-[#fff8fa] overflow-hidden mb-3 p-3 flex items-center justify-center border border-pink-50">
+                <div class="relative aspect-square rounded-t-2xl bg-[#fff8fa] overflow-hidden mb-3 flex items-center justify-center border border-pink-50">
                     <a href="{{ route('products.show', $prod->slug) }}" class="w-full h-full flex items-center justify-center">
                         <img src="{{ $prod->thumbnail_url }}"
                             alt="{{ $prod->name }}"
@@ -510,46 +597,48 @@
                     </button>
                 </div>
 
-                {{-- Category tag --}}
-                @if($prod->category)
-                <span class="text-[10px] uppercase font-bold tracking-wider text-[#e1276f] block mb-1">
-                    {{ $prod->category->name }}
-                </span>
-                @endif
-
-                {{-- Title --}}
-                <h3 class="font-bold text-sm text-gray-900 line-clamp-1 group-hover:text-[#e1276f] transition-colors leading-snug">
-                    <a href="{{ route('products.show', $prod->slug) }}">{{ $prod->name }}</a>
-                </h3>
-
-                {{-- Volume / Weight tag --}}
-                <p class="text-xs text-gray-400 font-medium mt-0.5">{{ $prod->unit_volume ?: 'Standard Size' }}</p>
-
-                {{-- Rating stars --}}
-                <div class="flex items-center gap-1 mt-1.5">
-                    <div class="flex text-amber-400 text-xs">
-                        @for($s = 1; $s <= 5; $s++)
-                        <span>★</span>
-                        @endfor
-                    </div>
-                    <span class="text-[11px] text-gray-400 font-medium">({{ $reviewCount }})</span>
-                </div>
-
-                {{-- Price --}}
-                <div class="flex items-baseline gap-2 mt-2">
-                    <span class="font-extrabold text-base sm:text-lg text-gray-900">
-                        {{ $currency }}{{ number_format($prod->current_price, 2) }}
-                    </span>
-                    @if($prod->price > $prod->current_price)
-                    <span class="text-xs text-gray-400 line-through">
-                        {{ $currency }}{{ number_format($prod->price, 2) }}
+                <div class="p-4">
+                    {{-- Category tag --}}
+                    @if($prod->category)
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-[#e1276f] block mb-1">
+                        {{ $prod->category->name }}
                     </span>
                     @endif
+
+                    {{-- Title --}}
+                    <h3 class="font-bold text-sm text-gray-900 line-clamp-1 group-hover:text-[#e1276f] transition-colors leading-snug">
+                        <a href="{{ route('products.show', $prod->slug) }}">{{ $prod->name }}</a>
+                    </h3>
+
+                    {{-- Volume / Weight tag --}}
+                    <p class="text-xs text-gray-400 font-medium mt-0.5">{{ $prod->unit_volume ?: 'Standard Size' }}</p>
+
+                    {{-- Rating stars --}}
+                    <div class="flex items-center gap-1 mt-1.5">
+                        <div class="flex text-amber-400 text-xs">
+                            @for($s = 1; $s <= 5; $s++)
+                            <span>★</span>
+                            @endfor
+                        </div>
+                        <span class="text-[11px] text-gray-400 font-medium">({{ $reviewCount }})</span>
+                    </div>
+
+                    {{-- Price --}}
+                    <div class="flex items-baseline gap-2 mt-2">
+                        <span class="font-extrabold text-base sm:text-lg text-gray-900">
+                            {{ $currency }}{{ number_format($prod->current_price, 2) }}
+                        </span>
+                        @if($prod->price > $prod->current_price)
+                        <span class="text-xs text-gray-400 line-through">
+                            {{ $currency }}{{ number_format($prod->price, 2) }}
+                        </span>
+                        @endif
+                    </div>
                 </div>
             </div>
 
             {{-- Full Width Add to Cart button --}}
-            <div class="mt-4 pt-1">
+            <div class="mt-4 p-4 pt-1">
                 <button type="button"
                     onclick="addToCartAjax({{ $prod->id }}, 1, this)"
                     class="w-full bg-[#ff1475] hover:bg-[#e00062] active:scale-95 text-white font-bold py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-2 shadow-md shadow-pink-900/10 hover:shadow-pink-900/20 transition-all">

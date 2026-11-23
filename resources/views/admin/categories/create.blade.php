@@ -59,8 +59,8 @@
                 <div class="mb-3">
                     <img id="category-image-preview" class="hidden w-24 h-24 rounded-xl object-cover border border-gray-200 dark:border-gray-700 shadow-sm preview-target mb-2" alt="Category Image Preview">
                 </div>
-                <input type="file" name="image" accept="image/*" data-preview="#category-image-preview" class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300 cursor-pointer">
-                <p class="text-xs text-gray-400 mt-1">Recommended size: 600x600px. JPG, PNG, or WebP up to 2MB.</p>
+                <input type="file" name="image" accept=".jpeg,.jpg,.png,.webp,.svg,.gif,.avif,image/jpeg,image/png,image/webp,image/svg+xml,image/gif,image/avif" data-preview="#category-image-preview" class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300 cursor-pointer">
+                <p class="text-xs text-gray-400 mt-1">Recommended size: 600x600px. Supported: JPEG, JPG, PNG, WEBP, AVIF, SVG, GIF (Max 2MB).</p>
             </div>
         </div>
 

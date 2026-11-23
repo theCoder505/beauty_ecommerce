@@ -25,7 +25,7 @@ class SettingController extends Controller
         // Handle Site Logo Upload (Point 3)
         if ($request->hasFile('site_logo')) {
             $request->validate([
-                'site_logo' => 'image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+                'site_logo' => ['file', 'mimes:jpeg,png,jpg,gif,svg,webp,avif', 'max:2048'],
             ]);
             $logoPath = $request->file('site_logo')->store('settings', 'public');
             $this->settingService->set('site_logo', $logoPath, false, 'general');
@@ -36,12 +36,23 @@ class SettingController extends Controller
         // Handle Site Icon / Favicon Upload (Point 3)
         if ($request->hasFile('site_icon')) {
             $request->validate([
-                'site_icon' => 'image|mimes:jpeg,png,jpg,gif,svg,webp,ico|max:1024',
+                'site_icon' => ['file', 'mimes:jpeg,png,jpg,gif,svg,webp,ico,avif', 'max:1024'],
             ]);
             $iconPath = $request->file('site_icon')->store('settings', 'public');
             $this->settingService->set('site_icon', $iconPath, false, 'general');
         } elseif ($request->boolean('remove_site_icon')) {
             $this->settingService->set('site_icon', '', false, 'general');
+        }
+
+        // Handle Hero Section Right-Side Image Upload
+        if ($request->hasFile('hero_image')) {
+            $request->validate([
+                'hero_image' => ['file', 'mimes:jpeg,png,jpg,gif,svg,webp,avif', 'max:5120'],
+            ]);
+            $heroPath = $request->file('hero_image')->store('settings', 'public');
+            $this->settingService->set('hero_image', $heroPath, false, 'general');
+        } elseif ($request->boolean('remove_hero_image')) {
+            $this->settingService->set('hero_image', '', false, 'general');
         }
 
         // Validate Timezone if submitted
@@ -84,7 +95,7 @@ class SettingController extends Controller
             $this->settingService->set('delivery_charges', json_encode($cleanCharges), false, 'shipping');
         }
 
-        $data = $request->except(['_token', '_method', 'site_logo', 'site_icon', 'remove_site_logo', 'remove_site_icon', 'delivery_charges']);
+        $data = $request->except(['_token', '_method', 'site_logo', 'site_icon', 'remove_site_logo', 'remove_site_icon', 'hero_image', 'remove_hero_image', 'delivery_charges']);
 
         foreach ($data as $key => $value) {
             if ($value === null) continue;

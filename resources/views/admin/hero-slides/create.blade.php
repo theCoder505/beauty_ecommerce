@@ -81,7 +81,8 @@
             <div class="space-y-3">
                 <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Slide Model Image</label>
                 <div class="space-y-2">
-                    <input type="file" name="image_file" accept="image/*" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 dark:file:bg-pink-950 dark:file:text-pink-300">
+                    <input type="file" name="image_file" accept=".jpeg,.jpg,.png,.webp,.svg,.gif,.avif,image/jpeg,image/png,image/webp,image/svg+xml,image/gif,image/avif" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 dark:file:bg-pink-950 dark:file:text-pink-300">
+                    <p class="text-[11px] text-gray-400">Supported: JPEG, JPG, PNG, WEBP, AVIF, SVG, GIF (Max 5MB)</p>
                     <p class="text-[11px] text-gray-400">Or enter an image URL below:</p>
                     <input type="text" name="image_url" value="{{ old('image_url') }}" placeholder="https://..." class="w-full px-3.5 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-xs">
                 </div>

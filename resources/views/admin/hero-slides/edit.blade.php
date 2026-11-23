@@ -85,7 +85,8 @@
                     <img src="{{ $heroSlide->image_url }}" alt="Slide Image" class="w-24 h-24 rounded-2xl object-cover border border-gray-200 dark:border-gray-700 shadow-sm bg-pink-50">
                     <div class="text-xs text-gray-500">
                         <p class="font-medium text-gray-700 dark:text-gray-300">Change image:</p>
-                        <input type="file" name="image_file" accept="image/*" class="mt-1 block text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 dark:file:bg-pink-950 dark:file:text-pink-300">
+                        <input type="file" name="image_file" accept=".jpeg,.jpg,.png,.webp,.svg,.gif,.avif,image/jpeg,image/png,image/webp,image/svg+xml,image/gif,image/avif" class="mt-1 block text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 dark:file:bg-pink-950 dark:file:text-pink-300">
+                        <p class="text-[11px] text-gray-400 mt-1">Supported: JPEG, JPG, PNG, WEBP, AVIF, SVG, GIF (Max 5MB)</p>
                     </div>
                 </div>
                 <div class="pt-2">

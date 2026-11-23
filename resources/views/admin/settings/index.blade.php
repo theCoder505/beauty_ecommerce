@@ -35,26 +35,27 @@
         <div x-show="tab === 'general'" class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 sm:p-8 space-y-6 shadow-sm">
             <h3 class="text-base font-semibold text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-800 pb-3">Brand & Store Info</h3>
 
-            {{-- Site Logo & Icon (Point 3 & Point 9) --}}
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 p-4 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20">
+            {{-- Site Logo, Icon & Hero Image (Point 3 & Point 9) --}}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20">
                 {{-- Logo --}}
                 <div class="space-y-2">
                     <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Website Logo</label>
                     <p class="text-xs text-gray-500">Appears in surface web header, admin sidebar & user dashboard.</p>
                     <div class="flex items-center gap-4 pt-1">
-                        <div class="w-24 h-16 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex items-center justify-center p-2 overflow-hidden shadow-inner shrink-0">
+                        <div class="w-20 h-16 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex items-center justify-center p-2 overflow-hidden shadow-inner shrink-0">
                             <img id="logo-preview" src="{{ !empty($settings['site_logo']->value) ? asset('storage/'.$settings['site_logo']->value) : '' }}" 
                                  class="max-h-full max-w-full object-contain {{ empty($settings['site_logo']->value) ? 'hidden' : '' }}" alt="Logo Preview">
                             <span id="logo-placeholder" class="text-xs text-gray-400 {{ !empty($settings['site_logo']->value) ? 'hidden' : '' }}">No Logo</span>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <input type="file" name="site_logo" accept="image/*" data-preview="#logo-preview"
+                            <input type="file" name="site_logo" accept=".jpeg,.jpg,.png,.webp,.svg,.gif,.avif,image/jpeg,image/png,image/webp,image/svg+xml,image/gif,image/avif" data-preview="#logo-preview"
                                    onchange="document.getElementById('logo-placeholder').classList.add('hidden')"
-                                   class="block w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300">
+                                   class="block w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-2.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300">
+                            <p class="text-[11px] text-gray-400 mt-1">Supported: JPEG, JPG, PNG, WEBP, AVIF, SVG, GIF (Max 2MB)</p>
                             @if(!empty($settings['site_logo']->value))
                             <label class="inline-flex items-center gap-1.5 mt-2 cursor-pointer">
                                 <input type="checkbox" name="remove_site_logo" value="1" class="rounded text-red-600 focus:ring-red-500 text-xs">
-                                <span class="text-xs text-red-500 hover:text-red-600">Remove current logo</span>
+                                <span class="text-xs text-red-500 hover:text-red-600">Remove logo</span>
                             </label>
                             @endif
                         </div>
@@ -64,7 +65,7 @@
                 {{-- Icon / Favicon --}}
                 <div class="space-y-2">
                     <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Website Icon / Favicon</label>
-                    <p class="text-xs text-gray-500">Appears as the browser tab icon and collapsed sidebar logo.</p>
+                    <p class="text-xs text-gray-500">Appears as browser tab icon and collapsed sidebar logo.</p>
                     <div class="flex items-center gap-4 pt-1">
                         <div class="w-16 h-16 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex items-center justify-center p-2 overflow-hidden shadow-inner shrink-0">
                             <img id="icon-preview" src="{{ !empty($settings['site_icon']->value) ? asset('storage/'.$settings['site_icon']->value) : '' }}" 
@@ -72,13 +73,39 @@
                             <span id="icon-placeholder" class="text-xs text-gray-400 {{ !empty($settings['site_icon']->value) ? 'hidden' : '' }}">No Icon</span>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <input type="file" name="site_icon" accept="image/*" data-preview="#icon-preview"
+                            <input type="file" name="site_icon" accept=".ico,.png,.jpg,.jpeg,.webp,.svg,.gif,.avif,image/x-icon,image/vnd.microsoft.icon,image/png,image/jpeg,image/webp,image/svg+xml,image/gif,image/avif" data-preview="#icon-preview"
                                    onchange="document.getElementById('icon-placeholder').classList.add('hidden')"
-                                   class="block w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300">
+                                   class="block w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-2.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300">
+                            <p class="text-[11px] text-gray-400 mt-1">Supported: ICO, PNG, JPG, JPEG, WEBP, AVIF, SVG, GIF (Max 1MB)</p>
                             @if(!empty($settings['site_icon']->value))
                             <label class="inline-flex items-center gap-1.5 mt-2 cursor-pointer">
                                 <input type="checkbox" name="remove_site_icon" value="1" class="rounded text-red-600 focus:ring-red-500 text-xs">
-                                <span class="text-xs text-red-500 hover:text-red-600">Remove current icon</span>
+                                <span class="text-xs text-red-500 hover:text-red-600">Remove icon</span>
+                            </label>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Hero Section Model Image --}}
+                <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Hero Section Model Image</label>
+                    <p class="text-xs text-gray-500">Right-side model image in the homepage hero slider.</p>
+                    <div class="flex items-center gap-4 pt-1">
+                        <div class="w-16 h-16 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex items-center justify-center p-2 overflow-hidden shadow-inner shrink-0">
+                            <img id="hero-preview" src="{{ !empty($settings['hero_image']->value) ? asset('storage/'.$settings['hero_image']->value) : '' }}" 
+                                 class="max-h-full max-w-full object-contain {{ empty($settings['hero_image']->value) ? 'hidden' : '' }}" alt="Hero Preview">
+                            <span id="hero-placeholder" class="text-xs text-gray-400 {{ !empty($settings['hero_image']->value) ? 'hidden' : '' }}">Default</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <input type="file" name="hero_image" accept=".jpeg,.jpg,.png,.webp,.svg,.gif,.avif,image/jpeg,image/png,image/webp,image/svg+xml,image/gif,image/avif" data-preview="#hero-preview"
+                                   onchange="document.getElementById('hero-placeholder').classList.add('hidden')"
+                                   class="block w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-2.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-300">
+                            <p class="text-[11px] text-gray-400 mt-1">Supported: JPEG, JPG, PNG, WEBP, AVIF, SVG, GIF (Max 5MB)</p>
+                            @if(!empty($settings['hero_image']->value))
+                            <label class="inline-flex items-center gap-1.5 mt-2 cursor-pointer">
+                                <input type="checkbox" name="remove_hero_image" value="1" class="rounded text-red-600 focus:ring-red-500 text-xs">
+                                <span class="text-xs text-red-500 hover:text-red-600">Reset image</span>
                             </label>
                             @endif
                         </div>

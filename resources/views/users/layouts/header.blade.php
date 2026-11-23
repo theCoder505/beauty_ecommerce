@@ -11,26 +11,43 @@
 @endphp
 
 <header
-    class="{{ $isHome ? 'bg-gradient-to-r from-[#fa7e8c] via-[#e1276f] to-[#7d0b48] text-white' : 'bg-white/95 backdrop-blur border-b border-pink-100 text-gray-900' }} sticky top-0 z-50 transition-colors duration-300"
-    x-data="{ mobileOpen: false }">
+    class="{{ $isHome ? 'bg-transparent text-white' : 'bg-white/95 backdrop-blur border-b border-pink-100 text-gray-900' }} sticky top-0 z-50 transition-all duration-300"
+    x-data="{
+        mobileOpen: false,
+        scrolled: false,
+        init() {
+            @if ($isHome)
+                const onScroll = () => {
+                    this.scrolled = (window.pageYOffset || document.documentElement.scrollTop || 0) > 20;
+                };
+                window.addEventListener('scroll', onScroll, { passive: true });
+                onScroll();
+            @endif
+        }
+    }"
+    @if ($isHome)
+        :class="(scrolled || mobileOpen)
+            ? 'bg-gradient-to-r from-[#fa7e8c] via-[#e1276f] to-[#7d0b48] shadow-md backdrop-blur-md'
+            : 'bg-transparent shadow-none'"
+    @endif>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center h-16 sm:h-20 gap-4 lg:gap-6 justify-between">
 
-        {{-- Logo Matching Mockup --}}
-        <a href="{{ route('home') }}" class="flex items-center gap-2.5 shrink-0 group">
-            <div
-                class="{{ $isHome ? 'text-white' : 'text-[#e1276f]' }} flex items-center justify-center transition-transform group-hover:scale-105">
-                <svg class="w-7 h-7 sm:w-8 sm:h-8 fill-current" viewBox="0 0 24 24">
-                    <path
-                        d="M12 2C12 2 8 8 8 13C8 16.31 10.69 19 14 19C15.65 19 17.15 18.33 18.24 17.24C16.89 16.5 15.5 15.2 14.7 13.5C13.6 11.2 14.1 8.3 15.5 6.3C14.5 4.5 13.2 3.1 12 2ZM6.5 14C5.1 14 4 15.1 4 16.5C4 17.9 5.1 19 6.5 19C7.9 19 9 17.9 9 16.5C9 15.1 7.9 14 6.5 14Z" />
-                </svg>
-            </div>
-            <div class="leading-none">
-                <span
-                    class="block font-bold text-lg sm:text-2xl tracking-tight {{ $isHome ? 'text-white' : 'text-gray-900' }}">GlowCare</span>
-                <span
-                    class="block text-[9px] sm:text-[10px] uppercase font-bold tracking-widest {{ $isHome ? 'text-pink-100/90' : 'text-[#e1276f]' }} mt-0.5">Health
-                    &amp; Beauty</span>
-            </div>
+        {{-- Dynamic Site Logo from Settings --}}
+        <a href="{{ route('home') }}" class="flex items-center shrink-0 group" title="{{ $siteName }}">
+            @if (!empty($settings['site_logo']))
+                <img src="{{ asset('storage/' . $settings['site_logo']) }}"
+                    alt="{{ $siteName }}"
+                    class="h-8 sm:h-10 lg:h-11 w-auto max-w-[170px] sm:max-w-[220px] object-contain transition-transform group-hover:scale-105">
+            @elseif (!empty($settings['site_icon']))
+                <div class="flex items-center gap-2">
+                    <img src="{{ asset('storage/' . $settings['site_icon']) }}"
+                        alt="{{ $siteName }}"
+                        class="h-8 sm:h-9 w-auto object-contain">
+                    <span class="font-bold text-lg sm:text-2xl tracking-tight {{ $isHome ? 'text-white' : 'text-gray-900' }}">{{ $siteName }}</span>
+                </div>
+            @else
+                <span class="font-bold text-lg sm:text-2xl tracking-tight {{ $isHome ? 'text-white' : 'text-gray-900' }}">{{ $siteName }}</span>
+            @endif
         </a>
 
         {{-- Nav (desktop) - Matching Image Navigation --}}
